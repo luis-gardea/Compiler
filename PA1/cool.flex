@@ -42,6 +42,9 @@ extern YYSTYPE cool_yylval;
 /*
  *  Add Your own definitions here
  */
+#define KEYWORD_TOKEN 286
+#define WHITESPACE_TOKEN 287
+#define DIGIT_TOKEN 288
 
 %}
 
@@ -50,13 +53,14 @@ extern YYSTYPE cool_yylval;
  */
 
 DARROW          =>
+
 DIGIT           [0-9]
 
 CLASS           [cC][lL][aA][sS][sS]
 ELSE            [eE][lL][sS][eE]
 FALSE           f[aA][lL][sS][eE]
 FI              [fF][iI]
-IF              [iI][fF]
+IF              (?i:if)
 IN              [iI][nN]
 INHERITS        [iI][nN][hH][eE][rR][iI][tT][sS]
 ISVOID          [iI][sS][vV][oO][iI][dD]
@@ -73,8 +77,18 @@ NOT             [nN][oO][tT]
 TRUE            t[rR][uU][eE]
 KEYWORD         CLASS|ELSE|FALSE|FI|IF|IN|INHERITS|ISVOID|LET|LOOP|POOL|THEN|WHILE|CASE|ESAC|NEW|OF|NOT|TRUE
 
+WHITESPACE      [ \t\n]+
 
+ERROR           .
 %%
+ /*
+  * Test
+  */
+{DIGIT} {
+    cool_yylval.symbol = inttable.add_string(yytext);
+    return DIGIT_TOKEN;
+}
+
 
  /*
   *  Nested comments
@@ -84,13 +98,17 @@ KEYWORD         CLASS|ELSE|FALSE|FI|IF|IN|INHERITS|ISVOID|LET|LOOP|POOL|THEN|WHI
  /*
   *  The multiple-character operators.
   */
-{DARROW}		{ return (DARROW); }
+{DARROW} { 
+    return (DARROW); 
+}
 
  /*
   * Keywords are case-insensitive except for the values true and false,
   * which must begin with a lower-case letter.
   */
+{KEYWORD} { 
 
+}
 
  /*
   *  String constants (C syntax)
@@ -98,6 +116,28 @@ KEYWORD         CLASS|ELSE|FALSE|FI|IF|IN|INHERITS|ISVOID|LET|LOOP|POOL|THEN|WHI
   *  \n \t \b \f, the result is c.
   *
   */
+
+ /*
+  *  Whitespace
+  *
+  */
+{WHITESPACE} {
+
+}
+
+
+{IF} { 
+    return (IF); 
+}
+
+ /*
+  *  Error
+  *
+  */
+{ERROR} { 
+    cool_yylval.error_msg = "error";
+    return (ERROR); 
+}
 
 
 %%
