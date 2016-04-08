@@ -52,26 +52,6 @@ extern YYSTYPE cool_yylval;
 DARROW          =>
 DIGIT           [0-9]
 
-CLASS           [cC][lL][aA][sS][sS]
-ELSE            [eE][lL][sS][eE]
-FALSE           f[aA][lL][sS][eE]
-FI              [fF][iI]
-IF              [iI][fF]
-IN              [iI][nN]
-INHERITS        [iI][nN][hH][eE][rR][iI][tT][sS]
-ISVOID          [iI][sS][vV][oO][iI][dD]
-LET             [lL][eE][tT]
-LOOP            [lL][oO][oO][pP]
-POOL            [pP][oO][oO][lL]
-THEN            [tT][hH][eE][nN]
-WHILE           [wW][hH][iI][lL][eE]
-CASE            [cC][aA][sS][eE]
-ESAC            [eE][sS][aA][cC]
-NEW             [nN][eE][wW]
-OF              [oO][fF]
-NOT             [nN][oO][tT]
-TRUE            t[rR][uU][eE]
-KEYWORD         CLASS|ELSE|FALSE|FI|IF|IN|INHERITS|ISVOID|LET|LOOP|POOL|THEN|WHILE|CASE|ESAC|NEW|OF|NOT|TRUE
 
 
 %%
@@ -90,7 +70,27 @@ KEYWORD         CLASS|ELSE|FALSE|FI|IF|IN|INHERITS|ISVOID|LET|LOOP|POOL|THEN|WHI
   * Keywords are case-insensitive except for the values true and false,
   * which must begin with a lower-case letter.
   */
+(?i:class)    { print_cool_token(CLASS); return (CLASS); }
+ELSE            (?i:else)
+FI              (?i:fi)
+IF              (?i:if)
+IN              (?i:in)
+INHERITS        (?i:inherits)
+ISVOID          (?i:isvoid)
+LET             (?i:let)
+LOOP            (?i:loop)
+POOL            (?i:pool)
+THEN            (?i:then)
+WHILE           (?i:while)
+CASE            (?i:case)
+ESAC            (?i:esac)
+NEW             (?i:new)
+OF              (?i:of)
+NOT             (?i:not)
 
+FALSE           f(?i:alse)
+TRUE            t(?i:rue)
+// KEYWORD         CLASS|ELSE|FALSE|FI|IF|IN|INHERITS|ISVOID|LET|LOOP|POOL|THEN|WHILE|CASE|ESAC|NEW|OF|NOT|TRUE
 
  /*
   *  String constants (C syntax)
