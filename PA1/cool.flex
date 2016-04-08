@@ -86,6 +86,8 @@ TRUE            t(?i:rue)
   *  The multiple-character operators.
   */
 {DARROW}		{ return (DARROW); }
+"<-"            { return (ASSIGN); } 
+"<="            { return (LE); } 
 
  /*
   * Keywords are case-insensitive except for the values true and false,
