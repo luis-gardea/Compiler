@@ -52,25 +52,7 @@ extern YYSTYPE cool_yylval;
 DARROW          =>
 DIGIT           [0-9]
 
-
-
-%%
-
- /*
-  *  Nested comments
-  */
-
-
- /*
-  *  The multiple-character operators.
-  */
-{DARROW}		{ return (DARROW); }
-
- /*
-  * Keywords are case-insensitive except for the values true and false,
-  * which must begin with a lower-case letter.
-  */
-(?i:class)    { print_cool_token(CLASS); return (CLASS); }
+CLASS           (?i:class)
 ELSE            (?i:else)
 FI              (?i:fi)
 IF              (?i:if)
@@ -90,7 +72,46 @@ NOT             (?i:not)
 
 FALSE           f(?i:alse)
 TRUE            t(?i:rue)
-// KEYWORD         CLASS|ELSE|FALSE|FI|IF|IN|INHERITS|ISVOID|LET|LOOP|POOL|THEN|WHILE|CASE|ESAC|NEW|OF|NOT|TRUE
+
+     
+
+%%
+
+ /*
+  *  Nested comments
+  */
+
+
+ /*
+  *  The multiple-character operators.
+  */
+{DARROW}		{ return (DARROW); }
+
+ /*
+  * Keywords are case-insensitive except for the values true and false,
+  * which must begin with a lower-case letter.
+  */
+{CLASS}       { return (CLASS); }
+{ELSE}        { return (ELSE); }
+{FI}          { return (FI); }
+{IF}          { return (IF); }
+{IN}          { return (IN); }
+{INHERITS}    { return (INHERITS); }
+{ISVOID}      { return (ISVOID); }
+{LET}         { return (LET); }
+{LOOP}        { return (LOOP); }
+{POOL}        { return (POOL); }
+{THEN}        { return (THEN); }
+{WHILE}       { return (WHILE); }
+{CASE}        { return (CASE); }
+{ESAC}        { return (ESAC); }
+{NEW}         { return (NEW); }
+{OF}          { return (OF); }
+{NOT}         { return (NOT); }
+[ \t\n]+      {}
+
+{FALSE}       { cool_yylval.boolean = false; return (BOOL_CONST); }
+{TRUE}        { cool_yylval.boolean = true; return (BOOL_CONST); }
 
  /*
   *  String constants (C syntax)
