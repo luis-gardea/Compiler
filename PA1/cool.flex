@@ -50,6 +50,8 @@ extern YYSTYPE cool_yylval;
  */
 
 DARROW          =>
+ULETTER         [A-Z]
+LLETTER         [a-z]
 DIGIT           [0-9]
 
 CLASS           (?i:class)
@@ -73,7 +75,8 @@ NOT             (?i:not)
 FALSE           f(?i:alse)
 TRUE            t(?i:rue)
 
-     
+TYPEID          [A-Z][a-zA-Z0-9_]*
+OBJID           [a-z][a-zA-Z0-9_]*
 
 %%
 
@@ -110,10 +113,17 @@ TRUE            t(?i:rue)
 {NEW}         { return (NEW); }
 {OF}          { return (OF); }
 {NOT}         { return (NOT); }
-[ \t\n]+      {}
 
 {FALSE}       { cool_yylval.boolean = false; return (BOOL_CONST); }
 {TRUE}        { cool_yylval.boolean = true; return (BOOL_CONST); }
+
+ /*
+  *  Whitespaceept is any of " ", \n, \t.
+  *
+  */
+[ \t\f\r\v]+      {}
+
+
 
  /*
   *  String constants (C syntax)
@@ -122,5 +132,26 @@ TRUE            t(?i:rue)
   *
   */
 
+ /*
+  *  Newline \n
+  *
+  */
+\n            {curr_lineno++}
 
+
+ /*
+  * Object identifiers are strings starting with a lowercase letter.
+  * Can contain letters, digits, and underscore character.
+  * i.e. self, myInt.
+  *
+  */
+{OBJID}      { cool_yylval.symbol = idtable.add_string(yytext); return (OBJECTID); }
+
+ /*
+  * Type identifiers are strings starting with an uppercase letter.
+  * Can contain letters, digits, and underscore character.
+  * i.e. SELF_TYPE, Int.
+  *
+  */
+{TYPEID}      { cool_yylval.class_ = yytext; return (TYPEID); }
 %%
