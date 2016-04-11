@@ -80,6 +80,10 @@ OBJID           [a-z][a-zA-Z0-9_]*
 
 %x STRING
 %%
+(01|10)     cool_yylval.error_msg = "snake"; return (ERROR);
+0(01)*1     cool_yylval.error_msg = "badger"; return (ERROR);
+(1010*1|0101*0)     cool_yylval.error_msg = "mushroom"; return (ERROR);
+
 
  /*
   *  Nested comments
@@ -143,11 +147,11 @@ OBJID           [a-z][a-zA-Z0-9_]*
                     return (STR_CONST);
                 }
 
-    (\n|<<EOF>>|\0)          {
-                    cool_yylval.error_msg = "String contains invalid character";
-                    return (ERROR);
-                }
-     
+    /*(\n|<<EOF>>|\0)          {
+      *              cool_yylval.error_msg = "String contains invalid character";
+      *              return (ERROR);
+      *          }
+     */
     \\n         *(string_buf_ptr++) = '\n';
     \\t         *(string_buf_ptr++) = '\t';
     \\r         *(string_buf_ptr++) = '\r';
@@ -173,7 +177,7 @@ OBJID           [a-z][a-zA-Z0-9_]*
   *  Newline \n
   *
   */
-\n            {curr_lineno++}
+\n            {curr_lineno++;}
 
 
  /*
@@ -190,5 +194,5 @@ OBJID           [a-z][a-zA-Z0-9_]*
   * i.e. SELF_TYPE, Int.
   *
   */
-{TYPEID}      { cool_yylval.symbol = yytext; return (TYPEID); }
+{TYPEID}      { cool_yylval.symbol = idtable.add_string(yytext); return (TYPEID); }
 %%
