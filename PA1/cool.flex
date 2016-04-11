@@ -78,6 +78,7 @@ TRUE            t(?i:rue)
 TYPEID          [A-Z][a-zA-Z0-9_]*
 OBJID           [a-z][a-zA-Z0-9_]*
 
+%x STRING
 %%
 
  /*
@@ -130,7 +131,43 @@ OBJID           [a-z][a-zA-Z0-9_]*
   *  Escape sequence \c is accepted for all characters c. Except for 
   *  \n \t \b \f, the result is c.
   *
-  */
+  */  
+\"          string_buf_ptr = string_buf; BEGIN(STRING);
+     
+<STRING>{
+    /* saw closing quote - all done */
+    \"          { 
+                    BEGIN(INITIAL);
+                    *string_buf_ptr = '\0';
+                    cool_yylval.symbol = stringtable.add_string(string_buf);
+                    return (STR_CONST);
+                }
+
+    (\n|<<EOF>>|\0)          {
+                    cool_yylval.error_msg = "String contains invalid character";
+                    return (ERROR);
+                }
+     
+    \\n         *(string_buf_ptr++) = '\n';
+    \\t         *(string_buf_ptr++) = '\t';
+    \\r         *(string_buf_ptr++) = '\r';
+    \\b         *(string_buf_ptr++) = '\b';
+    \\f         *(string_buf_ptr++) = '\f';
+     
+    /*
+     * Not sure what this does atm... needs some testing.
+     */
+    \\(.|\n)    *(string_buf_ptr++) = yytext[1];
+     
+    [^\\\n\"]+  {
+                    char* yptr = yytext;
+     
+                    while( *yptr )
+                         *(string_buf_ptr++) = *(yptr++);
+                }
+
+                
+}
 
  /*
   *  Newline \n
@@ -153,5 +190,5 @@ OBJID           [a-z][a-zA-Z0-9_]*
   * i.e. SELF_TYPE, Int.
   *
   */
-{TYPEID}      { cool_yylval.class_ = yytext; return (TYPEID); }
+{TYPEID}      { cool_yylval.symbol = yytext; return (TYPEID); }
 %%
