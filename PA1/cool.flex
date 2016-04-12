@@ -39,12 +39,20 @@ extern int verbose_flag;
 
 extern YYSTYPE cool_yylval;
 
-int str_lineno;
-
-
 /*
  *  Add Your own definitions here
  */
+int num_chars = 0;
+
+int check_overflow() {
+  if (num_chars == (MAX_STR_CONST - 1)) {
+    cool_yylval.error_msg = "String constant too long";
+    num_chars = 0;
+    return true; 
+  } else {
+    return false;
+  }
+}
 
 %}
 
@@ -83,6 +91,7 @@ TRUE            t(?i:rue)
 
 
 %x STRING
+%x BADSTRING
 %%
 
 
@@ -160,7 +169,7 @@ TRUE            t(?i:rue)
  * i.e. self, myInt.
  *
  */
-{OBJID}      { cool_yylval.symbol = idtable.add_string(yytext); return (OBJECTID); }
+{OBJID}       { cool_yylval.symbol = idtable.add_string(yytext); return (OBJECTID); }
 
  /*
   * Type identifiers are strings starting with an uppercase letter.
@@ -176,60 +185,74 @@ TRUE            t(?i:rue)
   *  \n \t \b \f, the result is c.
   *
   */  
-\"         string_buf_ptr = string_buf; str_lineno = 0; BEGIN(STRING);
+\"         string_buf_ptr = string_buf; BEGIN(STRING);
      
 <STRING>{
     /* saw closing quote - all done */
-    \"          { 
-                    BEGIN(INITIAL);
-                    *string_buf_ptr = '\0';
-                    cool_yylval.symbol = stringtable.add_string(string_buf);
-                    return (STR_CONST);
-                }
-    <<EOF>>     {
-                    cool_yylval.error_msg = "EOF in string constant"; 
-                    BEGIN(INITIAL);
-                    return (ERROR);
-    }
-    (\\n|\n)          {
+    \"        { 
+                BEGIN(INITIAL);
+                *string_buf_ptr = '\0';
+                cool_yylval.symbol = stringtable.add_string(string_buf);
+                return (STR_CONST);
+              }
+
+    <<EOF>>   {
+                BEGIN(INITIAL);
+                cool_yylval.error_msg = "EOF in string constant"; 
+                return (ERROR);
+              }
+
+    \n        {
                 BEGIN(INITIAL);
                 curr_lineno++;
                 cool_yylval.error_msg = "Unterminated string constant";
                 return (ERROR);
               }
-    \\0          {
-                BEGIN(INITIAL);
-                cool_yylval.error_msg = "Unterminated string constant";
-                return (ERROR);
-    }
+
+    \\0       {
+                BEGIN(BADSTRING);
+                cool_yylval.error_msg = "String contains null character";
+              }
     
-    \\\n         *(string_buf_ptr++) = '\n'; curr_lineno++;
-    \\t         *(string_buf_ptr++) = '\t';
-    \\r         *(string_buf_ptr++) = '\r';
-    \\b         *(string_buf_ptr++) = '\b';
-    \\f         *(string_buf_ptr++) = '\f';
+    \\n        if (check_overflow()) BEGIN(BADSTRING); else *(string_buf_ptr++) = '\n'; num_chars++;
+    \\t        if (check_overflow()) BEGIN(BADSTRING); else *(string_buf_ptr++) = '\t'; num_chars++;
+    \\r        if (check_overflow()) BEGIN(BADSTRING); else *(string_buf_ptr++) = '\r'; num_chars++;
+    \\b        if (check_overflow()) BEGIN(BADSTRING); else *(string_buf_ptr++) = '\b'; num_chars++;
+    \\f        if (check_overflow()) BEGIN(BADSTRING); else *(string_buf_ptr++) = '\f'; num_chars++;
      
-    /*
-     * Not sure what this does atm... needs some testing.
-     *
-     *   \\(.|\n)    *(string_buf_ptr++) = yytext[1]; curr_lineno++;
-     */
+    \\.        if (check_overflow()) BEGIN(BADSTRING); else *(string_buf_ptr++) = yytext[1]; num_chars++;
 
-    [^\\\n\"\0]+  {
-                    char* yptr = yytext;
-     
-                    while( *yptr )
-                         *(string_buf_ptr++) = *(yptr++);
+    \\\n       if (check_overflow()) BEGIN(BADSTRING); else curr_lineno++; *(string_buf_ptr++) = yytext[1]; num_chars++;
+
+    [^\\\n\"] {  
+                char* yptr = yytext;
+                if (check_overflow()) BEGIN(BADSTRING); else {
+                  while( *yptr ) {
+                    *(string_buf_ptr++) = *(yptr++);
+                    num_chars++;
+                  }
                 }
-
+              } 
                 
+}
+
+<BADSTRING>{
+  \n        {
+              BEGIN(INITIAL);
+              curr_lineno++;
+              return (ERROR);
+            }
+
+  \"        { 
+              BEGIN(INITIAL);
+              return (ERROR);
+            }
+
+  [^\\n\"] {}
 }
 
 <<EOF>>         {
     yyterminate();
 }
-
-
-
 
 %%
