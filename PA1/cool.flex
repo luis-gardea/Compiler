@@ -39,6 +39,9 @@ extern int verbose_flag;
 
 extern YYSTYPE cool_yylval;
 
+int str_lineno;
+
+
 /*
  *  Add Your own definitions here
  */
@@ -53,6 +56,8 @@ DARROW          =>
 ULETTER         [A-Z]
 LLETTER         [a-z]
 DIGIT           [0-9]
+TYPEID          [A-Z][a-zA-Z0-9_]*
+OBJID           [a-z][a-zA-Z0-9_]*
 
 CLASS           (?i:class)
 ELSE            (?i:else)
@@ -75,14 +80,10 @@ NOT             (?i:not)
 FALSE           f(?i:alse)
 TRUE            t(?i:rue)
 
-TYPEID          [A-Z][a-zA-Z0-9_]*
-OBJID           [a-z][a-zA-Z0-9_]*
+
 
 %x STRING
 %%
-(01|10)     cool_yylval.error_msg = "snake"; return (ERROR);
-0(01)*1     cool_yylval.error_msg = "badger"; return (ERROR);
-(1010*1|0101*0)     cool_yylval.error_msg = "mushroom"; return (ERROR);
 
 
  /*
@@ -95,7 +96,24 @@ OBJID           [a-z][a-zA-Z0-9_]*
   */
 {DARROW}		{ return (DARROW); }
 "<-"            { return (ASSIGN); } 
-"<="            { return (LE); } 
+"<="            { return (LE); }
+";"             { return ';'; }
+":"             { return ':'; }
+"{"             { return '{'; }
+"}"             { return '}'; }
+"+"             { return '+'; }
+"-"             { return '-'; }
+","             { return ';'; }
+"="             { return '='; }
+"@"             { return '@'; }
+"."             { return '.'; }
+"/"             { return '/'; }
+"*"             { return '*'; }
+"~"             { return '~'; }
+"("             { return '('; }
+")"             { return ')'; }
+"<"             { return '<'; }
+
 
  /*
   * Keywords are case-insensitive except for the values true and false,
@@ -122,56 +140,7 @@ OBJID           [a-z][a-zA-Z0-9_]*
 {FALSE}       { cool_yylval.boolean = false; return (BOOL_CONST); }
 {TRUE}        { cool_yylval.boolean = true; return (BOOL_CONST); }
 
- /*
-  *  Whitespaceept is any of " ", \n, \t.
-  *
-  */
-[ \t\f\r\v]+      {}
-
-
-
- /*
-  *  String constants (C syntax)
-  *  Escape sequence \c is accepted for all characters c. Except for 
-  *  \n \t \b \f, the result is c.
-  *
-  */  
-\"          string_buf_ptr = string_buf; BEGIN(STRING);
-     
-<STRING>{
-    /* saw closing quote - all done */
-    \"          { 
-                    BEGIN(INITIAL);
-                    *string_buf_ptr = '\0';
-                    cool_yylval.symbol = stringtable.add_string(string_buf);
-                    return (STR_CONST);
-                }
-
-    /*(\n|<<EOF>>|\0)          {
-      *              cool_yylval.error_msg = "String contains invalid character";
-      *              return (ERROR);
-      *          }
-     */
-    \\n         *(string_buf_ptr++) = '\n';
-    \\t         *(string_buf_ptr++) = '\t';
-    \\r         *(string_buf_ptr++) = '\r';
-    \\b         *(string_buf_ptr++) = '\b';
-    \\f         *(string_buf_ptr++) = '\f';
-     
-    /*
-     * Not sure what this does atm... needs some testing.
-     */
-    \\(.|\n)    *(string_buf_ptr++) = yytext[1];
-     
-    [^\\\n\"]+  {
-                    char* yptr = yytext;
-     
-                    while( *yptr )
-                         *(string_buf_ptr++) = *(yptr++);
-                }
-
-                
-}
+{DIGIT}+      { cool_yylval.symbol = inttable.add_string(yytext); return (INT_CONST);}
 
  /*
   *  Newline \n
@@ -179,13 +148,18 @@ OBJID           [a-z][a-zA-Z0-9_]*
   */
 \n            {curr_lineno++;}
 
-
  /*
-  * Object identifiers are strings starting with a lowercase letter.
-  * Can contain letters, digits, and underscore character.
-  * i.e. self, myInt.
+  *  Whitespaceept is any of " ", \n, \t.
   *
   */
+[ \t\f\r\v]+      {}
+
+ /*
+ * Object identifiers are strings starting with a lowercase letter.
+ * Can contain letters, digits, and underscore character.
+ * i.e. self, myInt.
+ *
+ */
 {OBJID}      { cool_yylval.symbol = idtable.add_string(yytext); return (OBJECTID); }
 
  /*
@@ -195,4 +169,67 @@ OBJID           [a-z][a-zA-Z0-9_]*
   *
   */
 {TYPEID}      { cool_yylval.symbol = idtable.add_string(yytext); return (TYPEID); }
+
+ /*
+  *  String constants (C syntax)
+  *  Escape sequence \c is accepted for all characters c. Except for 
+  *  \n \t \b \f, the result is c.
+  *
+  */  
+\"         string_buf_ptr = string_buf; str_lineno = 0; BEGIN(STRING);
+     
+<STRING>{
+    /* saw closing quote - all done */
+    \"          { 
+                    BEGIN(INITIAL);
+                    *string_buf_ptr = '\0';
+                    cool_yylval.symbol = stringtable.add_string(string_buf);
+                    return (STR_CONST);
+                }
+    <<EOF>>     {
+                    cool_yylval.error_msg = "EOF in string constant"; 
+                    BEGIN(INITIAL);
+                    return (ERROR);
+    }
+    (\\n|\n)          {
+                BEGIN(INITIAL);
+                curr_lineno++;
+                cool_yylval.error_msg = "Unterminated string constant";
+                return (ERROR);
+              }
+    \\0          {
+                BEGIN(INITIAL);
+                cool_yylval.error_msg = "Unterminated string constant";
+                return (ERROR);
+    }
+    
+    \\\n         *(string_buf_ptr++) = '\n'; curr_lineno++;
+    \\t         *(string_buf_ptr++) = '\t';
+    \\r         *(string_buf_ptr++) = '\r';
+    \\b         *(string_buf_ptr++) = '\b';
+    \\f         *(string_buf_ptr++) = '\f';
+     
+    /*
+     * Not sure what this does atm... needs some testing.
+     *
+     *   \\(.|\n)    *(string_buf_ptr++) = yytext[1]; curr_lineno++;
+     */
+
+    [^\\\n\"\0]+  {
+                    char* yptr = yytext;
+     
+                    while( *yptr )
+                         *(string_buf_ptr++) = *(yptr++);
+                }
+
+                
+}
+
+<<EOF>>         {
+    yyterminate();
+}
+
+
+
+
 %%
