@@ -54,6 +54,8 @@ int check_overflow() {
   }
 }
 
+int comment_depth = 0;
+
 %}
 
 /*
@@ -92,13 +94,35 @@ TRUE            t(?i:rue)
 
 %x STRING
 %x BADSTRING
+%x COMMENT
 %%
 
 
  /*
   *  Nested comments
   */
+"(*"      { comment_depth++; BEGIN(COMMENT); }
 
+<COMMENT>{
+    "(*"    {
+        comment_depth++;
+    }
+
+    "*)"    {
+        comment_depth--;
+        if (comment_depth == 0) {
+            BEGIN(INITIAL);
+        } 
+    }
+
+    \n      {
+        curr_lineno++;
+    }
+
+    .       {}
+}
+
+--.*\n        {} 
 
  /*
   *  The multiple-character operators.
@@ -224,7 +248,7 @@ TRUE            t(?i:rue)
 
     \\\n       if (check_overflow()) BEGIN(BADSTRING); else {curr_lineno++; *(string_buf_ptr++) = yytext[1]; num_chars++;}
 
-    [^\\\n\"\0]+ {  
+    [^\\\n\"\0] {  
                 char* yptr = yytext;
                 if (check_overflow()) BEGIN(BADSTRING); else {
                   while( *yptr ) {
@@ -254,5 +278,6 @@ TRUE            t(?i:rue)
 <<EOF>>         {
     yyterminate();
 }
+
 
 %%
