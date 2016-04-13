@@ -214,15 +214,15 @@ TRUE            t(?i:rue)
                 cool_yylval.error_msg = "String contains null character";
               }
     
-    \\n        if (check_overflow()) BEGIN(BADSTRING); else *(string_buf_ptr++) = '\n'; num_chars++;
-    \\t        if (check_overflow()) BEGIN(BADSTRING); else *(string_buf_ptr++) = '\t'; num_chars++;
-    \\r        if (check_overflow()) BEGIN(BADSTRING); else *(string_buf_ptr++) = '\r'; num_chars++;
-    \\b        if (check_overflow()) BEGIN(BADSTRING); else *(string_buf_ptr++) = '\b'; num_chars++;
-    \\f        if (check_overflow()) BEGIN(BADSTRING); else *(string_buf_ptr++) = '\f'; num_chars++;
+    \\n        if (check_overflow()) BEGIN(BADSTRING); else {*(string_buf_ptr++) = '\n'; num_chars++};
+    \\t        if (check_overflow()) BEGIN(BADSTRING); else {*(string_buf_ptr++) = '\t'; num_chars++};
+    \\r        if (check_overflow()) BEGIN(BADSTRING); else {*(string_buf_ptr++) = '\r'; num_chars++};
+    \\b        if (check_overflow()) BEGIN(BADSTRING); else {*(string_buf_ptr++) = '\b'; num_chars++};
+    \\f        if (check_overflow()) BEGIN(BADSTRING); else {*(string_buf_ptr++) = '\f'; num_chars++};
      
-    \\.        if (check_overflow()) BEGIN(BADSTRING); else *(string_buf_ptr++) = yytext[1]; num_chars++;
+    \\.        if (check_overflow()) BEGIN(BADSTRING); else {*(string_buf_ptr++) = yytext[1]; num_chars++};
 
-    \\\n       if (check_overflow()) BEGIN(BADSTRING); else curr_lineno++; *(string_buf_ptr++) = yytext[1]; num_chars++;
+    \\\n       if (check_overflow()) BEGIN(BADSTRING); else {curr_lineno++; *(string_buf_ptr++) = yytext[1]; num_chars++};
 
     [^\\\n\"] {  
                 char* yptr = yytext;
