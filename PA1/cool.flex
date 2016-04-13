@@ -248,7 +248,7 @@ TRUE            t(?i:rue)
               return (ERROR);
             }
 
-  [^\n\"]+  {}
+  [^\n\"]+ {}
 }
 
 <<EOF>>         {
