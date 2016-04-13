@@ -103,6 +103,8 @@ TRUE            t(?i:rue)
   */
 "(*"      { comment_depth++; BEGIN(COMMENT); }
 
+"*)"      { cool_yylval.error_msg = "Unmatched *)"; return (ERROR); }
+
 <COMMENT>{
     "(*"    {
         comment_depth++;
@@ -120,6 +122,12 @@ TRUE            t(?i:rue)
     }
 
     .       {}
+
+    <<EOF>>   {
+        BEGIN(INITIAL);
+        cool_yylval.error_msg = "EOF in comment";
+        return (ERROR);
+    }
 }
 
 --.*\n        {} 
@@ -182,7 +190,7 @@ TRUE            t(?i:rue)
 \n            {curr_lineno++;}
 
  /*
-  *  Whitespaceept is any of " ", \n, \t.
+  *  Whitespace is any of " ", \n, \t.
   *
   */
 [ \t\f\r\v]+      {}
@@ -215,6 +223,7 @@ TRUE            t(?i:rue)
     /* saw closing quote - all done */
     \"        { 
                 BEGIN(INITIAL);
+
                 *string_buf_ptr = '\0';
                 cool_yylval.symbol = stringtable.add_string(string_buf);
                 return (STR_CONST);
@@ -243,12 +252,14 @@ TRUE            t(?i:rue)
     \\r        if (check_overflow()) BEGIN(BADSTRING); else {*(string_buf_ptr++) = '\r'; num_chars++;}
     \\b        if (check_overflow()) BEGIN(BADSTRING); else {*(string_buf_ptr++) = '\b'; num_chars++;}
     \\f        if (check_overflow()) BEGIN(BADSTRING); else {*(string_buf_ptr++) = '\f'; num_chars++;}
-     
-    \\.        if (check_overflow()) BEGIN(BADSTRING); else {*(string_buf_ptr++) = yytext[1]; num_chars++;}
+    
+    \\.        if (check_overflow()) BEGIN(BADSTRING); else {*(string_buf_ptr++) = yytext[1]; num_chars++; }
 
     \\\n       if (check_overflow()) BEGIN(BADSTRING); else {curr_lineno++; *(string_buf_ptr++) = yytext[1]; num_chars++;}
 
-    [^\\\n\"\0] {  
+    
+
+    [^\n\"\0] {  
                 char* yptr = yytext;
                 if (check_overflow()) BEGIN(BADSTRING); else {
                   while( *yptr ) {
@@ -272,11 +283,16 @@ TRUE            t(?i:rue)
               return (ERROR);
             }
 
-  [^\n\"]+ {}
+  [^\n\"]+  {}
 }
 
 <<EOF>>         {
     yyterminate();
+}
+
+.     {
+    cool_yylval.error_msg = yytext;
+    return (ERROR);
 }
 
 
