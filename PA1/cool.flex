@@ -209,7 +209,7 @@ TRUE            t(?i:rue)
                 return (ERROR);
               }
 
-    \\0       {
+    (\0|\\\0) {
                 BEGIN(BADSTRING);
                 cool_yylval.error_msg = "String contains null character";
               }
@@ -224,7 +224,7 @@ TRUE            t(?i:rue)
 
     \\\n       if (check_overflow()) BEGIN(BADSTRING); else {curr_lineno++; *(string_buf_ptr++) = yytext[1]; num_chars++;}
 
-    [^\\\n\"] {  
+    [^\\\n\"\0]+ {  
                 char* yptr = yytext;
                 if (check_overflow()) BEGIN(BADSTRING); else {
                   while( *yptr ) {
@@ -248,7 +248,7 @@ TRUE            t(?i:rue)
               return (ERROR);
             }
 
-  [^\\n\"] {}
+  [^\n\"]+  {}
 }
 
 <<EOF>>         {
