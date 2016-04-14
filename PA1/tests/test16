@@ -1,0 +1,5 @@
+(* this is a comment (* nested comment
+*) *) "not a comment" 
+-- this is another good comment
+*) -- unmatched comment
+(* this is a bad comment
