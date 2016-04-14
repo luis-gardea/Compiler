@@ -63,8 +63,6 @@ int comment_depth = 0;
  */
 
 DARROW          =>
-ULETTER         [A-Z]
-LLETTER         [a-z]
 DIGIT           [0-9]
 TYPEID          [A-Z][a-zA-Z0-9_]*
 OBJID           [a-z][a-zA-Z0-9_]*
@@ -267,11 +265,13 @@ TRUE            t(?i:rue)
                     num_chars++;
                   }
                 }
-              } 
-                
+              }          
 }
 
 <BADSTRING>{
+
+  \\\n       if (check_overflow()) BEGIN(BADSTRING); else {curr_lineno++; *(string_buf_ptr++) = yytext[1]; num_chars++;}
+
   \n        {
               BEGIN(INITIAL);
               curr_lineno++;
@@ -283,7 +283,7 @@ TRUE            t(?i:rue)
               return (ERROR);
             }
 
-  [^\n\"]+  {}
+  [^\n\"]  {}
 }
 
 <<EOF>>         {
