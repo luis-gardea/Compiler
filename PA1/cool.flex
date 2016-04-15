@@ -142,7 +142,7 @@ TRUE            t(?i:rue)
 "}"             { return '}'; }
 "+"             { return '+'; }
 "-"             { return '-'; }
-","             { return ';'; }
+","             { return ','; }
 "="             { return '='; }
 "@"             { return '@'; }
 "."             { return '.'; }
@@ -215,7 +215,7 @@ TRUE            t(?i:rue)
   *  \n \t \b \f, the result is c.
   *
   */  
-\"         string_buf_ptr = string_buf; BEGIN(STRING);
+\"         string_buf_ptr = string_buf; num_chars = 0; BEGIN(STRING);
      
 <STRING>{
     /* saw closing quote - all done */
