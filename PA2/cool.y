@@ -135,7 +135,16 @@
     %type <class_> class
     
     /* You will want to change the following line. */
-    %type <features> dummy_feature_list
+    %type <features> feature_list
+    
+    %type <feature> feature 
+
+    %type <formals> formal_list
+    %type <formal> formal 
+
+
+    %type <expressions> expression_list
+    %type <expression> expression 
     
     /* Precedence declarations go here. */
     
@@ -157,18 +166,116 @@
     ;
     
     /* If no parent is specified, the class inherits from the Object class. */
-    class	: CLASS TYPEID '{' dummy_feature_list '}' ';'
+    class	: CLASS TYPEID '{' feature_list '}' ';'
     { $$ = class_($2,idtable.add_string("Object"),$4,
     stringtable.add_string(curr_filename)); }
-    | CLASS TYPEID INHERITS TYPEID '{' dummy_feature_list '}' ';'
+    | CLASS TYPEID INHERITS TYPEID '{' feature_list '}' ';'
     { $$ = class_($2,$4,$6,stringtable.add_string(curr_filename)); }
     ;
     
     /* Feature list may be empty, but no empty features in list. */
-    dummy_feature_list:		/* empty */
-    {  $$ = nil_Features(); }
+    feature_list
+    : 
+    { $$ = nil_Features(); }
+    | feature 
+    { $$ = single_Features($1); }
+    | feature_list feature
+    { $$ = append_Features($1,single_Features($2)); }
+    ;
+
+    feature : OBJECTID '(' formal_list ')' ':' TYPEID '{' expression '}'
+    {    }
+    | OBJECTID '(' ')' ':' TYPEID '{' expression '}'
+    {    }
+    | OBJECTID ':' TYPEID
+    {    }
+    | OBJECTID ':' TYPEID ASSIGN expression
+    {    }
+    ;
+
+    formal_list 
+    :
+    { $$ = nil_Formals(); }
+    | formal 
+    { $$ = single_Formals($1); }
+    | formal_list formal
+    { $$ = append_Formals($1,single_Formals($2)); }
+    ;
+
+    formal : OBJECTID ':' TYPEID
+    { }
+    ;
+
+    expression_list
+    :
+    { $$ = nil_Expressions(); }
+    | expression
+    { $$ = single_Expressions($1); }
+    | expression_list expression
+    { $$ = append_Expressions($1,single_Expressions($2)); }
+    ;
     
-    
+    expression : OBJECTID ASSIGN expression
+    { }
+    | expression '@' TYPEID '.' OBJECTID '(' expression_list ')'
+    { }
+    | expression '@' TYPEID '.' OBJECTID '(' ')'
+    { }
+    | expression '.' OBJECTID '(' expression_list ')'
+    { }
+    | expression '.' OBJECTID '(' ')'
+    { }
+    | OBJECTID '(' expression_list ')'
+    { }
+    | OBJECTID '(' ')'
+    { }
+    | IF expression THEN expression ELSE expression FI 
+    { }
+    | WHILE expression LOOP expression POOL 
+    { }
+    | '{' expression_list '}'
+    { }
+    /* unknown if feature_list or not */
+    | LET OBJECTID ':' TYPEID ASSIGN expression feature_list IN expression
+    { }
+    | LET OBJECTID ':' TYPEID feature_list IN expression
+    { }
+    /*
+    | CASE expression OF  uses darrow*/
+    | NEW TYPEID
+    { }
+    | ISVOID expression
+    { }
+    | expression '+' expression
+    { }
+    | expression '-' expression
+    { }
+    | expression '*' expression
+    { }
+    | expression '/' expression
+    { }
+    | '~' expression
+    { }
+    | expression '<' expression
+    { }
+    | expression LE expression
+    { }
+    | expression '=' expression
+    { }
+    | NOT expression
+    { }
+    | '(' expression ')'
+    { }
+    | OBJECTID
+    { }
+    | INT_CONST
+    { }
+    | STR_CONST
+    { }
+    | BOOL_CONST
+    { }
+    ;
+
     /* end of grammar */
     %%
     
