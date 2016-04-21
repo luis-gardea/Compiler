@@ -135,19 +135,27 @@
     %type <class_> class
     
     /* You will want to change the following line. */
-    %type <features> feature_list
+    %type <features> feature_list feature_list_prime
     
     %type <feature> feature 
 
-    %type <formals> formal_list
+    %type <formals> formal_list formal_list_prime
     %type <formal> formal 
 
 
-    %type <expressions> expression_list
+    %type <expressions> expression_list expression_list_prime
     %type <expression> expression 
     
     /* Precedence declarations go here. */
-    
+    %right ASSIGN
+    %left NOT
+    %nonassoc LE '<' '='
+    %left '+' '-'
+    %left '*' '/'
+    %left ISVOID
+    %left '~'
+    %left '@'
+    %left '.'
     
     %%
     /* 
@@ -177,29 +185,41 @@
     feature_list
     : 
     { $$ = nil_Features(); }
-    | feature 
+    | feature_list_prime
+    { $$ = $1; }
+    ;
+
+    feature_list_prime
+    :
+    feature
     { $$ = single_Features($1); }
-    | feature_list feature
+    | feature_list_prime feature
     { $$ = append_Features($1,single_Features($2)); }
     ;
 
-    feature : OBJECTID '(' formal_list ')' ':' TYPEID '{' expression '}'
+    
+    feature : OBJECTID '(' formal_list ')' ':' TYPEID '{' expression '}' ';'
     {    }
-    | OBJECTID '(' ')' ':' TYPEID '{' expression '}'
+    | OBJECTID ':' TYPEID ';'
     {    }
-    | OBJECTID ':' TYPEID
-    {    }
-    | OBJECTID ':' TYPEID ASSIGN expression
+    | OBJECTID ':' TYPEID ASSIGN expression ';'
     {    }
     ;
 
     formal_list 
     :
-    { $$ = nil_Formals(); }
-    | formal 
-    { $$ = single_Formals($1); }
-    | formal_list formal
-    { $$ = append_Formals($1,single_Formals($2)); }
+    { $$ = nil_Formals(); } 
+    | formal_list_prime
+    { $$ = $1; }
+    ;
+
+    formal_list_prime
+    :
+    formal
+    /*{ $$ = single_Formals($1); }*/
+    {}
+    | formal_list_prime ',' formal 
+    /*{ $$ = append_Formals($1,single_Formals($3)); }*/
     ;
 
     formal : OBJECTID ':' TYPEID
@@ -209,26 +229,32 @@
     expression_list
     :
     { $$ = nil_Expressions(); }
-    | expression
-    { $$ = single_Expressions($1); }
-    | expression_list expression
-    { $$ = append_Expressions($1,single_Expressions($2)); }
+    | expression_list_prime
+    { $$ = $1; }
     ;
+
+    expression_list_prime
+    : expression
+    { $$ = single_Expressions($1); }
+    | expression_list_prime ',' expression
+    { $$ = append_Expressions($1,single_Expressions($3)); }
+    ;
+
     
     expression : OBJECTID ASSIGN expression
     { }
     | expression '@' TYPEID '.' OBJECTID '(' expression_list ')'
     { }
-    | expression '@' TYPEID '.' OBJECTID '(' ')'
-    { }
+    /*| expression '@' TYPEID '.' OBJECTID '(' ')'
+    { }*/
     | expression '.' OBJECTID '(' expression_list ')'
     { }
-    | expression '.' OBJECTID '(' ')'
-    { }
+    /*| expression '.' OBJECTID '(' ')'
+    { }*/
     | OBJECTID '(' expression_list ')'
     { }
-    | OBJECTID '(' ')'
-    { }
+    /*| OBJECTID '(' ')'
+    { }*/
     | IF expression THEN expression ELSE expression FI 
     { }
     | WHILE expression LOOP expression POOL 
