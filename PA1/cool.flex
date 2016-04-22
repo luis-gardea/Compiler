@@ -128,7 +128,7 @@ TRUE            t(?i:rue)
     }
 }
 
---.*\n        {} 
+--.*\n        { curr_lineno++; } 
 
  /*
   *  The multiple-character operators.
@@ -243,23 +243,40 @@ TRUE            t(?i:rue)
     (\0|\\\0) {
                 BEGIN(BADSTRING);
                 cool_yylval.error_msg = "String contains null character";
+                return (ERROR);
               }
     
-    \\n        if (check_overflow()) BEGIN(BADSTRING); else {*(string_buf_ptr++) = '\n'; num_chars++;}
-    \\t        if (check_overflow()) BEGIN(BADSTRING); else {*(string_buf_ptr++) = '\t'; num_chars++;}
-    \\r        if (check_overflow()) BEGIN(BADSTRING); else {*(string_buf_ptr++) = '\r'; num_chars++;}
-    \\b        if (check_overflow()) BEGIN(BADSTRING); else {*(string_buf_ptr++) = '\b'; num_chars++;}
-    \\f        if (check_overflow()) BEGIN(BADSTRING); else {*(string_buf_ptr++) = '\f'; num_chars++;}
+    \\n        { if (check_overflow()) { 
+                BEGIN(BADSTRING); return(ERROR); 
+               } 
+               else {*(string_buf_ptr++) = '\n'; num_chars++;}}
+    \\t        { if (check_overflow()) { 
+                BEGIN(BADSTRING); return(ERROR); 
+               } else {*(string_buf_ptr++) = '\t'; num_chars++;}}
+    \\b        {if (check_overflow()) { 
+                BEGIN(BADSTRING); return(ERROR); 
+               } else {*(string_buf_ptr++) = '\b'; num_chars++;}}
+    \\f        {if (check_overflow()) { 
+                BEGIN(BADSTRING); return(ERROR); 
+               } else {*(string_buf_ptr++) = '\f'; num_chars++;}}
     
-    \\.        if (check_overflow()) BEGIN(BADSTRING); else {*(string_buf_ptr++) = yytext[1]; num_chars++; }
+    \\.        {if (check_overflow()) { 
+                BEGIN(BADSTRING); return(ERROR); 
+               } else {*(string_buf_ptr++) = yytext[1]; num_chars++; }}
 
-    \\\n       if (check_overflow()) BEGIN(BADSTRING); else {curr_lineno++; *(string_buf_ptr++) = yytext[1]; num_chars++;}
+    \\\n       {if (check_overflow()) { 
+                BEGIN(BADSTRING); return(ERROR); 
+               } else {curr_lineno++; *(string_buf_ptr++) = yytext[1]; num_chars++;}}
 
     
 
     [^\n\"\0] {  
                 char* yptr = yytext;
-                if (check_overflow()) BEGIN(BADSTRING); else {
+                if (check_overflow()) { 
+                  BEGIN(BADSTRING); 
+                  return(ERROR); 
+                } 
+                else {
                   while( *yptr ) {
                     *(string_buf_ptr++) = *(yptr++);
                     num_chars++;
@@ -270,17 +287,15 @@ TRUE            t(?i:rue)
 
 <BADSTRING>{
 
-  \\\n       if (check_overflow()) BEGIN(BADSTRING); else {curr_lineno++; *(string_buf_ptr++) = yytext[1]; num_chars++;}
+  \\\n       { curr_lineno++; *(string_buf_ptr++) = yytext[1]; num_chars++; }
 
   \n        {
               BEGIN(INITIAL);
               curr_lineno++;
-              return (ERROR);
             }
 
   \"        { 
               BEGIN(INITIAL);
-              return (ERROR);
             }
 
   [^\n\"]  {}
