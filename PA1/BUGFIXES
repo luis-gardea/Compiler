@@ -2,4 +2,4 @@ The first bug fix that we made was changing the way the single comment "-- .....
 
 Within a string, before \r would insert '\r' as a character to the string being returned, but it should actually count it as a regular character 'r', since '\r' was not within the special characters in strings.
 
-Another issue was found in the line number of error messages inside of the string starting condition. We reported errors at the end of the string, on the line after but now, we are reporting the error when it first encounters it. This was the case with unenescaped \n and null-characters
+Another issue was found in the line number of error messages for errors like \0 and being too long that occur while inside of the string starting condition. We reported errors at the end of the string, on the line after, but now, we are reporting the error when it first encounters it.
