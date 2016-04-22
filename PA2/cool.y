@@ -143,8 +143,11 @@
     %type <formal> formal 
 
 
-    %type <expressions> expression_list expression_list_prime
+    %type <expressions> expression_list expression_list_prime block_expression let_list
     %type <expression> expression 
+
+    %type <case_> case_expr
+    %type <cases> case_list
     
     /* Precedence declarations go here. */
     %right ASSIGN
@@ -199,11 +202,11 @@
 
     
     feature : OBJECTID '(' formal_list ')' ':' TYPEID '{' expression '}' ';'
-    {    }
+    { $$ = method($1,$3,$6,$8); }
     | OBJECTID ':' TYPEID ';'
-    {    }
+    { $$ = attr($1,$3,no_expr()); }
     | OBJECTID ':' TYPEID ASSIGN expression ';'
-    {    }
+    { $$ = attr($1,$3,$5); }
     ;
 
     formal_list 
@@ -216,14 +219,13 @@
     formal_list_prime
     :
     formal
-    /*{ $$ = single_Formals($1); }*/
-    {}
+    { $$ = single_Formals($1); }
     | formal_list_prime ',' formal 
-    /*{ $$ = append_Formals($1,single_Formals($3)); }*/
+    { $$ = append_Formals($1,single_Formals($3)); }
     ;
 
     formal : OBJECTID ':' TYPEID
-    { }
+    { $$ = formal($1,$3); }
     ;
 
     expression_list
@@ -240,34 +242,52 @@
     { $$ = append_Expressions($1,single_Expressions($3)); }
     ;
 
+    block_expression
+    : expression ';'
+    { $$ = single_Expressions($1); }
+    | block_expression expression ';'
+    { $$ = append_Expressions($1,single_Expressions($2)); }
+
+    case_expr: OBJECTID ':' TYPEID DARROW expression ';'
+    { $$ = branch($1,$3,$5); }
+    ;
+
+    case_list: 
+    case_expr
+    { $$ = single_Cases($1); }
+    |
+    case_list case_expr
+    { $$ = append_Cases($1, single_Cases($2)); }
+    ;
+
+    let_list
+    : ',' OBJECTID ':' TYPEID
+    { }
+    | ',' OBJECTID ':' TYPEID ASSIGN expression
+    { }
+
     
     expression : OBJECTID ASSIGN expression
-    { }
+    { $$ = assign($1,$3); }
     | expression '@' TYPEID '.' OBJECTID '(' expression_list ')'
     { }
-    /*| expression '@' TYPEID '.' OBJECTID '(' ')'
-    { }*/
     | expression '.' OBJECTID '(' expression_list ')'
     { }
-    /*| expression '.' OBJECTID '(' ')'
-    { }*/
     | OBJECTID '(' expression_list ')'
     { }
-    /*| OBJECTID '(' ')'
-    { }*/
     | IF expression THEN expression ELSE expression FI 
-    { }
+    { $$ = cond($2,$4,$6); }
     | WHILE expression LOOP expression POOL 
+    { $$ = loop($2,$4); }
+    | '{' block_expression '}'
+    { $$ = block($2); }
+    /* Probably the cause of shift reduce problems */
+    | LET OBJECTID ':' TYPEID ASSIGN expression let_list IN expression
     { }
-    | '{' expression_list '}'
+    | LET OBJECTID ':' TYPEID let_list IN expression
     { }
-    /* unknown if feature_list or not */
-    | LET OBJECTID ':' TYPEID ASSIGN expression feature_list IN expression
-    { }
-    | LET OBJECTID ':' TYPEID feature_list IN expression
-    { }
-    /*
-    | CASE expression OF  uses darrow*/
+    | CASE expression OF case_list ESAC
+    { $$ = typcase($2,$4); }
     | NEW TYPEID
     { $$ = new_($2); }
     | ISVOID expression
