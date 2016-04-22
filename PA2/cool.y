@@ -269,37 +269,37 @@
     /*
     | CASE expression OF  uses darrow*/
     | NEW TYPEID
-    { }
+    { $$ = new_($2); }
     | ISVOID expression
-    { }
+    { $$ = isvoid($2); }
     | expression '+' expression
-    { }
+    { $$ = plus($1,$3); }
     | expression '-' expression
-    { }
+    { $$ = sub($1,$3); }
     | expression '*' expression
-    { }
+    { $$ = mul($1,$3); }
     | expression '/' expression
-    { }
+    { $$ = divide($1,$3); }
     | '~' expression
-    { }
+    { $$ = neg($2);}
     | expression '<' expression
-    { }
+    { $$ = lt($1,$3); }
     | expression LE expression
-    { }
+    { $$ = leq($1,$3); }
     | expression '=' expression
-    { }
+    { $$ = eq($1,$3); }
     | NOT expression
-    { }
+    { $$ = comp($2); }
     | '(' expression ')'
-    { }
+    { $$ = $2; }
     | OBJECTID
-    { }
+    { $$ = object($1); }
     | INT_CONST
-    { }
+    { $$ = int_const($1); }
     | STR_CONST
-    { }
+    { $$ = string_const($1); }
     | BOOL_CONST
-    { }
+    { $$ = bool_const($1); }
     ;
 
     /* end of grammar */
