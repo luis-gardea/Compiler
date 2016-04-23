@@ -143,13 +143,14 @@
     %type <formal> formal 
 
 
-    %type <expressions> expression_list expression_list_prime block_expression let_list
-    %type <expression> expression 
+    %type <expressions> expression_list expression_list_prime block_expression 
+    %type <expression> expression let_expr
 
     %type <case_> case_expr
     %type <cases> case_list
     
     /* Precedence declarations go here. */
+    %precedence LET1 LET2 LET3 LET4
     %right ASSIGN
     %left NOT
     %nonassoc LE '<' '='
@@ -159,6 +160,7 @@
     %left '~'
     %left '@'
     %left '.'
+    
     
     %%
     /* 
@@ -182,6 +184,8 @@
     stringtable.add_string(curr_filename)); }
     | CLASS TYPEID INHERITS TYPEID '{' feature_list '}' ';'
     { $$ = class_($2,$4,$6,stringtable.add_string(curr_filename)); }
+    | error ';'
+    { /* do some error shit */ $$ = NULL; }
     ;
     
     /* Feature list may be empty, but no empty features in list. */
@@ -260,32 +264,37 @@
     { $$ = append_Cases($1, single_Cases($2)); }
     ;
 
-    let_list
-    : ',' OBJECTID ':' TYPEID
-    { }
-    | ',' OBJECTID ':' TYPEID ASSIGN expression
-    { }
+    let_expr
+    : OBJECTID ':' TYPEID IN expression %prec LET1
+    { $$ = let($1,$3,no_expr(),$5); }
+    | 
+    OBJECTID ':' TYPEID ASSIGN expression IN expression %prec LET2
+    { $$ = let($1,$3,$5,$7); }
+    | 
+    OBJECTID ':' TYPEID ',' let_expr %prec LET3
+    { $$ = let($1,$3,no_expr(),$5); }
+    |
+    OBJECTID ':' TYPEID ASSIGN expression ',' let_expr %prec LET4
+    { $$ = let($1,$3,$5,$7); }
+    ;
 
     
     expression : OBJECTID ASSIGN expression
     { $$ = assign($1,$3); }
     | expression '@' TYPEID '.' OBJECTID '(' expression_list ')'
-    { }
+    { $$ = static_dispatch($1,$3,$5,$7); }
     | expression '.' OBJECTID '(' expression_list ')'
-    { }
+    { $$ = dispatch($1,$3,$5); }
     | OBJECTID '(' expression_list ')'
-    { }
+    { $$ = dispatch(object(idtable.add_string("self")),$1,$3); }
     | IF expression THEN expression ELSE expression FI 
     { $$ = cond($2,$4,$6); }
     | WHILE expression LOOP expression POOL 
     { $$ = loop($2,$4); }
     | '{' block_expression '}'
     { $$ = block($2); }
-    /* Probably the cause of shift reduce problems */
-    | LET OBJECTID ':' TYPEID ASSIGN expression let_list IN expression
-    { }
-    | LET OBJECTID ':' TYPEID let_list IN expression
-    { }
+    | LET let_expr 
+    { $$ = $2; }
     | CASE expression OF case_list ESAC
     { $$ = typcase($2,$4); }
     | NEW TYPEID
