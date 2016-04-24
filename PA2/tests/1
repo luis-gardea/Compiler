@@ -1,0 +1,14 @@
+--nested if/else statements
+if a < b then
+	if b < c then
+		--do something
+	else
+		if c < d then
+			--do something
+		else
+			--do something else
+		fi
+	fi
+else
+	--do something else
+fi
