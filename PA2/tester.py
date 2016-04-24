@@ -8,7 +8,8 @@ dirs = os.listdir( path )
 
 # This would print all the files and directories
 for file in dirs:
-   command1 = "./myparser " + file + " >! output/out" + file
-   command2 = "/usr/class/cs143/bin/lexer " + file + " | /usr/class/cs143/bin/parser >! output/ref" + file
-   os.system(command1)
-   os.system(command2)
+	if file[0] != '.':
+		command1 = "./myparser tests/" + file + " > tests/output/out" + file
+		command2 = "/usr/class/cs143/bin/lexer tests/" + file + " | /usr/class/cs143/bin/parser > tests/output/ref" + file
+		os.system(command1)
+		os.system(command2)
