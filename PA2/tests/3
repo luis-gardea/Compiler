@@ -1,2 +1,3 @@
-let a : Int <- 3 in 
+--Simple let test (LET2)--
+let a : Int <- 3 in
 	b : Int <- a + a;
