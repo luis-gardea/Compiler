@@ -1,2 +1,3 @@
+--Simplest let statement (LET1)--
 let a : Int in 
 	3;
