@@ -22,29 +22,45 @@ class Testgood {
             3
     };
 
-    --Simplest let statement (LET1)--
+    --Simple let (LET1)--
     test2(): Int {
         let a : Int in 
             3
     };
 
-    --Simple let test (LET2)--
+    --Tricky end let test (LET2)--
     test3(): Int {
         let a : Int <- 3 in
             b <- a + a
     };
 
-    -- Nested let test1--
+    --Nested let before IN--
     test4(): Int {
         let a : Int <- 3 in
             let b : Int in
                 c <- a + a
     };
 
-    -- Nested let test2--
+    -- Lots of nested let before IN--
     test5(): Int {
         let a : Int <- let b : Int in 
             c <- a + a in
+            let d : Int in
+                c <- a + a
+    };
+
+    -- Nested lets--
+    test6(): Int {
+        let a : Int <- let b : Int in 
+            c <- a + a + a * g in
+            let d : Int in
+                c <- a + a
+    };
+
+    -- Nested lets--
+    test7(): Int {
+        let a : Int <- let b : Int in 
+            c <- a + a + a * g in
             let d : Int in
                 c <- a + a
     };
