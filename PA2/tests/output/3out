@@ -1,2 +1,2 @@
-"tests/3", line 2: syntax error at or near LET
+"tests/3", line 3: syntax error at or near '='
 Compilation halted due to lex and parse errors
