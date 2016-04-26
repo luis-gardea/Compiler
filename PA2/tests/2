@@ -1,11 +1,11 @@
 class BadClass{
-	Featur(x: Int, TT, YY, y: String) : Int{
+	featur(Z: Int, y: String) : Int{
 		5
 	};
-	featur2(x: Int) : x {
+	featur2(Y: Int) : s {
 		4
 	};
-	featur3(x:Int, X) : Int {
+	featur3(X) : Int {
 		6
 	};
 };

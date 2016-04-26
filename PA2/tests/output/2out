@@ -1,3 +1,3 @@
-"tests/2", line 2: syntax error at or near TYPEID = Featur
-"tests/2", line 5: syntax error at or near OBJECTID = x
+"tests/2", line 2: syntax error at or near TYPEID = Z
+"tests/2", line 5: syntax error at or near TYPEID = Y
 Compilation halted due to lex and parse errors

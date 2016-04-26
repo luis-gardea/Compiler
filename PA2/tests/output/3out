@@ -1,2 +1,26 @@
-"tests/3", line 3: syntax error at or near '='
-Compilation halted due to lex and parse errors
+#1
+_program
+  #1
+  _class
+    A
+    Object
+    "tests/3"
+    (
+    #2
+    _method
+      test
+      Int
+      #3
+      _block
+        #8
+        _comp
+          #8
+          _comp
+            #8
+            _object
+              a
+            : _no_type
+          : _no_type
+        : _no_type
+      : _no_type
+    )
