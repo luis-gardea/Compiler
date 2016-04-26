@@ -1,11 +1,23 @@
-class BadClass{
+(*class BadClass{
 	featur(Z: Int, y: String) : Int{
 		5
 	};
-	featur2(Y: Int) : s {
+	featur2(x: Int,Y: Int, y: String) : x {
 		4
 	};
-	featur3(X) : Int {
+	featur4(x: Int) : String{
 		6
+	};
+	featur3(x : Int,TT) : x{
+		5
+	};
+	featur4(x: Int) : String{
+		6
+	};
+};*)
+
+class LetErrorTests {
+	badBinding() : Int {
+		let a <- 4, a: Int in 4
 	};
 };

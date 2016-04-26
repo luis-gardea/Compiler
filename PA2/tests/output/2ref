@@ -1,4 +1,2 @@
-"tests/2", line 2: syntax error at or near TYPEID = Z
-"tests/2", line 5: syntax error at or near TYPEID = Y
-"tests/2", line 8: syntax error at or near TYPEID = X
+"tests/2", line 21: syntax error at or near ASSIGN
 Compilation halted due to lex and parse errors

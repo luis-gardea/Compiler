@@ -203,6 +203,8 @@
     { $$ = single_Features($1); }
     | feature_list_prime feature ';'
     { $$ = append_Features($1,single_Features($2)); }
+    | error ';'
+    { yyerrok; $$=NULL;}
     ;
 
     
@@ -212,8 +214,6 @@
     { $$ = attr($1,$3,no_expr()); }
     | OBJECTID ':' TYPEID ASSIGN expression
     { $$ = attr($1,$3,$5); }
-    | feature ':' OBJECTID '(' formal_list ')' ':' error '{' expression '}'
-    { $$= NULL;}
     ;
 
     formal_list 
@@ -229,8 +229,6 @@
     { $$ = single_Formals($1); }
     | formal_list_prime ',' formal 
     { $$ = append_Formals($1,single_Formals($3)); }
-    | error
-    { yyclearin; $$=NULL; }
     ;
 
     formal : OBJECTID ':' TYPEID
@@ -284,6 +282,8 @@
     |
     OBJECTID ':' TYPEID ASSIGN expression ',' let_expr %prec LET4
     { $$ = let($1,$3,$5,$7); }
+    | error ','
+    { yyerrok; $$ = NULL; }
     ;
 
     
@@ -340,8 +340,6 @@
     { $$ = string_const($1); }
     | BOOL_CONST
     { $$ = bool_const($1); }
-    | error
-    { $$=NULL;}
     ;
 
     /* end of grammar */
