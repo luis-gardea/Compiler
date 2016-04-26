@@ -1,2 +1,11 @@
-"tests/1", line 2: syntax error at or near IF
+"tests/1", line 15: syntax error at or near OBJECTID = test1
+"tests/1", line 32: syntax error at or near OBJECTID = test2
+"tests/1", line 38: syntax error at or near OBJECTID = test2
+"tests/1", line 44: syntax error at or near OBJECTID = test3
+"tests/1", line 50: syntax error at or near OBJECTID = test4
+"tests/1", line 57: syntax error at or near OBJECTID = test5
+"tests/1", line 65: syntax error at or near OBJECTID = test6
+"tests/1", line 73: syntax error at or near OBJECTID = test7
+"tests/1", line 79: syntax error at or near '}'
+"tests/1", line 83: syntax error at or near '}'
 Compilation halted due to lex and parse errors

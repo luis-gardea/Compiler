@@ -1,3 +1,11 @@
---Simplest let statement (LET1)--
-let a : Int in 
-	3;
+class BadClass{
+	Featur(x: Int, TT, YY, y: String) : Int{
+		5
+	};
+	featur2(x: Int) : x {
+		4
+	};
+	featur3(x:Int, X) : Int {
+		6
+	};
+};

@@ -1,4 +1,16 @@
-class Testgood {
+class TestBad {
+    --test1;
+    test2(): String {
+        if a < b then
+            4
+        else
+            5
+        fi 
+    };
+};
+
+
+class Testgood 
     --nested if/else statements--
     test1(): Int {
         if a < b then
@@ -65,3 +77,8 @@ class Testgood {
                 c <- a + a
     };
 };
+
+class Anotherbadclass
+
+};
+

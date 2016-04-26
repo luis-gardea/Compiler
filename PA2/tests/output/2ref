@@ -1,2 +1,4 @@
-"tests/2", line 1: syntax error at or near LET
+"tests/2", line 2: syntax error at or near TYPEID = Featur
+"tests/2", line 5: syntax error at or near OBJECTID = x
+"tests/2", line 8: syntax error at or near TYPEID = X
 Compilation halted due to lex and parse errors

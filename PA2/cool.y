@@ -184,8 +184,9 @@
     stringtable.add_string(curr_filename)); }
     | CLASS TYPEID INHERITS TYPEID '{' feature_list '}' ';'
     { $$ = class_($2,$4,$6,stringtable.add_string(curr_filename)); }
+    /* Error for classes */
     | error ';'
-    { /* do some error shit */ $$ = NULL; }
+    { yyerrok; $$ = NULL; }
     ;
     
     /* Feature list may be empty, but no empty features in list. */
@@ -198,19 +199,23 @@
 
     feature_list_prime
     :
-    feature
+    feature ';'
     { $$ = single_Features($1); }
-    | feature_list_prime feature
+    | feature_list_prime feature ';'
     { $$ = append_Features($1,single_Features($2)); }
+    | error ';'
+    { yyerrok; $$ = NULL; }
     ;
 
     
-    feature : OBJECTID '(' formal_list ')' ':' TYPEID '{' expression '}' ';'
+    feature : OBJECTID '(' formal_list ')' ':' TYPEID '{' expression '}'
     { $$ = method($1,$3,$6,$8); }
-    | OBJECTID ':' TYPEID ';'
+    | OBJECTID ':' TYPEID
     { $$ = attr($1,$3,no_expr()); }
-    | OBJECTID ':' TYPEID ASSIGN expression ';'
+    | OBJECTID ':' TYPEID ASSIGN expression
     { $$ = attr($1,$3,$5); }
+    | error 
+    { yyerrok; $$ = NULL; }
     ;
 
     formal_list 
@@ -226,10 +231,14 @@
     { $$ = single_Formals($1); }
     | formal_list_prime ',' formal 
     { $$ = append_Formals($1,single_Formals($3)); }
+    | error 
+    { $$ = NULL; }
     ;
 
     formal : OBJECTID ':' TYPEID
     { $$ = formal($1,$3); }
+    | error 
+    { $$=NULL; }
     ;
 
     expression_list
@@ -251,6 +260,9 @@
     { $$ = single_Expressions($1); }
     | block_expression expression ';'
     { $$ = append_Expressions($1,single_Expressions($2)); }
+    | error ';'
+    { yyerrok; $$ = NULL; }
+    ;
 
     case_expr: OBJECTID ':' TYPEID DARROW expression ';'
     { $$ = branch($1,$3,$5); }
@@ -289,6 +301,9 @@
     { $$ = dispatch(object(idtable.add_string("self")),$1,$3); }
     | IF expression THEN expression ELSE expression FI 
     { $$ = cond($2,$4,$6); }
+    /* If the IF statement is not made correctly */
+    | IF error FI 
+    { $$ = NULL; }
     | WHILE expression LOOP expression POOL 
     { $$ = loop($2,$4); }
     | '{' block_expression '}'
