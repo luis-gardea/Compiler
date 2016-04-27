@@ -282,7 +282,9 @@
     |
     OBJECTID ':' TYPEID ASSIGN expression ',' let_expr %prec LET4
     { $$ = let($1,$3,$5,$7); }
-    | error ','
+    | error ',' let_expr
+    { yyerrok; $$ = NULL; }
+    | error IN expression
     { yyerrok; $$ = NULL; }
     ;
 

@@ -1,2 +1,30 @@
-"tests/2", line 21: syntax error at or near ASSIGN
+"tests/2", line 2: syntax error at or near '}'
+"tests/2", line 6: syntax error at or near CLASS
+"tests/2", line 10: syntax error at or near CLASS
+"tests/2", line 14: syntax error at or near CLASS
+"tests/2", line 21: syntax error at or near TYPEID = Z
+"tests/2", line 24: syntax error at or near TYPEID = Y
+"tests/2", line 30: syntax error at or near TYPEID = TT
+"tests/2", line 40: syntax error at or near ASSIGN
+"tests/2", line 40: syntax error at or near OBJECTID = int
+"tests/2", line 44: syntax error at or near ASSIGN
+"tests/2", line 44: syntax error at or near OBJECTID = int
+"tests/2", line 48: syntax error at or near ASSIGN
+"tests/2", line 48: syntax error at or near OBJECTID = int
+"tests/2", line 55: syntax error at or near ':'
+"tests/2", line 56: syntax error at or near ':'
+"tests/2", line 63: syntax error at or near ':'
+"tests/2", line 64: syntax error at or near ':'
+"tests/2", line 72: syntax error at or near ':'
+"tests/2", line 73: syntax error at or near ':'
+"tests/2", line 74: syntax error at or near ':'
+"tests/2", line 81: syntax error at or near ':'
+"tests/2", line 82: syntax error at or near ':'
+"tests/2", line 83: syntax error at or near ':'
+"tests/2", line 84: syntax error at or near ':'
+"tests/2", line 92: syntax error at or near ':'
+"tests/2", line 93: syntax error at or near ':'
+"tests/2", line 97: syntax error at or near ':'
+"tests/2", line 100: syntax error at or near TYPEID = H
+"tests/2", line 101: syntax error at or near ':'
 Compilation halted due to lex and parse errors

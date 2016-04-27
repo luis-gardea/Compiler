@@ -1,4 +1,23 @@
-(*class BadClass{
+class BadClassTests {
+	g():I {}
+	,
+};
+
+class {
+	
+};
+
+class H inherits j {
+	
+};
+
+class H inherits j {
+	class() {
+
+	};
+};
+
+class BadFeatureTests{
 	featur(Z: Int, y: String) : Int{
 		5
 	};
@@ -14,10 +33,74 @@
 	featur4(x: Int) : String{
 		6
 	};
-};*)
+};
 
 class LetErrorTests {
+	badBindingAtEnf() : Int {
+		let a <- 4, a: int in 4
+	};
+
 	badBinding() : Int {
-		let a <- 4, a: Int in 4
+		let a <- 4, a: Int, a: int in 4
+	};
+
+	noComma() : Int {
+		let a <- 4 a: Int, a: int in 4
+	};
+};
+
+class BadBlockTests {
+	badFirstExpression() : Int {
+		{
+			a:in;
+			a:Int;
+		}
+
+	};
+
+	badLastExpression() : Int {
+		{
+			a:Int;
+			a:in;
+
+		}
+
+	};
+
+	badMiddleExpression() : Int {
+		{
+			a:Int;
+			a:in;
+			a:Int;
+		}
+
+	};
+
+	badtoBackBadExpression() : Int {
+		{
+			a:Int;
+			a:in;
+			a:i;
+			a:Int;
+		}
+
+	};
+
+
+	noLastSemi() : Int {
+		{
+			a:Int<-7;
+			a:I
+		}
+	};
+
+	randomElements() : Int {
+		{
+			exp:G + 45;
+			H:L<-2+2;
+			j:Int,
+			correct:H
+			j:C<-let in 5;
+		}
 	};
 };
