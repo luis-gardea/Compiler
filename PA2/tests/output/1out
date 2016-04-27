@@ -7,5 +7,6 @@
 "tests/1", line 65: syntax error at or near OBJECTID = test6
 "tests/1", line 73: syntax error at or near OBJECTID = test7
 "tests/1", line 79: syntax error at or near '}'
-"tests/1", line 83: syntax error at or near '}'
+"tests/1", line 91: syntax error at or near '}'
+"tests/1", line 91: syntax error at or near EOF
 Compilation halted due to lex and parse errors

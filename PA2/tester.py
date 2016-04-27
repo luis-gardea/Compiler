@@ -17,7 +17,7 @@ if len(sys.argv) == 2:
 else:
 	# This would print all the files and directories
 	for file in dirs:
-		if file[0] != '.' and file != 'output' and file == '2':
+		if file[0] != '.' and file != 'output':
 			command1 = "./myparser tests/" + file + " >& tests/output/" + file + "out"
 			command2 = "/usr/class/cs143/bin/lexer tests/" + file + " | /usr/class/cs143/bin/parser >& tests/output/" + file + "ref"
 			os.system(command1)

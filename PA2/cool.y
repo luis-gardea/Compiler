@@ -150,7 +150,7 @@
     %type <cases> case_list
     
     /* Precedence declarations go here. */
-    %precedence LET1 LET2 LET3 LET4
+    %precedence LET1 LET2 LET3 LET4 LET5 LET6
     %right ASSIGN
     %left NOT
     %nonassoc LE '<' '='
@@ -282,9 +282,9 @@
     |
     OBJECTID ':' TYPEID ASSIGN expression ',' let_expr %prec LET4
     { $$ = let($1,$3,$5,$7); }
-    | error ',' let_expr
+    | error ',' let_expr %prec LET5
     { yyerrok; $$ = NULL; }
-    | error IN expression
+    | error IN expression %prec LET6
     { yyerrok; $$ = NULL; }
     ;
 

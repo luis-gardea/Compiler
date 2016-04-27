@@ -78,7 +78,15 @@ class Testgood
     };
 };
 
-class Anotherbadclass
-
+class Anotherbadclass {
+    goodBlock(): Int {
+        { 
+            a + 2;
+            x = 5;
+        } = 
+        {
+            b + 3;
+        }
+    }
 };
 
