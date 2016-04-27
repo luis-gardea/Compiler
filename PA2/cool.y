@@ -144,7 +144,7 @@
 
 
     %type <expressions> expression_list expression_list_prime block_expression 
-    %type <expression> expression let_expr
+    %type <expression> expression let_expr parenthesis
 
     %type <case_> case_expr
     %type <cases> case_list
@@ -197,17 +197,20 @@
     { $$ = $1; }
     ;
 
+    /* Non terminal introduced to remove ambiguity from the grammar for lists*/
     feature_list_prime
     :
     feature ';'
     { $$ = single_Features($1); }
     | feature_list_prime feature ';'
     { $$ = append_Features($1,single_Features($2)); }
+    /* If an error found while parsing this non terminal, then consume up to ; then keep
+    parsing the list */
     | error ';'
     { yyerrok; $$=NULL;}
     ;
 
-    
+    /* Features can be methods or attributes */
     feature : OBJECTID '(' formal_list ')' ':' TYPEID '{' expression '}'
     { $$ = method($1,$3,$6,$8); }
     | OBJECTID ':' TYPEID
@@ -223,6 +226,8 @@
     { $$ = $1; }
     ;
 
+    /* Spec didnt specify to catch errors in formal list, so an error here is just
+    treated as a feature error, consuming the whole feature list */
     formal_list_prime
     :
     formal
@@ -242,6 +247,7 @@
     { $$ = $1; }
     ;
 
+    /* As above, errors treated here are considered errors of the feature_list*/
     expression_list_prime
     : expression
     { $$ = single_Expressions($1); }
@@ -249,6 +255,8 @@
     { $$ = append_Expressions($1,single_Expressions($3)); }
     ;
 
+    /* A block expression contains a multiple expressions separated by ; with ; 
+    at the end of the last experession*/
     block_expression
     : expression ';'
     { $$ = single_Expressions($1); }
@@ -262,6 +270,7 @@
     { $$ = branch($1,$3,$5); }
     ;
 
+    /* Case productions are generally straight forward as defined in the Cool manual*/
     case_list: 
     case_expr
     { $$ = single_Cases($1); }
@@ -270,6 +279,9 @@
     { $$ = append_Cases($1, single_Cases($2)); }
     ;
 
+    /* A let expression can have many different forms. We make sure to avoid ambiguity 
+    stating precedence for all the productions, including errors. We also nest lets statements
+    in the parse tree for more than one let expression. */
     let_expr
     : OBJECTID ':' TYPEID IN expression %prec LET1
     { $$ = let($1,$3,no_expr(),$5); }
@@ -332,8 +344,8 @@
     { $$ = eq($1,$3); }
     | NOT expression
     { $$ = comp($2); }
-    | '(' expression ')'
-    { $$ = $2; }
+    | parenthesis 
+    { $$ = $1; }
     | OBJECTID
     { $$ = object($1); }
     | INT_CONST
@@ -342,6 +354,12 @@
     { $$ = string_const($1); }
     | BOOL_CONST
     { $$ = bool_const($1); }
+    ;
+
+    /* make sure parenthesis have highest precedence*/
+    parenthesis :
+    '(' expression ')'
+    { $$ = $2; }
     ;
 
     /* end of grammar */
