@@ -1,11 +1,17 @@
 class A {
+	test():I{
+		not not (a + not b)
+	};
+};
+
+class A {
 	test(): Int {
 		{
-			--1=1;--
+			1=1;
 			--not 1 + 2 + (3 + 4) * 1 / 1 - 1 < 1 = 1;--
 			--~a <- isvoid 1@A.a(1 <= 1) + 4;--
 			--1 + (2 + 3) + 4;--
-			not not a;
+			~ ~ a;
 		}
 	};
 };

@@ -9,14 +9,56 @@ _program
     #2
     _method
       test
-      Int
+      I
       #3
-      _block
-        #8
+      _comp
+        #3
         _comp
-          #8
-          _comp
-            #8
+          #3
+          _plus
+            #3
+            _object
+              a
+            : _no_type
+            #3
+            _comp
+              #3
+              _object
+                b
+              : _no_type
+            : _no_type
+          : _no_type
+        : _no_type
+      : _no_type
+    )
+  #7
+  _class
+    A
+    Object
+    "tests/3"
+    (
+    #8
+    _method
+      test
+      Int
+      #9
+      _block
+        #10
+        _eq
+          #10
+          _int
+            1
+          : _no_type
+          #10
+          _int
+            1
+          : _no_type
+        : _no_type
+        #14
+        _neg
+          #14
+          _neg
+            #14
             _object
               a
             : _no_type

@@ -17,6 +17,36 @@ class H inherits j {
 	};
 };
 
+class H inherits j {
+	j() {
+
+	}
+};
+
+class H inherits j {
+	j() {
+
+	};
+}
+
+class H inherits j {
+	j() {
+
+	};
+;
+
+class H inherits j {
+	j() {
+
+	;
+;
+
+class H inherits j {
+	j() {
+
+	}
+}
+
 class BadFeatureTests{
 	featur(Z: Int, y: String) : Int{
 		5

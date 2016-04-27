@@ -1,4 +1,6 @@
 "tests/bad", line 15: syntax error at or near OBJECTID = b
 "tests/bad", line 19: syntax error at or near OBJECTID = a
 "tests/bad", line 23: syntax error at or near OBJECTID = inherts
+"tests/bad", line 28: syntax error at or near ';'
+"tests/bad", line 28: syntax error at or near EOF
 Compilation halted due to lex and parse errors
