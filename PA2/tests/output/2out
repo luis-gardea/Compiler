@@ -36,4 +36,6 @@
 "tests/2", line 127: syntax error at or near ':'
 "tests/2", line 130: syntax error at or near TYPEID = H
 "tests/2", line 131: syntax error at or near ':'
+"tests/2", line 160: syntax error at or near '}'
+"tests/2", line 160: syntax error at or near EOF
 Compilation halted due to lex and parse errors

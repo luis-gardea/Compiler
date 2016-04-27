@@ -1,16 +1,5 @@
-class TestBad {
-    --test1;
-    test2(): String {
-        if a < b then
-            4
-        else
-            5
-        fi 
-    };
-};
 
-
-class Testgood 
+class Testgood {
     --nested if/else statements--
     test1(): Int {
         if a < b then
@@ -76,17 +65,5 @@ class Testgood
             let d : Int in
                 c <- a + a
     };
-};
-
-class Anotherbadclass {
-    goodBlock(): Int {
-        { 
-            a + 2;
-            x = 5;
-        } = 
-        {
-            b + 3;
-        }
-    }
 };
 

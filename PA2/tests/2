@@ -134,3 +134,27 @@ class BadBlockTests {
 		}
 	};
 };
+
+class TestBad {
+    --test1;
+    test2(): String {
+        if a < b then
+            4
+        else
+            5
+        fi 
+    };
+};
+
+
+class Anotherbadclass {
+    goodBlock(): Int {
+        { 
+            a + 2;
+            x = 5;
+        } = 
+        {
+            b + 3;
+        }
+    }
+};
