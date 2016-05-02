@@ -85,7 +85,24 @@ static void initialize_constants(void)
 
 ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) {
 
-    /* Fill this in */
+    install_basic_classes();
+
+
+    for(int i = classes->first(); classes->more(i); i = classes->next(i))
+        //create Class_ object from class
+        // if class name is already in class_map, print error + quit
+        class_table[classes->nth(i)->get_name()] = classes->nth(i);
+        // Class_ class_ = class_()
+    // Bool has_cycles;
+    // //Iterate through map of all class
+    // for(each class) {
+    //     if (!class_->parent_is_defined()){
+    //          print error msg + quit;
+    //     if (!class_->check_for_cycles()){
+    //          print error msg;
+    //     }
+    // }
+    // if has_cycles then error msg + quit
 
 }
 
@@ -188,6 +205,11 @@ void ClassTable::install_basic_classes() {
 						      Str, 
 						      no_expr()))),
 	       filename);
+    class_table[Object] = Object_class;
+    class_table[IO] = IO_class;
+    class_table[Int] = Int_class;
+    class_table[Bool] = Bool_class;
+    class_table[Str] = Str_class;
 }
 
 ////////////////////////////////////////////////////////////////////
