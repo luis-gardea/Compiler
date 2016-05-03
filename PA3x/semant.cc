@@ -10,8 +10,6 @@
 extern int semant_debug;
 extern char *curr_filename;
 
-// std::map<Symbol, Class_> class_table;
-
 //////////////////////////////////////////////////////////////////////
 //
 // Symbols
@@ -83,57 +81,14 @@ static void initialize_constants(void)
     val         = idtable.add_string("_val");
 }
 
-ClassTree::ClassTree() {
 
-}
-
-void ClassTree::check_for_cycles() {
-    std::vector<Class_> visited;
-}
-
-void ClassTree::add_node(Symbol name, Symbol parent) {
-    Node* child = new Node(name);
-    if (added_to_tree.find(parent) != added_to_tree.end()){
-        added_to_tree[parent]->children.push_back(child);
-        child->parent = added_to_tree[parent];
-    } else {
-        add_node(parent, class_table[parent]->get_parent());
-        add_node(name, parent);
-    }
-}
 
 ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) {
-    install_tree();
+
+    /* Fill this in */
+
     install_basic_classes();
 
-    // for(int i = classes->first(); classes->more(i); i = classes->next(i))
-    //     if(class_table.find(classes->nth(i))) == class_table.end()) {
-    //         semant_error(class_table[name]) << "Class redefined." << endl;
-    //     } else {
-    //         class_table[classes->nth(i)->get_name()] = classes->nth(i);
-    //     }
-
-    // for(auto const &entry : class_table){
-    //     Symbol name = entry.first;
-    //     Symbol parent = get_parent_symbol(name);
-    //     if (parent == NULL) {
-    //         semant_error(class_table[name]) << "Parent class not defined." << endl;
-    //     } else {
-    //         classtree->add_node(name, parent);
-    //     }
-    // }
-
-    // Keeps track of errors and calls semant_error() internally because it has all the necessary details there
-    classtree->check_for_cycles();
-
-    if(semant_errors > 0) {
-        exit(1);
-    }
-}
-
-void ClassTable::install_tree() {
-    semant_errors=1;
-    classtree = new ClassTree();
 }
 
 void ClassTable::install_basic_classes() {
@@ -235,37 +190,16 @@ void ClassTable::install_basic_classes() {
 						      Str, 
 						      no_expr()))),
 	       filename);
-    
 
-    printf("This shit is printing\n");
-    
-    // class_table[Object] = Object_class;
-    // // classtree->add_root(Object_class);
-
-    // class_table[IO] = IO_class; 
-    // // classtree->add_node(IO_class, Object_class);
-    
-    // class_table[Int] = Int_class;
-    // // classtree->add_node(Int_class, Object_class);
-
-    // class_table[Bool] = Bool_class;
-    // // classtree->add_node(Bool_class, Object_class);
-
-    // class_table[Str] = Str_class;
-    // // classtree->add_node(Str_class, Object_class);
-    Class_ basic_classes[] = {Object_class,
-                              Str_class,
-                              Int_class,
-                              IO_class,
-                              Bool_class};
+    Class_ basic_class[] = {Object_class,Str_class,Int_class,IO_class,Bool_class};
 
     for (int i = 0; i < 5; i++) {
+        printf("%d\n", i);
+        cout << basic_class[i]->get_name() << endl;
+        cout << basic_class[i]->get_parent() << endl;
       // add_pair(basic_classes[i]->get_name(),
       //          basic_classes[i]->get_parent());
-      printf("%d\n",i);
-      cout << basic_classes[i]->get_name() << endl;
-        //classtree->add_node(basic_classes[i]->get_name(),basic_classes[i]->get_parent());
-        //class_table[basic_classes[i]->get_name()] = basic_classes[i];
+      // class_map[basic_classes[i]->get_name()] = basic_classes[i];
     }
 }
 
@@ -322,8 +256,6 @@ void program_class::semant()
 
     /* ClassTable constructor may do some semantic analysis */
     ClassTable *classtable = new ClassTable(classes);
-
-
 
     /* some semantic analysis code may go here */
 

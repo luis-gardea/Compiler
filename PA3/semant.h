@@ -1,6 +1,9 @@
 #ifndef SEMANT_H_
 #define SEMANT_H_
 
+#include <stdlib.h>
+#include <map>
+#include <vector>
 #include <assert.h>
 #include <iostream>  
 #include "cool-tree.h"
@@ -12,7 +15,19 @@
 #define FALSE 0
 
 class ClassTable;
+class ClassTree;
 typedef ClassTable *ClassTableP;
+typedef struct Node{
+  Symbol name;
+  Node* parent;
+  std::vector<Node *> children;
+
+  Node(Symbol n) {
+    name = n;
+  }
+} Node;
+
+std::map<Symbol, Class_> class_table;
 
 // This is a structure that may be used to contain the semantic
 // information such as the inheritance graph.  You may use it or not as
@@ -25,13 +40,18 @@ private:
   void install_tree();
   void install_basic_classes();
   ostream& error_stream;
-  std::map<Symbol, Class_> class_table;
-  ClassTree* = classtree;
+  ClassTree* classtree;
+  
 
 public:
   ClassTable(Classes);
   int errors() { return semant_errors; }
-  Class_ get_parent_class(Symbol class_) { return class_table[class_]; }
+  Symbol get_parent_symbol(Symbol child) { 
+    Symbol parent = class_table[child]->get_parent(); 
+    // If not found in class_table, then parent is not defined. Return NULL.
+    if (class_table.find(parent) == class_table.end()) return NULL;
+    return parent;
+  }
   ostream& semant_error();
   ostream& semant_error(Class_ c);
   ostream& semant_error(Symbol filename, tree_node *t);
@@ -39,14 +59,17 @@ public:
 
 class ClassTree {
 private:
-	Class_ root;
+	Node* root;
+  std::map<Symbol, Node*> added_to_tree; 
 
 public:
 	ClassTree();
-	void add_root(Class_ Object) { root = Object; }
-	void add_node(Class_ name, Class_ parent);
-	bool check_for_cycles();
+	void add_root(Symbol object) { root = new Node(object); }
+	void add_node(Symbol name, Symbol parent);
+	void check_for_cycles();
 };
+
+
 
 #endif
 
