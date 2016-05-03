@@ -81,29 +81,48 @@ static void initialize_constants(void)
     val         = idtable.add_string("_val");
 }
 
+ClassTree::ClassTree() {
 
+}
+
+bool ClassTree::check_for_cycles() {
+    std::vector<Class_> visited;
+}
+
+bool ClassTree::add_node(Class_ name, Class_ parent) {
+
+}
 
 ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) {
-
+    install_tree();
     install_basic_classes();
 
-
     for(int i = classes->first(); classes->more(i); i = classes->next(i))
-        //create Class_ object from class
-        // if class name is already in class_map, print error + quit
-        class_table[classes->nth(i)->get_name()] = classes->nth(i);
-        // Class_ class_ = class_()
-    // Bool has_cycles;
-    // //Iterate through map of all class
-    // for(each class) {
-    //     if (!class_->parent_is_defined()){
-    //          print error msg + quit;
-    //     if (!class_->check_for_cycles()){
-    //          print error msg;
-    //     }
-    // }
-    // if has_cycles then error msg + quit
+        if(class_table.find(classes->nth(i))) == class_table.end()) {
+            // if class name is already in class_map, print error + quit
+        } else {
+            class_table[classes->nth(i)->get_name()] = classes->nth(i);
+        }
 
+    for(auto const &entry : class_table){
+        Symbol name = entry.first;
+        Class_ class_ = entry.second;
+        Class_ parent = get_parent_class(name);
+        if (parent == NULL) {
+    //          print error msg + quit;
+        } else {
+            classtree.add_node(class_, parent);
+        }
+    }
+
+    bool cycles_detected = classtree.check_for_cycles();
+    if(cycles_detected) {
+        // if has_cycles then error msg + quit
+    }
+}
+
+void ClassTable::install_tree() {
+    classtree = new ClassTree();
 }
 
 void ClassTable::install_basic_classes() {
@@ -206,10 +225,19 @@ void ClassTable::install_basic_classes() {
 						      no_expr()))),
 	       filename);
     class_table[Object] = Object_class;
+    classtree.add_root(Object_class);
+
     class_table[IO] = IO_class;
+    classtree.add_node(IO_class, Object_class);
+
     class_table[Int] = Int_class;
+    classtree.add_node(Int_class, Object_class);
+
     class_table[Bool] = Bool_class;
+    classtree.add_node(Bool_class, Object_class);
+
     class_table[Str] = Str_class;
+    classtree.add_node(Str_class, Object_class);
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -265,6 +293,8 @@ void program_class::semant()
 
     /* ClassTable constructor may do some semantic analysis */
     ClassTable *classtable = new ClassTable(classes);
+
+
 
     /* some semantic analysis code may go here */
 

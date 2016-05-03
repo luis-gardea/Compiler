@@ -22,13 +22,16 @@ typedef ClassTable *ClassTableP;
 class ClassTable {
 private:
   int semant_errors;
+  void install_tree();
   void install_basic_classes();
   ostream& error_stream;
-  map<Symbol, Class_> class_table;
+  std::map<Symbol, Class_> class_table;
+  ClassTree* = classtree;
 
 public:
   ClassTable(Classes);
   int errors() { return semant_errors; }
+  Class_ get_parent_class(Symbol class_) { return class_table[class_]; }
   ostream& semant_error();
   ostream& semant_error(Class_ c);
   ostream& semant_error(Symbol filename, tree_node *t);
@@ -36,24 +39,13 @@ public:
 
 class ClassTree {
 private:
-	Symbol root;
-	Vector<Symbol> visited;
-	map<Symbol, Class_> tree_table;
+	Class_ root;
 
 public:
-	ClassTree(map<Symbol, Class_> class_table){
-		tree_table = class_table;
-	}
-	void add_root();
-	void add_node(Symbol name, Symbol* parent) {new Node();}
-	Symbol* find_node(Symbol* )
-	void check_for_cycle();
-};
-
-struct Node {
-	Symbol name;
-	Symbol* parent;
-	Symbol* children;
+	ClassTree();
+	void add_root(Class_ Object) { root = Object; }
+	void add_node(Class_ name, Class_ parent);
+	bool check_for_cycles();
 };
 
 #endif

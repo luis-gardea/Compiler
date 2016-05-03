@@ -152,6 +152,7 @@ protected:
    Symbol parent;
    Features features;
    Symbol filename;
+   std::vector<Symbol> children 
 public:
    class__class(Symbol a1, Symbol a2, Features a3, Symbol a4) {
       name = a1;
