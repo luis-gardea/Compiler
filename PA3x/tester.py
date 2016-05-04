@@ -6,8 +6,11 @@ import os, sys
 # path = "tests/"
 # dirs = os.listdir( path )
 
-command = "/usr/class/cs143/bin/lexer good.cl | /usr/class/cs143/bin/parser | ./semant" 
-os.system(command)
+command1 = "/usr/class/cs143/bin/lexer bad.cl | /usr/class/cs143/bin/parser | ./semant" 
+command2 = "/usr/class/cs143/bin/lexer bad.cl | /usr/class/cs143/bin/parser | /usr/class/cs143/bin/semant" 
+os.system(command1)
+print "\n"
+os.system(command2)
 # if len(sys.argv) == 2:
 	# command1 = "./myparser tests/" + str(sys.argv[1]) + " >& tests/output/" + str(sys.argv[1]) + "out"
 	# command2 = "/usr/class/cs143/bin/lexer tests/" + str(sys.argv[1]) + " | /usr/class/cs143/bin/parser >& tests/output/" + str(sys.argv[1]) + "ref"

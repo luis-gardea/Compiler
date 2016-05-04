@@ -81,6 +81,10 @@ static void initialize_constants(void)
     val         = idtable.add_string("_val");
 }
 
+void static_error_exit(){
+    cerr << "Compilation halted due to static semantic errors." << endl;
+    exit(1);
+}
 
 
 ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) {
@@ -89,6 +93,73 @@ ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) 
 
     install_basic_classes();
 
+    // Here we are adding all of the class that are defined to a map called class_map
+    // We are also adding all of the child,parent pairs to another map
+    for (int i = classes->first(); classes->more(i); i = classes->next(i)){
+        if (class_map.find(classes->nth(i)->get_name()) != class_map.end()){
+            semant_error(classes->nth(i)) << "Class " << classes->nth(i)->get_name() << " was previously defined." << endl;
+        } else {
+            class_map[classes->nth(i)->get_name()] = classes->nth(i);
+            child_to_parent[classes->nth(i)->get_name()] = classes->nth(i)->get_parent();
+        }
+    }
+
+    
+    CheckInheritanceTree();
+
+}
+
+
+bool ClassTable::CheckForCycles(Symbol child, std::set<Symbol> visited){
+    Symbol parent = child_to_parent[child];
+    // If the child is object then we reach the root of our inheritance tree, there are no cycles
+    if (child == Object)
+        return false;
+    // If the full path of this child has been visited before, then we document if it has a cycle in its path or not, return that bool
+    if (has_cycle.find(child) != has_cycle.end()){
+        return has_cycle[child];
+    }
+    // If we have visited this child in our current path, then there is a cycle, we add this child to has_cycle and set value to true
+    // We raise error and then return true
+    if (visited.find(child) != visited.end()){
+        has_cycle[child] = true;
+        return true;
+    }
+
+    //We insert child to our current path and then call CheckForCycles on the parent
+    visited.insert(child);
+    bool cycle = CheckForCycles(parent,visited);
+    //When cycle returns, we have visited the entire path of child so we can set has_cycle to value returned by recursive call on parent
+    if (cycle) {
+        semant_error(class_map[child]) << "Class " << child << ", or an ancestor of " << child << ", is involved in an inheritance cycle." << endl;
+    }
+    has_cycle[child] = cycle;
+
+    return cycle;
+
+}
+
+void ClassTable::CheckInheritanceTree(){
+    // Here we check to make sure all parent classes are defined
+    for (std::map<Symbol,Symbol>::iterator it=child_to_parent.begin(); it!=child_to_parent.end(); ++it){
+        // std::cout << it->first << " => " << it->second << '\n';
+        if (it->first == Object)
+            continue;
+        if (class_map.find(it->second) == class_map.end())
+            semant_error(class_map[it->first]) << "Class " << it->first << " inherits from an undefined class." << it->second << endl;
+    }
+    if (get_semant_errors() > 0){
+        static_error_exit();
+    }
+
+    // Here we are checking for cycles
+    for (std::map<Symbol,Symbol>::iterator it=child_to_parent.begin(); it!=child_to_parent.end(); ++it){
+        std::set<Symbol> visited;
+        CheckForCycles(it->first, visited);
+    }
+    if (get_semant_errors() > 0){
+        static_error_exit();
+    }
 }
 
 void ClassTable::install_basic_classes() {
@@ -191,15 +262,11 @@ void ClassTable::install_basic_classes() {
 						      no_expr()))),
 	       filename);
 
-    Class_ basic_class[] = {Object_class,Str_class,Int_class,IO_class,Bool_class};
+    Class_ basic_class[] = {Object_class,IO_class,Int_class,Bool_class,Str_class};
 
     for (int i = 0; i < 5; i++) {
-        printf("%d\n", i);
-        cout << basic_class[i]->get_name() << endl;
-        cout << basic_class[i]->get_parent() << endl;
-      // add_pair(basic_classes[i]->get_name(),
-      //          basic_classes[i]->get_parent());
-      // class_map[basic_classes[i]->get_name()] = basic_classes[i];
+        class_map[basic_class[i]->get_name()] = basic_class[i];
+        child_to_parent[basic_class[i]->get_name()] = basic_class[i]->get_parent();
     }
 }
 
