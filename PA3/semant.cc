@@ -10,8 +10,6 @@
 extern int semant_debug;
 extern char *curr_filename;
 
-// std::map<Symbol, Class_> class_table;
-
 //////////////////////////////////////////////////////////////////////
 //
 // Symbols
@@ -83,57 +81,137 @@ static void initialize_constants(void)
     val         = idtable.add_string("_val");
 }
 
-ClassTree::ClassTree() {
-
+void static_error_exit(){
+    cerr << "Compilation halted due to static semantic errors." << endl;
+    exit(1);
 }
 
-void ClassTree::check_for_cycles() {
-    std::vector<Class_> visited;
-}
-
-void ClassTree::add_node(Symbol name, Symbol parent) {
-    Node* child = new Node(name);
-    if (added_to_tree.find(parent) != added_to_tree.end()){
-        added_to_tree[parent]->children.push_back(child);
-        child->parent = added_to_tree[parent];
-    } else {
-        add_node(parent, class_table[parent]->get_parent());
-        add_node(name, parent);
-    }
-}
 
 ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) {
-    install_tree();
+
+    /* Fill this in */
+
     install_basic_classes();
 
-    // for(int i = classes->first(); classes->more(i); i = classes->next(i))
-    //     if(class_table.find(classes->nth(i))) == class_table.end()) {
-    //         semant_error(class_table[name]) << "Class redefined." << endl;
-    //     } else {
-    //         class_table[classes->nth(i)->get_name()] = classes->nth(i);
-    //     }
+    // Here we are adding all of the class that are defined to a map called class_map
+    // We are also adding all of the child,parent pairs to another map
+    for (int i = classes->first(); classes->more(i); i = classes->next(i)){
+        if (class_map.find(classes->nth(i)->get_name()) != class_map.end()){
+            semant_error(classes->nth(i)) << "Class " << classes->nth(i)->get_name() << " was previously defined." << endl;
+        } else {
+            class_map[classes->nth(i)->get_name()] = classes->nth(i);
+            child_to_parent[classes->nth(i)->get_name()] = classes->nth(i)->get_parent();
+        }
+    }
 
-    // for(auto const &entry : class_table){
-    //     Symbol name = entry.first;
-    //     Symbol parent = get_parent_symbol(name);
-    //     if (parent == NULL) {
-    //         semant_error(class_table[name]) << "Parent class not defined." << endl;
-    //     } else {
-    //         classtree->add_node(name, parent);
-    //     }
+    
+    CheckInheritanceTree();
+
+    // if (semant_debug) {
+    //     cout << lub(Object, IO) << endl;
+    //     cout << lub(IO, Object) << endl;
+    //     cout << lub(Object, Object) << endl;
+    //     cout << lub(IO, IO) << endl;
+    //     cout << lub(Int, IO) << endl;
     // }
+    for (int i = classes->first(); classes->more(i); i = classes->next(i)){
+        for (int j = classes->first(); classes->more(j); j = classes->next(j)){
+            if (semant_debug)
+                cout << classes->nth(i)->get_name() << "," << classes->nth(j)->get_name() << ":" << lub(classes->nth(i)->get_name(),classes->nth(j)->get_name()) << endl;
+        }
+    }
 
-    // Keeps track of errors and calls semant_error() internally because it has all the necessary details there
-    classtree->check_for_cycles();
+}
 
-    if(semant_errors > 0) {
-        exit(1);
+
+bool ClassTable::CheckForCycles(Symbol child, std::set<Symbol> visited){
+    Symbol parent = child_to_parent[child];
+    // If the child is object then we reach the root of our inheritance tree, there are no cycles
+    if (child == Object)
+        return false;
+    // If the full path of this child has been visited before, then we document if it has a cycle in its path or not, return that bool
+    if (has_cycle.find(child) != has_cycle.end()){
+        return has_cycle[child];
+    }
+    // If we have visited this child in our current path, then there is a cycle, we add this child to has_cycle and set value to true
+    // We raise error and then return true
+    if (visited.find(child) != visited.end()){
+        has_cycle[child] = true;
+        return true;
+    }
+
+    //We insert child to our current path and then call CheckForCycles on the parent
+    visited.insert(child);
+    bool cycle = CheckForCycles(parent,visited);
+    //When cycle returns, we have visited the entire path of child so we can set has_cycle to value returned by recursive call on parent
+    if (cycle) {
+        semant_error(class_map[child]) << "Class " << child << ", or an ancestor of " << child << ", is involved in an inheritance cycle." << endl;
+    }
+    has_cycle[child] = cycle;
+
+    return cycle;
+
+}
+
+void ClassTable::CheckInheritanceTree(){
+    // Here we check to make sure all parent classes are defined
+    for (std::map<Symbol,Symbol>::iterator it=child_to_parent.begin(); it!=child_to_parent.end(); ++it){
+        // std::cout << it->first << " => " << it->second << '\n';
+        if (it->first == Object)
+            continue;
+        if (class_map.find(it->second) == class_map.end())
+            semant_error(class_map[it->first]) << "Class " << it->first << " inherits from an undefined class." << it->second << endl;
+    }
+    if (get_semant_errors() > 0){
+        static_error_exit();
+    }
+
+    // Here we are checking for cycles
+    for (std::map<Symbol,Symbol>::iterator it=child_to_parent.begin(); it!=child_to_parent.end(); ++it){
+        std::set<Symbol> visited;
+        CheckForCycles(it->first, visited);
+    }
+    if (get_semant_errors() > 0){
+        static_error_exit();
     }
 }
 
-void ClassTable::install_tree() {
-    semant_errors=1;
-    classtree = new ClassTree();
+// Checks if c1 <= c2, i.e. that class c1 conforms to class c2
+bool ClassTable::conforms(Symbol c1, Symbol c2) {
+    Symbol class_ = c1;
+    while (true) {
+        if (class_ == c2) {
+            if (semant_debug)
+                cout << c1 << " conforms to " << c2 << endl;
+            return true;
+        } else if (class_ == Object) {
+            if (semant_debug)
+                cout << c1 << " does not conform to " << c2 << endl;
+            break;
+        }
+        class_ = child_to_parent[class_];
+    }
+    return false;
+}
+
+// (least upper bound) 
+// Finds the least common ancestor of class c1 and c2. Will always return a Symbol, as all classes have Object as common ancestor
+Symbol ClassTable::lub(Symbol c1, Symbol c2) {
+    std::set<Symbol> c2_ancestors;
+    Symbol class_ = c2;
+    while (true) {
+        c2_ancestors.insert(class_);
+        if (class_ == Object) break;
+        class_ = child_to_parent[class_];
+    }
+
+    class_ = c1;
+    while (true) {
+        if (c2_ancestors.find(class_) != c2_ancestors.end()) break;
+        class_ = child_to_parent[class_];
+    }
+
+    return class_;
 }
 
 void ClassTable::install_basic_classes() {
@@ -235,37 +313,12 @@ void ClassTable::install_basic_classes() {
 						      Str, 
 						      no_expr()))),
 	       filename);
-    
 
-    printf("This shit is printing\n");
-    
-    // class_table[Object] = Object_class;
-    // // classtree->add_root(Object_class);
-
-    // class_table[IO] = IO_class; 
-    // // classtree->add_node(IO_class, Object_class);
-    
-    // class_table[Int] = Int_class;
-    // // classtree->add_node(Int_class, Object_class);
-
-    // class_table[Bool] = Bool_class;
-    // // classtree->add_node(Bool_class, Object_class);
-
-    // class_table[Str] = Str_class;
-    // // classtree->add_node(Str_class, Object_class);
-    Class_ basic_classes[] = {Object_class,
-                              Str_class,
-                              Int_class,
-                              IO_class,
-                              Bool_class};
+    Class_ basic_class[] = {Object_class,IO_class,Int_class,Bool_class,Str_class};
 
     for (int i = 0; i < 5; i++) {
-      // add_pair(basic_classes[i]->get_name(),
-      //          basic_classes[i]->get_parent());
-      printf("%d\n",i);
-      cout << basic_classes[i]->get_name() << endl;
-        //classtree->add_node(basic_classes[i]->get_name(),basic_classes[i]->get_parent());
-        //class_table[basic_classes[i]->get_name()] = basic_classes[i];
+        class_map[basic_class[i]->get_name()] = basic_class[i];
+        child_to_parent[basic_class[i]->get_name()] = basic_class[i]->get_parent();
     }
 }
 
@@ -322,8 +375,6 @@ void program_class::semant()
 
     /* ClassTable constructor may do some semantic analysis */
     ClassTable *classtable = new ClassTable(classes);
-
-
 
     /* some semantic analysis code may go here */
 
