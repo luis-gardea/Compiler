@@ -31,7 +31,6 @@ private:
   ostream& error_stream;
   std::map<Symbol,Class_> class_map;
   std::map<Symbol,Symbol> child_to_parent;
-  std::map<Symbol,std::vector<Symbol> > parent_to_children;
   std::map<Symbol,bool> has_cycle;
   bool CheckForCycles(Symbol child, std::set<Symbol> visited);
   void CheckInheritanceTree();

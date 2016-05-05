@@ -81,8 +81,6 @@ static void initialize_constants(void)
     val         = idtable.add_string("_val");
 }
 
-SymbolTable<Symbol,Symbol> *symtab = new SymbolTable<Symbol,Symbol>();
-
 void static_error_exit(){
     cerr << "Compilation halted due to static semantic errors." << endl;
     exit(1);
@@ -103,7 +101,6 @@ ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) 
         } else {
             class_map[classes->nth(i)->get_name()] = classes->nth(i);
             child_to_parent[classes->nth(i)->get_name()] = classes->nth(i)->get_parent();
-            parent_to_children[classes->nth(i)->get_parent()].push_back(classes->nth(i)->get_name());
         }
     }
 
@@ -357,57 +354,7 @@ ostream& ClassTable::semant_error()
     return error_stream;
 } 
 
-//
-//  program_class prints "program" and then each of the
-//  component classes of the program, one at a time, at a
-//  greater indentation. The recursive invocation on
-//  "classes->nth(i)->dump_with_types(...)" shows how useful
-//  and compact virtual functions are for this kind of computation.
-//
-//  Note the use of the iterator to cycle through all of the
-//  classes.  The methods first, more, next, and nth on AST lists
-//  are defined in tree.h.
-//
-void program_class::recurse()
-{
-   for(int i = classes->first(); classes->more(i); i = classes->next(i))
-      classes->nth(i)->recurse();
-}
 
-//
-// Prints the components of a class, including all of the features.
-// Note that printing the Features is another use of an iterator.
-//
-void class__class::recurse()
-{
-   // check other stuff here, maybe like that class isnt named "Object" etc.
-   symtab->enterscope();
-   //dump_Symbol(stream, n+2, name);
-   //dump_Symbol(stream, n+2, parent);
-   //print_escaped_string(stream, filename->get_string());
-   for(int i = features->first(); features->more(i); i = features->next(i))
-      features->nth(i)->recurse();
-}
-
-
-//
-// dump_with_types for method_class first prints that this is a method,
-// then prints the method name followed by the formal parameters
-// (another use of an iterator, this time access all of the list members
-// of type Formal), the return type, and finally calls dump_type recursively
-// on the method body. 
-
-void method_class::recurse()
-{
-   //if (map->probe(name) == something to know whether this is a method or attr) {
-      //error
-   //}
-   //symtab->addid(name, name);
-   for(int i = formals->first(); formals->more(i); i = formals->next(i))
-     formals->nth(i)->recurse();
-   //dump_Symbol(stream, n+2, return_type);
-   expr->recurse();
-}
 
 /*   This is the entry point to the semantic checker.
 
