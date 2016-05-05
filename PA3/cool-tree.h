@@ -11,6 +11,8 @@
 
 #include "tree.h"
 #include "cool-tree.handcode.h"
+#include <map>
+#include <vector>
 
 // define the class for phylum
 // define simple phylum - Program
@@ -21,7 +23,7 @@ public:
    tree_node *copy()		 { return copy_Program(); }
    virtual Program copy_Program() = 0;
 
-   virtual void recurse() = 0;
+   virtual void recurse(std::map<Symbol,std::vector<Symbol>> parent_to_children, std::map<Symbol,Class_> class_map) = 0;
 
 #ifdef Program_EXTRAS
    Program_EXTRAS
@@ -37,7 +39,7 @@ public:
    tree_node *copy()		 { return copy_Class_(); }
    virtual Class_ copy_Class_() = 0;
 
-   virtual void recurse() = 0;
+   virtual void recurse(std::map<Symbol,std::vector<Symbol>> parent_to_children, std::map<Symbol,Class_> class_map) = 0;
    virtual Symbol get_name() const = 0;
    virtual Symbol get_parent() const = 0;
    virtual Symbol get_filename() const = 0;
@@ -56,7 +58,7 @@ class Feature_class : public tree_node {
 public:
    tree_node *copy()		 { return copy_Feature(); }
    virtual Feature copy_Feature() = 0;
-   virtual void recurse() = 0;
+   virtual void recurse(Symbol class_name) = 0;
 
 
 #ifdef Feature_EXTRAS
@@ -150,7 +152,7 @@ public:
    Program copy_Program();
    void dump(ostream& stream, int n);
 
-   void recurse();
+   void recurse(std::map<Symbol,std::vector<Symbol>> parent_to_children, std::map<Symbol,Class_> class_map);
 
 #ifdef Program_SHARED_EXTRAS
    Program_SHARED_EXTRAS
@@ -179,7 +181,7 @@ public:
    Class_ copy_Class_();
    void dump(ostream& stream, int n);
 
-   void recurse();
+   void recurse(std::map<Symbol,std::vector<Symbol>> parent_to_children, std::map<Symbol,Class_> class_map);
    Symbol get_name() const { return name; }
    Symbol get_parent() const { return parent; }
    Symbol get_filename() const { return filename; }
@@ -210,7 +212,7 @@ public:
    }
    Feature copy_Feature();
    void dump(ostream& stream, int n);
-   void recurse();
+   void recurse(Symbol class_name);
 
 #ifdef Feature_SHARED_EXTRAS
    Feature_SHARED_EXTRAS
@@ -235,7 +237,7 @@ public:
    }
    Feature copy_Feature();
    void dump(ostream& stream, int n);
-   void recurse();
+   void recurse(Symbol class_name);
 
 #ifdef Feature_SHARED_EXTRAS
    Feature_SHARED_EXTRAS

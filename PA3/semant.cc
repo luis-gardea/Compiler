@@ -99,13 +99,19 @@ ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) 
     // We are also adding all of the child,parent pairs to another map
     for (int i = classes->first(); classes->more(i); i = classes->next(i)){
         if (class_map.find(classes->nth(i)->get_name()) != class_map.end()){
-            semant_error(classes->nth(i)) << "Class " << classes->nth(i)->get_name() << " was previously defined." << endl;
+            Symbol name = classes->nth(i)->get_name();
+            if (name == Object || name == Str || name == IO || name == Int || name == Bool) {
+                semant_error(classes->nth(i)) << "Redefinition of basic class " << name << "." << endl;
+            } else {
+                semant_error(classes->nth(i)) << "Class " << name << " was previously defined." << endl;
+            }
         } else {
             class_map[classes->nth(i)->get_name()] = classes->nth(i);
             child_to_parent[classes->nth(i)->get_name()] = classes->nth(i)->get_parent();
             parent_to_children[classes->nth(i)->get_parent()].push_back(classes->nth(i)->get_name());
         }
     }
+
     if (semant_debug) {
         for (auto it=parent_to_children.begin(); it!=parent_to_children.end(); ++it){
             cout << it->first << endl;
@@ -173,6 +179,9 @@ void ClassTable::CheckInheritanceTree(){
             continue;
         if (class_map.find(it->second) == class_map.end())
             semant_error(class_map[it->first]) << "Class " << it->first << " inherits from an undefined class." << it->second << endl;
+        if (it->second == Str || it->second == IO || it->second == Int || it->second == Bool) {
+            semant_error(class_map[it->first]) << "Class " << it->first << " cannot inherit class " << it->second << "." << endl;
+        }
     }
     if (get_semant_errors() > 0){
         static_error_exit();
@@ -366,23 +375,23 @@ ostream& ClassTable::semant_error()
     return error_stream;
 } 
 
-void program_class::recurse() {
+void program_class::recurse(std::map<Symbol,std::vector<Symbol>> parent_to_children, std::map<Symbol,Class_> class_map) {
     sym_tab->enterscope();
     auto children = parent_to_children[Object];
-    for(size_t i = 0; i < children; i++){
-        class_map[children[i]]->recurse();
+    for(size_t i = 0; i < children.size(); i++){
+        class_map[children[i]]->recurse(parent_to_children, class_map);
     }
     sym_tab->exitscope();
 }
 
-void class__class::recurse() {
+void class__class::recurse(std::map<Symbol,std::vector<Symbol>> parent_to_children, std::map<Symbol,Class_> class_map) {
     sym_tab->enterscope();
     for(int i = features->first(); features->more(i); i = features->next(i))
         features->nth(i)->recurse(name);
 
     auto children = parent_to_children[name];
-    for(size_t i = 0; i < children; i++){
-        class_map[children[i]]->recurse();
+    for(size_t i = 0; i < children.size(); i++){
+        class_map[children[i]]->recurse(parent_to_children, class_map);
     }
 
     sym_tab->exitscope();
@@ -399,9 +408,28 @@ void class__class::recurse() {
 void method_class::recurse(Symbol class_name)
 {
     return;
-    //check to make sure the method name does not clash with any predefined ethod in a predefied class
+    //check to make sure the method name does not clash with any predefined method in a predefied class
     //if (class_name == )
     //  if (name == )
+
+    //check to make sure method was not already defined in class
+
+    // sym_tab->addid(name, name);
+    // for(int i = formals->first(); formals->more(i); i = formals->next(i))
+    //     formals->nth(i)->recurse();
+    // dump_Symbol(stream, n+2, return_type);
+    // expr->recurse();
+}
+
+void attr_class::recurse(Symbol class_name)
+{
+    return;
+    //check to make sure the method name does not clash with any predefined method in a predefied class
+    //if (class_name == )
+    //  if (name == )
+
+    //check to make sure method was not already defined in class
+
     // sym_tab->addid(name, name);
     // for(int i = formals->first(); formals->more(i); i = formals->next(i))
     //     formals->nth(i)->recurse();
@@ -428,9 +456,10 @@ void program_class::semant()
 
     /* ClassTable constructor may do some semantic analysis */
     ClassTable *classtable = new ClassTable(classes);
-    std::map<Symbol,std::vector<Symbol>>& parent_to_children = classtable.get_tree_map()
+    std::map<Symbol,std::vector<Symbol>> parent_to_children = classtable->get_tree_map();
+    std::map<Symbol,Class_> class_map = classtable->get_class_map();
 
-    //recurse(parent_to_children);
+    recurse(parent_to_children, class_map);
 
     /* some semantic analysis code may go here */
 

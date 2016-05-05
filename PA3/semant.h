@@ -45,7 +45,8 @@ public:
   int get_semant_errors() const { return semant_errors; }
   bool conforms(Symbol c1, Symbol c2);
   Symbol lub(Symbol c1, Symbol c2);
-  std::map<Symbol,std::vector<Symbol>>& get_tree_map() { return parent_to_children; }
+  std::map<Symbol,std::vector<Symbol>> get_tree_map() { return parent_to_children; }
+  std::map<Symbol,Class_> get_class_map() { return class_map; }
 
 };
 
