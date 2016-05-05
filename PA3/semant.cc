@@ -101,6 +101,7 @@ ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) 
         } else {
             class_map[classes->nth(i)->get_name()] = classes->nth(i);
             child_to_parent[classes->nth(i)->get_name()] = classes->nth(i)->get_parent();
+            parent_to_children[classes->nth(i)->get_parent()].push_back(classes->nth(i)->get_name());
         }
     }
 
@@ -354,7 +355,9 @@ ostream& ClassTable::semant_error()
     return error_stream;
 } 
 
-
+void program_class::recurse() {
+    return;
+}
 
 /*   This is the entry point to the semantic checker.
 

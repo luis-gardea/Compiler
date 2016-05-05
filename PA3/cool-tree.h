@@ -12,7 +12,6 @@
 #include "tree.h"
 #include "cool-tree.handcode.h"
 
-
 // define the class for phylum
 // define simple phylum - Program
 typedef class Program_class *Program;
@@ -21,6 +20,7 @@ class Program_class : public tree_node {
 public:
    tree_node *copy()		 { return copy_Program(); }
    virtual Program copy_Program() = 0;
+   virtual void recurse();
 
 #ifdef Program_EXTRAS
    Program_EXTRAS
@@ -35,6 +35,7 @@ class Class__class : public tree_node {
 public:
    tree_node *copy()		 { return copy_Class_(); }
    virtual Class_ copy_Class_() = 0;
+
 
    virtual Symbol get_name() const = 0;
    virtual Symbol get_parent() const = 0;
@@ -55,6 +56,8 @@ public:
    tree_node *copy()		 { return copy_Feature(); }
    virtual Feature copy_Feature() = 0;
 
+
+
 #ifdef Feature_EXTRAS
    Feature_EXTRAS
 #endif
@@ -68,6 +71,8 @@ class Formal_class : public tree_node {
 public:
    tree_node *copy()		 { return copy_Formal(); }
    virtual Formal copy_Formal() = 0;
+
+
 
 #ifdef Formal_EXTRAS
    Formal_EXTRAS
@@ -83,6 +88,8 @@ public:
    tree_node *copy()		 { return copy_Expression(); }
    virtual Expression copy_Expression() = 0;
 
+
+
 #ifdef Expression_EXTRAS
    Expression_EXTRAS
 #endif
@@ -96,6 +103,7 @@ class Case_class : public tree_node {
 public:
    tree_node *copy()		 { return copy_Case(); }
    virtual Case copy_Case() = 0;
+
 
 #ifdef Case_EXTRAS
    Case_EXTRAS
@@ -141,6 +149,8 @@ public:
    Program copy_Program();
    void dump(ostream& stream, int n);
 
+   void recurse();
+
 #ifdef Program_SHARED_EXTRAS
    Program_SHARED_EXTRAS
 #endif
@@ -163,6 +173,7 @@ public:
       parent = a2;
       features = a3;
       filename = a4;
+
    }
    Class_ copy_Class_();
    void dump(ostream& stream, int n);
