@@ -31,7 +31,7 @@ private:
   ostream& error_stream;
   std::map<Symbol,Class_> class_map;
   std::map<Symbol,Symbol> child_to_parent;
-  std::map<Symbol,std::vector<Symbol> > parent_to_children;
+  std::map<Symbol,std::vector<Symbol>> parent_to_children;
   std::map<Symbol,bool> has_cycle;
   bool CheckForCycles(Symbol child, std::set<Symbol> visited);
   void CheckInheritanceTree();
@@ -45,6 +45,8 @@ public:
   int get_semant_errors() const { return semant_errors; }
   bool conforms(Symbol c1, Symbol c2);
   Symbol lub(Symbol c1, Symbol c2);
+  std::map<Symbol,std::vector<Symbol>>& get_tree_map() { return parent_to_children; }
+
 };
 
 

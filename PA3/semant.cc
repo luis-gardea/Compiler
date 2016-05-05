@@ -5,10 +5,12 @@
 #include <stdarg.h>
 #include "semant.h"
 #include "utilities.h"
+#include <symtab.h>
 
 
 extern int semant_debug;
 extern char *curr_filename;
+static SymbolTable<Symbol,Symbol> *sym_tab = new SymbolTable<Symbol, Symbol>();
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -104,6 +106,15 @@ ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) 
             parent_to_children[classes->nth(i)->get_parent()].push_back(classes->nth(i)->get_name());
         }
     }
+    if (semant_debug) {
+        for (auto it=parent_to_children.begin(); it!=parent_to_children.end(); ++it){
+            cout << it->first << endl;
+            for (size_t i = 0; i < it->second.size(); i++){
+                cout << "\t" << it->second[i];
+            }
+            cout << endl;
+        }
+    }   
 
     
     CheckInheritanceTree();
@@ -356,7 +367,46 @@ ostream& ClassTable::semant_error()
 } 
 
 void program_class::recurse() {
+    sym_tab->enterscope();
+    auto children = parent_to_children[Object];
+    for(size_t i = 0; i < children; i++){
+        class_map[children[i]]->recurse();
+    }
+    sym_tab->exitscope();
+}
+
+void class__class::recurse() {
+    sym_tab->enterscope();
+    for(int i = features->first(); features->more(i); i = features->next(i))
+        features->nth(i)->recurse(name);
+
+    auto children = parent_to_children[name];
+    for(size_t i = 0; i < children; i++){
+        class_map[children[i]]->recurse();
+    }
+
+    sym_tab->exitscope();
+    // dump_Symbol(stream, n+2, name);
+    // dump_Symbol(stream, n+2, parent);
+    // stream << pad(n+2) << "\"";
+    // print_escaped_string(stream, filename->get_string());
+    // stream << "\"\n" << pad(n+2) << "(\n";
+    // for(int i = features->first(); features->more(i); i = features->next(i))
+    //     features->nth(i)->dump_with_types(stream, n+2);
+    // stream << pad(n+2) << ")\n";
+}
+
+void method_class::recurse(Symbol class_name)
+{
     return;
+    //check to make sure the method name does not clash with any predefined ethod in a predefied class
+    //if (class_name == )
+    //  if (name == )
+    // sym_tab->addid(name, name);
+    // for(int i = formals->first(); formals->more(i); i = formals->next(i))
+    //     formals->nth(i)->recurse();
+    // dump_Symbol(stream, n+2, return_type);
+    // expr->recurse();
 }
 
 /*   This is the entry point to the semantic checker.
@@ -378,12 +428,15 @@ void program_class::semant()
 
     /* ClassTable constructor may do some semantic analysis */
     ClassTable *classtable = new ClassTable(classes);
+    std::map<Symbol,std::vector<Symbol>>& parent_to_children = classtable.get_tree_map()
+
+    //recurse(parent_to_children);
 
     /* some semantic analysis code may go here */
 
     if (classtable->errors()) {
-	cerr << "Compilation halted due to static semantic errors." << endl;
-	exit(1);
+	   cerr << "Compilation halted due to static semantic errors." << endl;
+	   exit(1);
     }
 }
 

@@ -20,7 +20,8 @@ class Program_class : public tree_node {
 public:
    tree_node *copy()		 { return copy_Program(); }
    virtual Program copy_Program() = 0;
-   virtual void recurse();
+
+   virtual void recurse() = 0;
 
 #ifdef Program_EXTRAS
    Program_EXTRAS
@@ -36,7 +37,7 @@ public:
    tree_node *copy()		 { return copy_Class_(); }
    virtual Class_ copy_Class_() = 0;
 
-
+   virtual void recurse() = 0;
    virtual Symbol get_name() const = 0;
    virtual Symbol get_parent() const = 0;
    virtual Symbol get_filename() const = 0;
@@ -55,7 +56,7 @@ class Feature_class : public tree_node {
 public:
    tree_node *copy()		 { return copy_Feature(); }
    virtual Feature copy_Feature() = 0;
-
+   virtual void recurse() = 0;
 
 
 #ifdef Feature_EXTRAS
@@ -178,6 +179,7 @@ public:
    Class_ copy_Class_();
    void dump(ostream& stream, int n);
 
+   void recurse();
    Symbol get_name() const { return name; }
    Symbol get_parent() const { return parent; }
    Symbol get_filename() const { return filename; }
@@ -208,6 +210,7 @@ public:
    }
    Feature copy_Feature();
    void dump(ostream& stream, int n);
+   void recurse();
 
 #ifdef Feature_SHARED_EXTRAS
    Feature_SHARED_EXTRAS
@@ -232,6 +235,7 @@ public:
    }
    Feature copy_Feature();
    void dump(ostream& stream, int n);
+   void recurse();
 
 #ifdef Feature_SHARED_EXTRAS
    Feature_SHARED_EXTRAS
