@@ -1,0 +1,27 @@
+class IO {
+
+};
+
+class A inherits String {
+
+};
+
+class B {
+
+};
+
+class C inherits A {
+
+};
+
+class O inherits Object {
+
+};
+
+class Object inherits IO {
+
+};
+
+class D inherits B {
+    a : Int <- true;
+};

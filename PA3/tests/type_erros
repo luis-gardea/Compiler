@@ -1,0 +1,7 @@
+class A {
+    a : Bool;
+
+    a() : Int {
+        a <- 5 + 5
+    };
+}

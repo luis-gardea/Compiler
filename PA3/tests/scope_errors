@@ -1,0 +1,11 @@
+class A {
+    a : Int <- a + 5;
+
+    a : Int;
+
+    a : Int;
+    
+    b(x : Int) : Int {
+        b <- x
+    };
+};

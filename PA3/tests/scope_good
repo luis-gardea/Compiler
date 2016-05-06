@@ -1,0 +1,7 @@
+class Main {
+    main() : Int {
+        a <- 5
+    };
+
+    a : Int;
+};
