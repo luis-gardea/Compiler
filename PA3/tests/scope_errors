@@ -8,4 +8,8 @@ class A {
     b(x : Int) : Int {
         b <- x
     };
+
+    d : Bool;
+
+    c : Int <- if let d:Int <- 5 in d then a else d fi;
 };

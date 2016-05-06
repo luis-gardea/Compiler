@@ -1,7 +1,12 @@
 class A {
     a : Bool;
+    b : Int;
 
-    a() : Int {
-        a <- 5 + 5
+    c() : Int { 
+        {	
+        	--a <- 5 + 5;
+        	--if let d:Int in b then d <- 5 else b fi;
+        	while let d:Int in b loop d <- 5 pool;
+        }
     };
-}
+};

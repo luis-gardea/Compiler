@@ -23,5 +23,5 @@ class Object inherits IO {
 };
 
 class D inherits B {
-    a : Int <- true;
+    --a : Int <- true;
 };

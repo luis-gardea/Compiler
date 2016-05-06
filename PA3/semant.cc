@@ -398,7 +398,8 @@ void program_class::recurse(ClassTable* classtable) {
     }
     sym_tab->exitscope();
     if (!main_defined)
-        cerr << "Class Main is not defined." << endl;
+        classtable->semant_error() << "Class Main is not defined." << endl;
+
 }
 
 void class__class::recurse(ClassTable* classtable) {
@@ -516,12 +517,16 @@ void dispatch_class::recurse(ClassTable* classtable, Symbol class_name)
 // in the conditional and then the type of the entire expression.
 //
 void cond_class::recurse(ClassTable* classtable, Symbol class_name)
-{
+{   
     sym_tab->enterscope();
     pred->recurse(classtable, class_name);
     sym_tab->exitscope();
     Symbol pred_type = pred->get_type();
     //Check if pred_type is bool
+    cout << "We are here" << endl;
+    if (pred_type != Bool) {
+        classtable->semant_error1(class_name, this) << "Predicate of \'if\' does not have type Bool." << endl; 
+    }
 
     sym_tab->enterscope();
     then_exp->recurse(classtable, class_name);
@@ -533,6 +538,8 @@ void cond_class::recurse(ClassTable* classtable, Symbol class_name)
     sym_tab->exitscope();
     Symbol else_type = else_exp->get_type();
 
+    type = classtable->lub(then_type,else_type);
+    exit();
 }
 
 //
@@ -541,7 +548,20 @@ void cond_class::recurse(ClassTable* classtable, Symbol class_name)
 //
 void loop_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-   return;
+    sym_tab->enterscope();
+    pred->recurse(classtable,class_name);
+    sym_tab->exitscope();
+    Symbol pred_type = pred->get_type();
+    cout << "We are here!!!" << endl;
+    if (pred_type != Bool) {
+        classtable->semant_error1(class_name,this) << "Loop condition does not have type Bool." << endl;
+    }
+
+    sym_tab->enterscope();
+    body->recurse(classtable, class_name);
+    sym_tab->exitscope();
+
+    type = Object;
 }
 
 //
@@ -669,7 +689,7 @@ void program_class::semant()
 
     /* ClassTable constructor may do some semantic analysis */
     ClassTable *classtable = new ClassTable(classes);
-
+    cout << "We are here" << endl;
     recurse(classtable);
 
     /* some semantic analysis code may go here */
