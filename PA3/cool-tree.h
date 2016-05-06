@@ -13,6 +13,9 @@
 #include "cool-tree.handcode.h"
 #include <map>
 #include <vector>
+#include "semant.h"
+
+class ClassTable;
 
 // define the class for phylum
 // define simple phylum - Program
@@ -23,7 +26,7 @@ public:
    tree_node *copy()		 { return copy_Program(); }
    virtual Program copy_Program() = 0;
 
-   virtual void recurse(std::map<Symbol,std::vector<Symbol>> parent_to_children, std::map<Symbol,Class_> class_map) = 0;
+   virtual void recurse(ClassTable* classtable) = 0;
 
 #ifdef Program_EXTRAS
    Program_EXTRAS
@@ -39,7 +42,7 @@ public:
    tree_node *copy()		 { return copy_Class_(); }
    virtual Class_ copy_Class_() = 0;
 
-   virtual void recurse(std::map<Symbol,std::vector<Symbol>> parent_to_children, std::map<Symbol,Class_> class_map) = 0;
+   virtual void recurse(ClassTable* classtable) = 0;
    virtual Symbol get_name() const = 0;
    virtual Symbol get_parent() const = 0;
    virtual Symbol get_filename() const = 0;
@@ -58,7 +61,7 @@ class Feature_class : public tree_node {
 public:
    tree_node *copy()		 { return copy_Feature(); }
    virtual Feature copy_Feature() = 0;
-   virtual void recurse(Symbol class_name) = 0;
+   virtual void recurse(ClassTable* classtable, Symbol class_name) = 0;
 
 
 #ifdef Feature_EXTRAS
@@ -75,7 +78,7 @@ public:
    tree_node *copy()		 { return copy_Formal(); }
    virtual Formal copy_Formal() = 0;
 
-
+   virtual void recurse() = 0;
 
 #ifdef Formal_EXTRAS
    Formal_EXTRAS
@@ -91,7 +94,7 @@ public:
    tree_node *copy()		 { return copy_Expression(); }
    virtual Expression copy_Expression() = 0;
 
-
+   virtual void recurse() = 0;
 
 #ifdef Expression_EXTRAS
    Expression_EXTRAS
@@ -106,7 +109,6 @@ class Case_class : public tree_node {
 public:
    tree_node *copy()		 { return copy_Case(); }
    virtual Case copy_Case() = 0;
-
 
 #ifdef Case_EXTRAS
    Case_EXTRAS
@@ -152,7 +154,7 @@ public:
    Program copy_Program();
    void dump(ostream& stream, int n);
 
-   void recurse(std::map<Symbol,std::vector<Symbol>> parent_to_children, std::map<Symbol,Class_> class_map);
+   void recurse(ClassTable* classtable);
 
 #ifdef Program_SHARED_EXTRAS
    Program_SHARED_EXTRAS
@@ -181,7 +183,7 @@ public:
    Class_ copy_Class_();
    void dump(ostream& stream, int n);
 
-   void recurse(std::map<Symbol,std::vector<Symbol>> parent_to_children, std::map<Symbol,Class_> class_map);
+   void recurse(ClassTable* classtable);
    Symbol get_name() const { return name; }
    Symbol get_parent() const { return parent; }
    Symbol get_filename() const { return filename; }
@@ -212,7 +214,8 @@ public:
    }
    Feature copy_Feature();
    void dump(ostream& stream, int n);
-   void recurse(Symbol class_name);
+
+   void recurse(ClassTable* classtable, Symbol class_name);
 
 #ifdef Feature_SHARED_EXTRAS
    Feature_SHARED_EXTRAS
@@ -237,7 +240,8 @@ public:
    }
    Feature copy_Feature();
    void dump(ostream& stream, int n);
-   void recurse(Symbol class_name);
+
+   void recurse(ClassTable* classtable, Symbol class_name);
 
 #ifdef Feature_SHARED_EXTRAS
    Feature_SHARED_EXTRAS
@@ -260,6 +264,8 @@ public:
    }
    Formal copy_Formal();
    void dump(ostream& stream, int n);
+
+   void recurse();
 
 #ifdef Formal_SHARED_EXTRAS
    Formal_SHARED_EXTRAS
@@ -285,6 +291,8 @@ public:
    Case copy_Case();
    void dump(ostream& stream, int n);
 
+   void recurse();
+
 #ifdef Case_SHARED_EXTRAS
    Case_SHARED_EXTRAS
 #endif
@@ -306,6 +314,8 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+
+   void recurse();
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -333,6 +343,8 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
+   void recurse();
+
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
 #endif
@@ -356,6 +368,8 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+
+   void recurse();
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -381,6 +395,8 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
+   void recurse();
+
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
 #endif
@@ -402,6 +418,8 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+
+   void recurse();
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -425,6 +443,8 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
+   void recurse();
+
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
 #endif
@@ -444,6 +464,8 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+
+   void recurse();
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -471,6 +493,8 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
+   void recurse();
+
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
 #endif
@@ -492,6 +516,8 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+
+   void recurse();
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -515,6 +541,8 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
+   void recurse();
+
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
 #endif
@@ -536,6 +564,8 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+
+   void recurse();
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -559,6 +589,8 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
+   void recurse();
+
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
 #endif
@@ -578,6 +610,8 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+
+   void recurse();
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -601,6 +635,8 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
+   void recurse();
+
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
 #endif
@@ -622,6 +658,8 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+
+   void recurse();
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -645,6 +683,8 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
+   void recurse();
+
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
 #endif
@@ -664,6 +704,8 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+
+   void recurse();
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -685,6 +727,8 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
+   void recurse();
+
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
 #endif
@@ -704,6 +748,8 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+
+   void recurse();
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -725,6 +771,8 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
+   void recurse();
+
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
 #endif
@@ -744,6 +792,8 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+
+   void recurse();
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -765,6 +815,8 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
+   void recurse();
+
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
 #endif
@@ -782,6 +834,8 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+
+   void recurse();
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -802,6 +856,8 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+
+   void recurse();
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS

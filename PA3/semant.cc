@@ -11,6 +11,7 @@
 extern int semant_debug;
 extern char *curr_filename;
 static SymbolTable<Symbol,Symbol> *sym_tab = new SymbolTable<Symbol, Symbol>();
+static std::map<Symbol,Symbol> *method_table = new std::map<Symbol, Symbol>();
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -375,66 +376,232 @@ ostream& ClassTable::semant_error()
     return error_stream;
 } 
 
-void program_class::recurse(std::map<Symbol,std::vector<Symbol>> parent_to_children, std::map<Symbol,Class_> class_map) {
+// ostream& ClassTable::semant_error(Symbol name, tree_node *t)
+// {
+//     return semant_error(class_map[name]->get_filename(), );
+// }
+
+///////
+//
+///////
+
+void program_class::recurse(ClassTable* classtable) {
     sym_tab->enterscope();
-    auto children = parent_to_children[Object];
+    auto children = classtable->get_tree_map()[Object];
     for(size_t i = 0; i < children.size(); i++){
-        class_map[children[i]]->recurse(parent_to_children, class_map);
+        classtable->get_class_map()[children[i]]->recurse(classtable);
     }
     sym_tab->exitscope();
 }
 
-void class__class::recurse(std::map<Symbol,std::vector<Symbol>> parent_to_children, std::map<Symbol,Class_> class_map) {
+void class__class::recurse(ClassTable* classtable) {
     sym_tab->enterscope();
     for(int i = features->first(); features->more(i); i = features->next(i))
-        features->nth(i)->recurse(name);
+        features->nth(i)->recurse(classtable, name);
 
-    auto children = parent_to_children[name];
+    auto children = classtable->get_tree_map()[name];
     for(size_t i = 0; i < children.size(); i++){
-        class_map[children[i]]->recurse(parent_to_children, class_map);
+        classtable->get_class_map()[children[i]]->recurse(classtable);
     }
 
     sym_tab->exitscope();
-    // dump_Symbol(stream, n+2, name);
-    // dump_Symbol(stream, n+2, parent);
-    // stream << pad(n+2) << "\"";
-    // print_escaped_string(stream, filename->get_string());
-    // stream << "\"\n" << pad(n+2) << "(\n";
-    // for(int i = features->first(); features->more(i); i = features->next(i))
-    //     features->nth(i)->dump_with_types(stream, n+2);
-    // stream << pad(n+2) << ")\n";
 }
 
-void method_class::recurse(Symbol class_name)
+void method_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-    return;
-    //check to make sure the method name does not clash with any predefined method in a predefied class
-    //if (class_name == )
-    //  if (name == )
-
+    // if(sym_tab->probe(name) != NULL); {
     //check to make sure method was not already defined in class
+    // }
+    sym_tab->enterscope();
+    for(int i = formals->first(); formals->more(i); i = formals->next(i))
+        formals->nth(i)->recurse();
 
-    // sym_tab->addid(name, name);
-    // for(int i = formals->first(); formals->more(i); i = formals->next(i))
-    //     formals->nth(i)->recurse();
-    // dump_Symbol(stream, n+2, return_type);
-    // expr->recurse();
+    expr->recurse();
+    sym_tab->exitscope();
 }
 
-void attr_class::recurse(Symbol class_name)
+void attr_class::recurse(ClassTable* classtable, Symbol class_name)
+{
+    if(sym_tab->probe(name) != NULL) {
+        classtable->semant_error((classtable->get_class_map()[class_name])->get_filename(), (tree_node*) self) << "Attribute " << name << " is multiply defined in class." << endl;
+    }
+
+    sym_tab->addid(name, &type_decl);
+    init->recurse();
+}
+
+//
+// formal_class::dump_with_types dumps the name and type declaration
+// of a formal parameter.
+//
+void formal_class::recurse()
+{
+    sym_tab->addid(name, &type_decl);
+    return;
+}
+
+//
+// branch_class::dump_with_types dumps the name, type declaration,
+// and body of any case branch.
+//
+void branch_class::recurse()
+{
+   return;
+}
+
+//
+// assign_class::dump_with_types prints "assign" and then (indented)
+// the variable being assigned, the expression, and finally the type
+// of the result.  Note the call to dump_type (see above) at the
+// end of the method.
+//
+void assign_class::recurse()
+{
+   expr->recurse();
+   sym_tab->addid(name, (Symbol*) expr->get_type());
+}
+
+//
+// static_dispatch_class::dump_with_types prints the expression,
+// static dispatch class, function name, and actual arguments
+// of any static dispatch.  
+//
+void static_dispatch_class::recurse()
+{
+   return;
+}
+
+//
+//   dispatch_class::dump_with_types is similar to 
+//   static_dispatch_class::dump_with_types 
+//
+void dispatch_class::recurse()
+{
+   return;
+}
+
+//
+// cond_class::dump_with_types dumps each of the three expressions
+// in the conditional and then the type of the entire expression.
+//
+void cond_class::recurse()
 {
     return;
-    //check to make sure the method name does not clash with any predefined method in a predefied class
-    //if (class_name == )
-    //  if (name == )
+}
 
-    //check to make sure method was not already defined in class
+//
+// loop_class::dump_with_types dumps the predicate and then the
+// body of the loop, and finally the type of the entire expression.
+//
+void loop_class::recurse()
+{
+   return;
+}
 
-    // sym_tab->addid(name, name);
-    // for(int i = formals->first(); formals->more(i); i = formals->next(i))
-    //     formals->nth(i)->recurse();
-    // dump_Symbol(stream, n+2, return_type);
-    // expr->recurse();
+//
+//  typcase_class::dump_with_types dumps each branch of the
+//  the Case_ one at a time.  The type of the entire expression
+//  is dumped at the end.
+//
+void typcase_class::recurse()
+{
+   return;
+}
+
+//
+//  The rest of the cases for Expression are very straightforward
+//  and introduce nothing that isn't already in the code discussed
+//  above.
+//
+void block_class::recurse()
+{
+   return;
+}
+
+void let_class::recurse()
+{
+   return;
+}
+
+void plus_class::recurse()
+{
+    return;
+}
+
+void sub_class::recurse()
+{
+   return;
+}
+
+void mul_class::recurse()
+{
+   return;
+}
+
+void divide_class::recurse()
+{
+   return;
+}
+
+void neg_class::recurse()
+{
+   return;
+}
+
+void lt_class::recurse()
+{
+   return;
+}
+
+
+void eq_class::recurse()
+{
+   return;
+}
+
+void leq_class::recurse()
+{
+   return;
+}
+
+void comp_class::recurse()
+{
+   return;
+}
+
+void int_const_class::recurse()
+{
+   return;
+}
+
+void bool_const_class::recurse()
+{
+   return;
+}
+
+void string_const_class::recurse()
+{
+   return;
+}
+
+void new__class::recurse()
+{
+   return;
+}
+
+void isvoid_class::recurse()
+{
+   return;
+}
+
+void no_expr_class::recurse()
+{
+   return;
+}
+
+void object_class::recurse()
+{
+   return;
 }
 
 /*   This is the entry point to the semantic checker.
@@ -456,10 +623,8 @@ void program_class::semant()
 
     /* ClassTable constructor may do some semantic analysis */
     ClassTable *classtable = new ClassTable(classes);
-    std::map<Symbol,std::vector<Symbol>> parent_to_children = classtable->get_tree_map();
-    std::map<Symbol,Class_> class_map = classtable->get_class_map();
 
-    recurse(parent_to_children, class_map);
+    recurse(classtable);
 
     /* some semantic analysis code may go here */
 

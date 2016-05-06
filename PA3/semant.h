@@ -42,6 +42,7 @@ public:
   ostream& semant_error();
   ostream& semant_error(Class_ c);
   ostream& semant_error(Symbol filename, tree_node *t);
+  ostream& semant_error(Symbol name);
   int get_semant_errors() const { return semant_errors; }
   bool conforms(Symbol c1, Symbol c2);
   Symbol lub(Symbol c1, Symbol c2);
