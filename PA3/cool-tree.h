@@ -62,6 +62,8 @@ public:
    tree_node *copy()		 { return copy_Feature(); }
    virtual Feature copy_Feature() = 0;
    virtual void recurse(ClassTable* classtable, Symbol class_name) = 0;
+   virtual Symbol get_name_sym_tab() = 0;
+   virtual Symbol get_type() = 0;
 
 
 #ifdef Feature_EXTRAS
@@ -94,7 +96,7 @@ public:
    tree_node *copy()		 { return copy_Expression(); }
    virtual Expression copy_Expression() = 0;
 
-   virtual void recurse() = 0;
+   virtual void recurse(ClassTable* classtable, Symbol class_name) = 0;
 
 #ifdef Expression_EXTRAS
    Expression_EXTRAS
@@ -216,6 +218,8 @@ public:
    void dump(ostream& stream, int n);
 
    void recurse(ClassTable* classtable, Symbol class_name);
+   Symbol get_name_sym_tab() { return NULL; }
+   Symbol get_type() { return return_type; }
 
 #ifdef Feature_SHARED_EXTRAS
    Feature_SHARED_EXTRAS
@@ -242,6 +246,8 @@ public:
    void dump(ostream& stream, int n);
 
    void recurse(ClassTable* classtable, Symbol class_name);
+   Symbol get_name_sym_tab() { return name; }
+   Symbol get_type() { return type_decl; }
 
 #ifdef Feature_SHARED_EXTRAS
    Feature_SHARED_EXTRAS
@@ -315,7 +321,7 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
-   void recurse();
+   void recurse(ClassTable* classtable, Symbol class_name);
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -343,7 +349,7 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
-   void recurse();
+   void recurse(ClassTable* classtable, Symbol class_name);
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -369,7 +375,7 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
-   void recurse();
+   void recurse(ClassTable* classtable, Symbol class_name);
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -395,7 +401,7 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
-   void recurse();
+   void recurse(ClassTable* classtable, Symbol class_name);
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -419,7 +425,7 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
-   void recurse();
+   void recurse(ClassTable* classtable, Symbol class_name);
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -443,7 +449,7 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
-   void recurse();
+   void recurse(ClassTable* classtable, Symbol class_name);
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -465,7 +471,7 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
-   void recurse();
+   void recurse(ClassTable* classtable, Symbol class_name);
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -493,7 +499,7 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
-   void recurse();
+   void recurse(ClassTable* classtable, Symbol class_name);
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -517,7 +523,7 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
-   void recurse();
+   void recurse(ClassTable* classtable, Symbol class_name);
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -541,7 +547,7 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
-   void recurse();
+   void recurse(ClassTable* classtable, Symbol class_name);
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -565,7 +571,7 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
-   void recurse();
+   void recurse(ClassTable* classtable, Symbol class_name);
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -589,7 +595,7 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
-   void recurse();
+   void recurse(ClassTable* classtable, Symbol class_name);
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -611,7 +617,7 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
-   void recurse();
+   void recurse(ClassTable* classtable, Symbol class_name);
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -635,7 +641,7 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
-   void recurse();
+   void recurse(ClassTable* classtable, Symbol class_name);
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -659,7 +665,7 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
-   void recurse();
+   void recurse(ClassTable* classtable, Symbol class_name);
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -683,7 +689,7 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
-   void recurse();
+   void recurse(ClassTable* classtable, Symbol class_name);
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -705,7 +711,7 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
-   void recurse();
+   void recurse(ClassTable* classtable, Symbol class_name);
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -727,7 +733,7 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
-   void recurse();
+   void recurse(ClassTable* classtable, Symbol class_name);
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -749,7 +755,7 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
-   void recurse();
+   void recurse(ClassTable* classtable, Symbol class_name);
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -771,7 +777,7 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
-   void recurse();
+   void recurse(ClassTable* classtable, Symbol class_name);
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -793,7 +799,7 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
-   void recurse();
+   void recurse(ClassTable* classtable, Symbol class_name);
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -815,7 +821,7 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
-   void recurse();
+   void recurse(ClassTable* classtable, Symbol class_name);
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -835,7 +841,7 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
-   void recurse();
+   void recurse(ClassTable* classtable, Symbol class_name);
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -857,7 +863,7 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
-   void recurse();
+   void recurse(ClassTable* classtable, Symbol class_name);
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS

@@ -376,32 +376,55 @@ ostream& ClassTable::semant_error()
     return error_stream;
 } 
 
-// ostream& ClassTable::semant_error(Symbol name, tree_node *t)
-// {
-//     return semant_error(class_map[name]->get_filename(), );
-// }
+ostream& ClassTable::semant_error1(Symbol name, tree_node *t)
+{
+    return semant_error(class_map[name]->get_filename(), t);
+}
 
 ///////
 //
 ///////
 
 void program_class::recurse(ClassTable* classtable) {
+    bool main_defined = false;
     sym_tab->enterscope();
+    //Do we need to loop over all classes (ie type symbols) and add them to sym_tab before recursing?
+
     auto children = classtable->get_tree_map()[Object];
     for(size_t i = 0; i < children.size(); i++){
         classtable->get_class_map()[children[i]]->recurse(classtable);
+        if (children[i] == Main)
+            main_defined = true;
     }
     sym_tab->exitscope();
+    if (!main_defined)
+        cerr << "Class Main is not defined." << endl;
 }
 
 void class__class::recurse(ClassTable* classtable) {
     sym_tab->enterscope();
-    for(int i = features->first(); features->more(i); i = features->next(i))
-        features->nth(i)->recurse(classtable, name);
+    Symbol feature_name;
+    for(int i = features->first(); features->more(i); i = features->next(i)) {
+        feature_name = features->nth(i)->get_name_sym_tab();
+        if (feature_name != NULL) {
+            if(sym_tab->probe(feature_name) != NULL) {
+                classtable->semant_error1(name, features->nth(i)) << "Attribute " << feature_name << " is multiply defined in class." << endl;
+            } else {
+                Symbol feature_type = features->nth(i)->get_type();
+                if (feature_type != NULL) {
+                    sym_tab->addid(feature_name, &feature_type);
+                }
+            }
+        }
+    }
 
     auto children = classtable->get_tree_map()[name];
     for(size_t i = 0; i < children.size(); i++){
         classtable->get_class_map()[children[i]]->recurse(classtable);
+    }
+
+    for(int i = features->first(); features->more(i); i = features->next(i)) {
+        features->nth(i)->recurse(classtable, name);
     }
 
     sym_tab->exitscope();
@@ -416,18 +439,17 @@ void method_class::recurse(ClassTable* classtable, Symbol class_name)
     for(int i = formals->first(); formals->more(i); i = formals->next(i))
         formals->nth(i)->recurse();
 
-    expr->recurse();
+    expr->recurse(classtable, class_name);
     sym_tab->exitscope();
 }
 
 void attr_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-    if(sym_tab->probe(name) != NULL) {
-        classtable->semant_error((classtable->get_class_map()[class_name])->get_filename(), (tree_node*) self) << "Attribute " << name << " is multiply defined in class." << endl;
-    }
-
-    sym_tab->addid(name, &type_decl);
-    init->recurse();
+    sym_tab->enterscope();
+    init->recurse(classtable, class_name);
+    sym_tab->exitscope();
+    Symbol type = init->get_type();
+    //Probably want to do some type cheking with this type
 }
 
 //
@@ -446,7 +468,7 @@ void formal_class::recurse()
 //
 void branch_class::recurse()
 {
-   return;
+    return;
 }
 
 //
@@ -455,10 +477,19 @@ void branch_class::recurse()
 // of the result.  Note the call to dump_type (see above) at the
 // end of the method.
 //
-void assign_class::recurse()
+void assign_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-   expr->recurse();
-   sym_tab->addid(name, (Symbol*) expr->get_type());
+    if (sym_tab->lookup(name) == NULL) {
+        classtable->semant_error1(class_name, this) << "Assignment to undeclared variable " << name << "." << endl;
+    }
+
+    sym_tab->enterscope();
+    expr->recurse(classtable, class_name);
+    sym_tab->exitscope();
+    type = expr->get_type();
+    
+    // Probably want to do some typechecking here. Questionable if we should re addd this symbold to sym_tab or not.
+    //sym_tab->addid(name, &type);
 }
 
 //
@@ -466,7 +497,7 @@ void assign_class::recurse()
 // static dispatch class, function name, and actual arguments
 // of any static dispatch.  
 //
-void static_dispatch_class::recurse()
+void static_dispatch_class::recurse(ClassTable* classtable, Symbol class_name)
 {
    return;
 }
@@ -475,7 +506,7 @@ void static_dispatch_class::recurse()
 //   dispatch_class::dump_with_types is similar to 
 //   static_dispatch_class::dump_with_types 
 //
-void dispatch_class::recurse()
+void dispatch_class::recurse(ClassTable* classtable, Symbol class_name)
 {
    return;
 }
@@ -484,16 +515,31 @@ void dispatch_class::recurse()
 // cond_class::dump_with_types dumps each of the three expressions
 // in the conditional and then the type of the entire expression.
 //
-void cond_class::recurse()
+void cond_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-    return;
+    sym_tab->enterscope();
+    pred->recurse(classtable, class_name);
+    sym_tab->exitscope();
+    Symbol pred_type = pred->get_type();
+    //Check if pred_type is bool
+
+    sym_tab->enterscope();
+    then_exp->recurse(classtable, class_name);
+    sym_tab->exitscope();
+    Symbol then_type = then_exp->get_type();
+    
+    sym_tab->enterscope();
+    else_exp->recurse(classtable, class_name);
+    sym_tab->exitscope();
+    Symbol else_type = else_exp->get_type();
+
 }
 
 //
 // loop_class::dump_with_types dumps the predicate and then the
 // body of the loop, and finally the type of the entire expression.
 //
-void loop_class::recurse()
+void loop_class::recurse(ClassTable* classtable, Symbol class_name)
 {
    return;
 }
@@ -503,7 +549,7 @@ void loop_class::recurse()
 //  the Case_ one at a time.  The type of the entire expression
 //  is dumped at the end.
 //
-void typcase_class::recurse()
+void typcase_class::recurse(ClassTable* classtable, Symbol class_name)
 {
    return;
 }
@@ -513,93 +559,93 @@ void typcase_class::recurse()
 //  and introduce nothing that isn't already in the code discussed
 //  above.
 //
-void block_class::recurse()
+void block_class::recurse(ClassTable* classtable, Symbol class_name)
 {
    return;
 }
 
-void let_class::recurse()
+void let_class::recurse(ClassTable* classtable, Symbol class_name)
 {
    return;
 }
 
-void plus_class::recurse()
+void plus_class::recurse(ClassTable* classtable, Symbol class_name)
 {
     return;
 }
 
-void sub_class::recurse()
+void sub_class::recurse(ClassTable* classtable, Symbol class_name)
 {
    return;
 }
 
-void mul_class::recurse()
+void mul_class::recurse(ClassTable* classtable, Symbol class_name)
 {
    return;
 }
 
-void divide_class::recurse()
+void divide_class::recurse(ClassTable* classtable, Symbol class_name)
 {
    return;
 }
 
-void neg_class::recurse()
+void neg_class::recurse(ClassTable* classtable, Symbol class_name)
 {
    return;
 }
 
-void lt_class::recurse()
+void lt_class::recurse(ClassTable* classtable, Symbol class_name)
 {
    return;
 }
 
 
-void eq_class::recurse()
+void eq_class::recurse(ClassTable* classtable, Symbol class_name)
 {
    return;
 }
 
-void leq_class::recurse()
+void leq_class::recurse(ClassTable* classtable, Symbol class_name)
 {
    return;
 }
 
-void comp_class::recurse()
+void comp_class::recurse(ClassTable* classtable, Symbol class_name)
 {
    return;
 }
 
-void int_const_class::recurse()
+void int_const_class::recurse(ClassTable* classtable, Symbol class_name)
 {
    return;
 }
 
-void bool_const_class::recurse()
+void bool_const_class::recurse(ClassTable* classtable, Symbol class_name)
 {
    return;
 }
 
-void string_const_class::recurse()
+void string_const_class::recurse(ClassTable* classtable, Symbol class_name)
 {
    return;
 }
 
-void new__class::recurse()
+void new__class::recurse(ClassTable* classtable, Symbol class_name)
 {
    return;
 }
 
-void isvoid_class::recurse()
+void isvoid_class::recurse(ClassTable* classtable, Symbol class_name)
 {
    return;
 }
 
-void no_expr_class::recurse()
+void no_expr_class::recurse(ClassTable* classtable, Symbol class_name)
 {
    return;
 }
 
-void object_class::recurse()
+void object_class::recurse(ClassTable* classtable, Symbol class_name)
 {
    return;
 }
