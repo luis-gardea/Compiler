@@ -1,11 +1,11 @@
-class A {
-    (*a : Int <- a + 5;
+class Main {
+    a : Int <- a + 5;
 
-    a : Int;*)
+    a : Int;
 
     a : Int;
     
-    (*b(x : Int) : Int {
+    b(x : Int) : Int {
         b <- x
     };
 
@@ -13,5 +13,11 @@ class A {
 
     c : Int <- if d then e <- 5 else e <- 6 fi;
 
-    g : Int <- if d then e <- e + e else e fi;*)
+    g : Int <- if d then e <- e + e else e fi;
+
+    h: Bool <- "" = 7;
+
+    j: A <- new B;
+
+    k: B;
 };

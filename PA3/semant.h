@@ -51,6 +51,11 @@ public:
 
 };
 
+typedef struct Method {
+  Symbol name;
+  Symbol type;
+} Method;
+
 
 #endif
 

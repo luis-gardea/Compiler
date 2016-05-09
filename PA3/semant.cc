@@ -11,7 +11,7 @@
 extern int semant_debug;
 extern char *curr_filename;
 static SymbolTable<Symbol,Symbol> *sym_tab = new SymbolTable<Symbol, Symbol>();
-static std::map<Symbol,Symbol> *method_table = new std::map<Symbol, Symbol>();
+static std::map<Method, std::vector<Symbol>> *method_map = new std::map<Method, std::vector<Symbol>>();
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -200,7 +200,7 @@ void ClassTable::CheckInheritanceTree(){
 
 // Checks if c1 <= c2, i.e. that class c1 conforms to class c2
 bool ClassTable::conforms(Symbol c1, Symbol c2) {
-    if (c1 == NULL || c2 == NULL) return Object;
+    if (c1 == NULL || c2 == NULL) return false;
     Symbol class_ = c1;
     while (true) {
         if (class_ == c2) {
@@ -441,12 +441,9 @@ void class__class::recurse(ClassTable* classtable, bool& main_method_defined) {
 
 void method_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-    // if(sym_tab->probe(name) != NULL); {
-    //check to make sure method was not already defined in class
-    // }
     sym_tab->enterscope();
     for(int i = formals->first(); formals->more(i); i = formals->next(i))
-        formals->nth(i)->recurse();
+        formals->nth(i)->recurse(classtable, class_name);
 
     expr->recurse(classtable, class_name);
     sym_tab->exitscope();
@@ -463,7 +460,7 @@ void attr_class::recurse(ClassTable* classtable, Symbol class_name)
 // formal_class::dump_with_types dumps the name and type declaration
 // of a formal parameter.
 //
-void formal_class::recurse()
+void formal_class::recurse(ClassTable* classtable, Symbol class_name)
 {
     sym_tab->addid(name, &type_decl);
     return;
@@ -473,7 +470,7 @@ void formal_class::recurse()
 // branch_class::dump_with_types dumps the name, type declaration,
 // and body of any case branch.
 //
-void branch_class::recurse()
+void branch_class::recurse(ClassTable* classtable, Symbol class_name)
 {
     return;
 }
@@ -496,7 +493,7 @@ void assign_class::recurse(ClassTable* classtable, Symbol class_name)
     }
 
     
-    // Probably want to do some typechecking here. Questionable if we should re addd this symbold to sym_tab or not.
+    // Probably want to do some typechecking here.
     //sym_tab->addid(name, &type);
 }
 
@@ -650,7 +647,7 @@ void lt_class::recurse(ClassTable* classtable, Symbol class_name)
     e2->recurse(classtable, class_name);
 
     if (e1->get_type() != Bool || e2->get_type() != Bool) {
-        classtable->semant_error1(class_name,this) << "Non-Bool arguments: " << e1->get_type() << " + " << e2->get_type() << endl;
+        classtable->semant_error1(class_name,this) << "Non-Bool arguments: " << e1->get_type() << " < " << e2->get_type() << endl;
     }
 
     type = Bool;
@@ -659,7 +656,14 @@ void lt_class::recurse(ClassTable* classtable, Symbol class_name)
 
 void eq_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-   return;
+    e1->recurse(classtable, class_name);
+    e2->recurse(classtable, class_name);
+
+    if (e1->get_type() !=  e2->get_type()) {
+        classtable->semant_error1(class_name,this) << "Non-mathcing arguments: " << e1->get_type() << " = " << e2->get_type() << endl;
+    }
+
+    type = Bool;
 }
 
 void leq_class::recurse(ClassTable* classtable, Symbol class_name)
@@ -668,7 +672,7 @@ void leq_class::recurse(ClassTable* classtable, Symbol class_name)
     e2->recurse(classtable, class_name);
 
     if (e1->get_type() != Bool || e2->get_type() != Bool) {
-        classtable->semant_error1(class_name,this) << "Non-Bool arguments: " << e1->get_type() << " + " << e2->get_type() << endl;
+        classtable->semant_error1(class_name,this) << "Non-Bool arguments: " << e1->get_type() << " <= " << e2->get_type() << endl;
     }
 
     type = Bool;
@@ -676,42 +680,55 @@ void leq_class::recurse(ClassTable* classtable, Symbol class_name)
 
 void comp_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-   return;
+    e1->recurse(classtable, class_name);
+
+    if (e1->get_type() !=  Bool) {
+        classtable->semant_error1(class_name,this) << "Non-Bool argument: " << e1->get_type() << endl;
+    }
+
+    type = Bool;
 }
 
 void int_const_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-   return;
+    type = Int;
 }
 
 void bool_const_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-   return;
+    type = Bool;
 }
 
 void string_const_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-   return;
+    type = Str;
 }
 
 void new__class::recurse(ClassTable* classtable, Symbol class_name)
 {
-   return;
+    //type check
+    type = type_name;
 }
 
 void isvoid_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-   return;
+    e1->recurse(classtable, class_name);
+    //do some sort of type check here with No_class ?
+    type = Bool;
 }
 
 void no_expr_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-   return;
+    type = No_type;
 }
 
 void object_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-   return;
+    if (sym_tab->probe(name) == NULL) {
+        classtable->semant_error1(class_name,this) << "undeclared identifier " << name << endl;
+    }
+    type = Object;
+    //this is just place holder for now-- should get type from sym_tab
 }
 
 /*   This is the entry point to the semantic checker.
