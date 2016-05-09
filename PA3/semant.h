@@ -10,12 +10,14 @@
 #include "stringtab.h"
 #include "symtab.h"
 #include "list.h"
+#include <utility>
 
 #define TRUE 1
 #define FALSE 0
 
 class ClassTable;
 typedef ClassTable *ClassTableP;
+typedef std::pair<Symbol, Symbol> stp;
 
 void static_error_exit();
 
@@ -51,10 +53,14 @@ public:
 
 };
 
-typedef struct Method {
-  Symbol name;
-  Symbol type;
-} Method;
+// Method {
+//   Symbol name_;
+//   Symbol type_;
+//   Method::Method(Symbol name, Symbol type) {
+//     name_ = name;
+//     type_ = type;
+//   };
+// };
 
 
 #endif

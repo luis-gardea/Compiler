@@ -62,8 +62,9 @@ public:
    tree_node *copy()		 { return copy_Feature(); }
    virtual Feature copy_Feature() = 0;
    virtual void recurse(ClassTable* classtable, Symbol class_name) = 0;
-   virtual Symbol get_name_sym_tab() = 0;
+   virtual Symbol get_name() = 0;
    virtual Symbol get_type() = 0;
+   virtual std::string get_feature_type() = 0;
 
 
 #ifdef Feature_EXTRAS
@@ -81,6 +82,8 @@ public:
    virtual Formal copy_Formal() = 0;
 
    virtual void recurse(ClassTable* classtable, Symbol class_name) = 0;
+   virtual Symbol get_name() = 0;
+   virtual Symbol get_type() = 0;
 
 #ifdef Formal_EXTRAS
    Formal_EXTRAS
@@ -209,19 +212,22 @@ protected:
    Formals formals;
    Symbol return_type;
    Expression expr;
+   std::string feature_type;
 public:
    method_class(Symbol a1, Formals a2, Symbol a3, Expression a4) {
       name = a1;
       formals = a2;
       return_type = a3;
       expr = a4;
+      feature_type = "Method";
    }
    Feature copy_Feature();
    void dump(ostream& stream, int n);
 
    void recurse(ClassTable* classtable, Symbol class_name);
-   Symbol get_name_sym_tab() { return NULL; }
+   Symbol get_name() { return name; }
    Symbol get_type() { return return_type; }
+   std::string get_feature_type() { return feature_type; }
 
 #ifdef Feature_SHARED_EXTRAS
    Feature_SHARED_EXTRAS
@@ -238,18 +244,21 @@ protected:
    Symbol name;
    Symbol type_decl;
    Expression init;
+   std::string feature_type;
 public:
    attr_class(Symbol a1, Symbol a2, Expression a3) {
       name = a1;
       type_decl = a2;
       init = a3;
+      feature_type = "Attribute";
    }
    Feature copy_Feature();
    void dump(ostream& stream, int n);
 
    void recurse(ClassTable* classtable, Symbol class_name);
-   Symbol get_name_sym_tab() { return name; }
+   Symbol get_name() { return name; }
    Symbol get_type() { return type_decl; }
+   std::string get_feature_type() { return feature_type; }
 
 #ifdef Feature_SHARED_EXTRAS
    Feature_SHARED_EXTRAS
@@ -274,6 +283,8 @@ public:
    void dump(ostream& stream, int n);
 
    void recurse(ClassTable* classtable, Symbol class_name);
+   Symbol get_name() { return name; }
+   Symbol get_type() { return type_decl; } 
 
 #ifdef Formal_SHARED_EXTRAS
    Formal_SHARED_EXTRAS

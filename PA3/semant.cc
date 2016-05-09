@@ -11,7 +11,7 @@
 extern int semant_debug;
 extern char *curr_filename;
 static SymbolTable<Symbol,Symbol> *sym_tab = new SymbolTable<Symbol, Symbol>();
-static std::map<Method, std::vector<Symbol>> *method_map = new std::map<Method, std::vector<Symbol>>();
+static std::map<stp, std::vector<stp> > method_map;
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -404,11 +404,31 @@ void program_class::recurse(ClassTable* classtable) {
 }
 
 void class__class::recurse(ClassTable* classtable, bool& main_method_defined) {
+    // Enter a new scope since we just entered a new Class. All features defined here
+    // are added to this Class's scope upfront. 
+    //
+    // Add all method declarations to the global method_map data structure,
+    // which defines the method environment for the program.
+    //
+    // Add all attribute declarations to the global sym_tab data structure,
+    // which defines the type environment for the program.
     sym_tab->enterscope();
     Symbol feature_name;
+    Symbol feature_type;
     for(int i = features->first(); features->more(i); i = features->next(i)) {
-        feature_name = features->nth(i)->get_name_sym_tab();
-        if (feature_name != NULL) {
+        feature_name = features->nth(i)->get_name(); 
+        feature_type = features->nth(i)->get_type();
+        // Do we need this next line of checking?
+        //if (feature_name == NULL || feature_type == NULL) continue;
+
+        if (features->nth(i)->get_feature_type() == "Method") {
+            stp m(feature_name, feature_type);
+            if (method_map.find(m) != method_map.end()) {
+                classtable->semant_error1(name, features->nth(i)) << "Method " << feature_name << " is multiply defined in class." << endl;
+            } else {
+                    method_map[m] = std::vector<stp>();
+            }
+        } else {
             if(sym_tab->probe(feature_name) != NULL) {
                 classtable->semant_error1(name, features->nth(i)) << "Attribute " << feature_name << " is multiply defined in class." << endl;
             } else {
@@ -417,7 +437,7 @@ void class__class::recurse(ClassTable* classtable, bool& main_method_defined) {
                     sym_tab->addid(feature_name, &feature_type);
                 }
             }
-        }
+        }   
     }
 
     if (name == Main) {
@@ -442,6 +462,12 @@ void class__class::recurse(ClassTable* classtable, bool& main_method_defined) {
 void method_class::recurse(ClassTable* classtable, Symbol class_name)
 {
     sym_tab->enterscope();
+    for(int i = formals->first(); formals->more(i); i = formals->next(i)) {
+        stp m(name, return_type);
+        stp f(formals->nth(i)->get_name(), formals->nth(i)->get_type());
+        method_map[m].push_back(f);
+    }
+
     for(int i = formals->first(); formals->more(i); i = formals->next(i))
         formals->nth(i)->recurse(classtable, class_name);
 
