@@ -42,7 +42,7 @@ public:
    tree_node *copy()		 { return copy_Class_(); }
    virtual Class_ copy_Class_() = 0;
 
-   virtual void recurse(ClassTable* classtable) = 0;
+   virtual void recurse(ClassTable* classtable, bool& main_method_defined) = 0;
    virtual Symbol get_name() const = 0;
    virtual Symbol get_parent() const = 0;
    virtual Symbol get_filename() const = 0;
@@ -185,7 +185,7 @@ public:
    Class_ copy_Class_();
    void dump(ostream& stream, int n);
 
-   void recurse(ClassTable* classtable);
+   void recurse(ClassTable* classtable, bool& main_method_defined);
    Symbol get_name() const { return name; }
    Symbol get_parent() const { return parent; }
    Symbol get_filename() const { return filename; }

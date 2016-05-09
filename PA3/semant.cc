@@ -200,6 +200,7 @@ void ClassTable::CheckInheritanceTree(){
 
 // Checks if c1 <= c2, i.e. that class c1 conforms to class c2
 bool ClassTable::conforms(Symbol c1, Symbol c2) {
+    if (c1 == NULL || c2 == NULL) return Object;
     Symbol class_ = c1;
     while (true) {
         if (class_ == c2) {
@@ -219,10 +220,12 @@ bool ClassTable::conforms(Symbol c1, Symbol c2) {
 // (least upper bound) 
 // Finds the least common ancestor of class c1 and c2. Will always return a Symbol, as all classes have Object as common ancestor
 Symbol ClassTable::lub(Symbol c1, Symbol c2) {
+    if (c1 == NULL || c2 == NULL) return Object;
     std::set<Symbol> c2_ancestors;
     Symbol class_ = c2;
     while (true) {
         c2_ancestors.insert(class_);
+        cout << class_ << endl;
         if (class_ == Object) break;
         class_ = child_to_parent[class_];
     }
@@ -386,23 +389,21 @@ ostream& ClassTable::semant_error1(Symbol name, tree_node *t)
 ///////
 
 void program_class::recurse(ClassTable* classtable) {
-    bool main_defined = false;
+    bool main_method_defined = false;
     sym_tab->enterscope();
     //Do we need to loop over all classes (ie type symbols) and add them to sym_tab before recursing?
 
     auto children = classtable->get_tree_map()[Object];
     for(size_t i = 0; i < children.size(); i++){
-        classtable->get_class_map()[children[i]]->recurse(classtable);
-        if (children[i] == Main)
-            main_defined = true;
+        classtable->get_class_map()[children[i]]->recurse(classtable, main_method_defined);
     }
     sym_tab->exitscope();
-    if (!main_defined)
+    if (!main_method_defined)
         classtable->semant_error() << "Class Main is not defined." << endl;
 
 }
 
-void class__class::recurse(ClassTable* classtable) {
+void class__class::recurse(ClassTable* classtable, bool& main_method_defined) {
     sym_tab->enterscope();
     Symbol feature_name;
     for(int i = features->first(); features->more(i); i = features->next(i)) {
@@ -419,9 +420,16 @@ void class__class::recurse(ClassTable* classtable) {
         }
     }
 
+    if (name == Main) {
+        main_method_defined = true;
+        if (sym_tab->probe(main_meth) == NULL) {
+            classtable->semant_error1(name, this) << "main method not defined in class Main." << endl;
+        }
+    }
+
     auto children = classtable->get_tree_map()[name];
     for(size_t i = 0; i < children.size(); i++){
-        classtable->get_class_map()[children[i]]->recurse(classtable);
+        classtable->get_class_map()[children[i]]->recurse(classtable, main_method_defined);
     }
 
     for(int i = features->first(); features->more(i); i = features->next(i)) {
@@ -446,9 +454,7 @@ void method_class::recurse(ClassTable* classtable, Symbol class_name)
 
 void attr_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-    sym_tab->enterscope();
     init->recurse(classtable, class_name);
-    sym_tab->exitscope();
     Symbol type = init->get_type();
     //Probably want to do some type cheking with this type
 }
@@ -480,14 +486,15 @@ void branch_class::recurse()
 //
 void assign_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-    if (sym_tab->lookup(name) == NULL) {
+    expr->recurse(classtable, class_name);
+
+    if (sym_tab->probe(name) == NULL) {
         classtable->semant_error1(class_name, this) << "Assignment to undeclared variable " << name << "." << endl;
+        type = Object;
+    } else {
+        type = expr->get_type();
     }
 
-    sym_tab->enterscope();
-    expr->recurse(classtable, class_name);
-    sym_tab->exitscope();
-    type = expr->get_type();
     
     // Probably want to do some typechecking here. Questionable if we should re addd this symbold to sym_tab or not.
     //sym_tab->addid(name, &type);
@@ -500,7 +507,7 @@ void assign_class::recurse(ClassTable* classtable, Symbol class_name)
 //
 void static_dispatch_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-   return;
+    type = Object;
 }
 
 //
@@ -509,7 +516,7 @@ void static_dispatch_class::recurse(ClassTable* classtable, Symbol class_name)
 //
 void dispatch_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-   return;
+    type = Object;
 }
 
 //
@@ -518,28 +525,19 @@ void dispatch_class::recurse(ClassTable* classtable, Symbol class_name)
 //
 void cond_class::recurse(ClassTable* classtable, Symbol class_name)
 {   
-    sym_tab->enterscope();
     pred->recurse(classtable, class_name);
-    sym_tab->exitscope();
     Symbol pred_type = pred->get_type();
-    //Check if pred_type is bool
-    cout << "We are here" << endl;
     if (pred_type != Bool) {
         classtable->semant_error1(class_name, this) << "Predicate of \'if\' does not have type Bool." << endl; 
     }
 
-    sym_tab->enterscope();
     then_exp->recurse(classtable, class_name);
-    sym_tab->exitscope();
     Symbol then_type = then_exp->get_type();
     
-    sym_tab->enterscope();
     else_exp->recurse(classtable, class_name);
-    sym_tab->exitscope();
     Symbol else_type = else_exp->get_type();
 
     type = classtable->lub(then_type,else_type);
-    exit();
 }
 
 //
@@ -548,18 +546,13 @@ void cond_class::recurse(ClassTable* classtable, Symbol class_name)
 //
 void loop_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-    sym_tab->enterscope();
     pred->recurse(classtable,class_name);
-    sym_tab->exitscope();
     Symbol pred_type = pred->get_type();
-    cout << "We are here!!!" << endl;
     if (pred_type != Bool) {
         classtable->semant_error1(class_name,this) << "Loop condition does not have type Bool." << endl;
     }
 
-    sym_tab->enterscope();
     body->recurse(classtable, class_name);
-    sym_tab->exitscope();
 
     type = Object;
 }
@@ -581,7 +574,10 @@ void typcase_class::recurse(ClassTable* classtable, Symbol class_name)
 //
 void block_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-   return;
+    for (int i = body->first(); body->more(i); i = body->next(i)) {
+        body->nth(i)->recurse(classtable, class_name);
+        type = body->nth(i)->get_type();
+    }
 }
 
 void let_class::recurse(ClassTable* classtable, Symbol class_name)
@@ -591,32 +587,73 @@ void let_class::recurse(ClassTable* classtable, Symbol class_name)
 
 void plus_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-    return;
+    e1->recurse(classtable, class_name);
+    e2->recurse(classtable, class_name);
+
+    if (e1->get_type() != Int || e2->get_type() != Int) {
+        classtable->semant_error1(class_name,this) << "Non-Int arguments: " << e1->get_type() << " + " << e2->get_type() << endl;
+    }
+
+    type = Int;
 }
 
 void sub_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-   return;
+    e1->recurse(classtable, class_name);
+    e2->recurse(classtable, class_name);
+
+    if (e1->get_type() != Int || e2->get_type() != Int) {
+        classtable->semant_error1(class_name,this) << "Non-Int arguments: " << e1->get_type() << " - " << e2->get_type() << endl;
+    }
+
+    type = Int;
 }
 
 void mul_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-   return;
+    e1->recurse(classtable, class_name);
+    e2->recurse(classtable, class_name);
+
+    if (e1->get_type() != Int || e2->get_type() != Int) {
+        classtable->semant_error1(class_name,this) << "Non-Int arguments: " << e1->get_type() << " * " << e2->get_type() << endl;
+    }
+
+    type = Int;
 }
 
 void divide_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-   return;
+    e1->recurse(classtable, class_name);
+    e2->recurse(classtable, class_name);
+
+    if (e1->get_type() != Int || e2->get_type() != Int) {
+        classtable->semant_error1(class_name,this) << "Non-Int arguments: " << e1->get_type() << " / " << e2->get_type() << endl;
+    }
+
+    type = Int;
 }
 
 void neg_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-   return;
+    e1->recurse(classtable, class_name);
+
+    if (e1->get_type() != Int) {
+        classtable->semant_error1(class_name,this) << "Non-Int argument: " << e1->get_type() << endl;
+    }
+
+    type = Int;
 }
 
 void lt_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-   return;
+    e1->recurse(classtable, class_name);
+    e2->recurse(classtable, class_name);
+
+    if (e1->get_type() != Bool || e2->get_type() != Bool) {
+        classtable->semant_error1(class_name,this) << "Non-Bool arguments: " << e1->get_type() << " + " << e2->get_type() << endl;
+    }
+
+    type = Bool;
 }
 
 
@@ -627,7 +664,14 @@ void eq_class::recurse(ClassTable* classtable, Symbol class_name)
 
 void leq_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-   return;
+    e1->recurse(classtable, class_name);
+    e2->recurse(classtable, class_name);
+
+    if (e1->get_type() != Bool || e2->get_type() != Bool) {
+        classtable->semant_error1(class_name,this) << "Non-Bool arguments: " << e1->get_type() << " + " << e2->get_type() << endl;
+    }
+
+    type = Bool;
 }
 
 void comp_class::recurse(ClassTable* classtable, Symbol class_name)
@@ -689,7 +733,7 @@ void program_class::semant()
 
     /* ClassTable constructor may do some semantic analysis */
     ClassTable *classtable = new ClassTable(classes);
-    cout << "We are here" << endl;
+
     recurse(classtable);
 
     /* some semantic analysis code may go here */
