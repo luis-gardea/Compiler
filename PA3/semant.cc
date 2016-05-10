@@ -11,7 +11,7 @@
 extern int semant_debug;
 extern char *curr_filename;
 static SymbolTable<Symbol,Symbol> *sym_tab = new SymbolTable<Symbol, Symbol>();
-static std::map<stp, std::vector<stp> > method_map;
+static std::map<Method, std::vector<Symbol> > method_map;
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -384,6 +384,27 @@ ostream& ClassTable::semant_error1(Symbol name, tree_node *t)
     return semant_error(class_map[name]->get_filename(), t);
 }
 
+
+///////
+//
+///////
+std::set<Symbol> class__class::get_parent_method_names(ClassTable* classtable){
+    //Symbol p = classtable->child_to_parent[name];
+    // class__class p = classtable->get_class_map()[parent];
+    // Features feat = p.get_features();
+    std::set<Symbol> parent_set;
+    // for (int i = features->first(); features->more(i); features->next(i)){
+    //     std::string feature_type = features->nth(i)->get_feature_type();
+    //     if (feature_type == "Method")
+    //         parent_set.insert(features->nth(i)->get_name());
+    // }
+    for (auto it : method_map){
+        if (it.first.first == parent)
+            parent_set.insert(it.first.second);
+    }
+    return parent_set;
+}
+
 ///////
 //
 ///////
@@ -415,29 +436,50 @@ void class__class::recurse(ClassTable* classtable, bool& main_method_defined) {
     sym_tab->enterscope();
     Symbol feature_name;
     Symbol feature_type;
+    std::set<Symbol> parent_method_names = get_parent_method_names(classtable);
     for(int i = features->first(); features->more(i); i = features->next(i)) {
         feature_name = features->nth(i)->get_name(); 
-        feature_type = features->nth(i)->get_type();
+        
+        //feature_type = features->nth(i)->get_type();
         // Do we need this next line of checking?
         //if (feature_name == NULL || feature_type == NULL) continue;
 
         if (features->nth(i)->get_feature_type() == "Method") {
-            stp m(feature_name, feature_type);
+            Method m(name, feature_name);
+
             if (method_map.find(m) != method_map.end()) {
-                classtable->semant_error1(name, features->nth(i)) << "Method " << feature_name << " is multiply defined in class." << endl;
+                //check to see if this method was already defined in THIS class
+                //Need lots of error checking here for redefinitions
+                //if typ order doesnt match->error
+                //if return type
+                //classtable->semant_error1(name, features->nth(i)) << "Method " << feature_name << " is multiply defined in class." << endl;
+            } else if (parent_method_names.find(feature_name) != parent_method_names.end()) {
+                parent_method_names.erase(feature_name);
+                method_map[m] = std::vector<Symbol>();
+                //check if method is defined was defined in PARENT class 
+                //remove from set
+                //add new Method to map
             } else {
-                    method_map[m] = std::vector<stp>();
+                method_map[m] = std::vector<Symbol>();
             }
         } else {
             if(sym_tab->probe(feature_name) != NULL) {
                 classtable->semant_error1(name, features->nth(i)) << "Attribute " << feature_name << " is multiply defined in class." << endl;
-            } else {
+            } else if (sym_tab->lookup(feature_name) != NULL) {
+                classtable->semant_error1(name, features->nth(i)) << "Attribute " << feature_name << " is an attribute of an inherited class." << endl;
+            }else {
                 Symbol feature_type = features->nth(i)->get_type();
                 if (feature_type != NULL) {
                     sym_tab->addid(feature_name, &feature_type);
                 }
             }
         }   
+    }
+
+    for (auto it = parent_method_names.begin(); it != parent_method_names.end(); it++){
+        Method parent_m(parent,*it);
+        Method m(name,*it);
+        method_map[m] = method_map[parent_m];
     }
 
     if (name == Main) {
@@ -447,13 +489,13 @@ void class__class::recurse(ClassTable* classtable, bool& main_method_defined) {
         }
     }
 
+    for(int i = features->first(); features->more(i); i = features->next(i)) {
+        features->nth(i)->recurse(classtable, name);
+    }
+
     auto children = classtable->get_tree_map()[name];
     for(size_t i = 0; i < children.size(); i++){
         classtable->get_class_map()[children[i]]->recurse(classtable, main_method_defined);
-    }
-
-    for(int i = features->first(); features->more(i); i = features->next(i)) {
-        features->nth(i)->recurse(classtable, name);
     }
 
     sym_tab->exitscope();
@@ -462,11 +504,15 @@ void class__class::recurse(ClassTable* classtable, bool& main_method_defined) {
 void method_class::recurse(ClassTable* classtable, Symbol class_name)
 {
     sym_tab->enterscope();
+    Method m(class_name, name);
     for(int i = formals->first(); formals->more(i); i = formals->next(i)) {
-        stp m(name, return_type);
-        stp f(formals->nth(i)->get_name(), formals->nth(i)->get_type());
-        method_map[m].push_back(f);
+        //stp f(formals->nth(i)->get_name(), formals->nth(i)->get_type());
+        method_map[m].push_back(formals->nth(i)->get_type());
     }
+    method_map[m].push_back(return_type);
+    Method parent_m(classtable->get_child_to_parent()[class_name],name);
+    // if(parent_m exists in methodmap) compare(m, parent_m);
+
 
     for(int i = formals->first(); formals->more(i); i = formals->next(i))
         formals->nth(i)->recurse(classtable, class_name);

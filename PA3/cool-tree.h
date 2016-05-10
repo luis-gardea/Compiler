@@ -47,6 +47,7 @@ public:
    virtual Symbol get_parent() const = 0;
    virtual Symbol get_filename() const = 0;
    virtual Features get_features() const = 0;
+   virtual std::set<Symbol> get_parent_method_names(ClassTable* classtable) const = 0;
 
 #ifdef Class__EXTRAS
    Class__EXTRAS
@@ -195,6 +196,7 @@ public:
    Symbol get_parent() const { return parent; }
    Symbol get_filename() const { return filename; }
    Features get_features() const { return features; }
+   std::set<Symbol> get_parent_method_names(ClassTable* classtable);
 
 #ifdef Class__SHARED_EXTRAS
    Class__SHARED_EXTRAS

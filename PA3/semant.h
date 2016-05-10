@@ -17,7 +17,7 @@
 
 class ClassTable;
 typedef ClassTable *ClassTableP;
-typedef std::pair<Symbol, Symbol> stp;
+typedef std::pair<Symbol, Symbol> Method;
 
 void static_error_exit();
 
@@ -50,6 +50,7 @@ public:
   Symbol lub(Symbol c1, Symbol c2);
   std::map<Symbol,std::vector<Symbol>> get_tree_map() { return parent_to_children; }
   std::map<Symbol,Class_> get_class_map() { return class_map; }
+  std::map<Symbol,Symbol> get_child_to_parent() { return child_to_parent; }
 
 };
 
