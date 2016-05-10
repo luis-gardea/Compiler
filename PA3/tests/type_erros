@@ -9,4 +9,18 @@ class A {
         	while let d:Int in b loop d <- 5 pool;
         }
     };
+
+    d:Bool <- 5;
+};
+
+class B {
+    a:Bool;
+
+    b(): Bool {
+            g <- 5
+    };
+};
+
+class C inherits B {
+
 };

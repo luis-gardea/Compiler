@@ -47,7 +47,7 @@ public:
    virtual Symbol get_parent() const = 0;
    virtual Symbol get_filename() const = 0;
    virtual Features get_features() const = 0;
-   virtual std::set<Symbol> get_parent_method_names(ClassTable* classtable) const = 0;
+   virtual std::set<Symbol> get_parent_method_names(ClassTable* classtable) = 0;
 
 #ifdef Class__EXTRAS
    Class__EXTRAS
