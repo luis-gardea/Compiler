@@ -15,6 +15,8 @@
 #include <vector>
 #include "semant.h"
 
+typedef std::pair<Symbol, Symbol> Method;
+
 class ClassTable;
 
 // define the class for phylum
@@ -47,7 +49,7 @@ public:
    virtual Symbol get_parent() const = 0;
    virtual Symbol get_filename() const = 0;
    virtual Features get_features() const = 0;
-   virtual std::set<Symbol> get_parent_method_names(ClassTable* classtable) const = 0;
+   virtual std::set<Symbol> get_parent_method_names(ClassTable* classtable) = 0;
 
 #ifdef Class__EXTRAS
    Class__EXTRAS
@@ -65,7 +67,8 @@ public:
    virtual void recurse(ClassTable* classtable, Symbol class_name) = 0;
    virtual Symbol get_name() = 0;
    virtual Symbol get_type() = 0;
-   virtual std::string get_feature_type() = 0;
+   virtual std::string get_feature_type() = 0; 
+   // virtual void compare(ClassTable* classtable, Symbol class_name, Method m, Method parent_m) = 0;
 
 
 #ifdef Feature_EXTRAS
@@ -230,6 +233,7 @@ public:
    Symbol get_name() { return name; }
    Symbol get_type() { return return_type; }
    std::string get_feature_type() { return feature_type; }
+   // void compare(ClassTable* classtable, Symbol class_name, Method m, Method parent_m);
 
 #ifdef Feature_SHARED_EXTRAS
    Feature_SHARED_EXTRAS

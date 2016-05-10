@@ -264,14 +264,14 @@ void ClassTable::install_basic_classes() {
     // are already built in to the runtime system.
 
     Class_ Object_class =
-	class_(Object, 
-	       No_class,
-	       append_Features(
-			       append_Features(
-					       single_Features(method(cool_abort, nil_Formals(), Object, no_expr())),
-					       single_Features(method(type_name, nil_Formals(), Str, no_expr()))),
-			       single_Features(method(copy, nil_Formals(), SELF_TYPE, no_expr()))),
-	       filename);
+    class_(Object, 
+           No_class,
+           append_Features(
+                   append_Features(
+                           single_Features(method(cool_abort, nil_Formals(), Object, no_expr())),
+                           single_Features(method(type_name, nil_Formals(), Str, no_expr()))),
+                   single_Features(method(copy, nil_Formals(), SELF_TYPE, no_expr()))),
+           filename);
 
     // 
     // The IO class inherits from Object. Its methods are
@@ -281,34 +281,34 @@ void ClassTable::install_basic_classes() {
     //        in_int() : Int                      "   an int     "  "     "
     //
     Class_ IO_class = 
-	class_(IO, 
-	       Object,
-	       append_Features(
-			       append_Features(
-					       append_Features(
-							       single_Features(method(out_string, single_Formals(formal(arg, Str)),
-										      SELF_TYPE, no_expr())),
-							       single_Features(method(out_int, single_Formals(formal(arg, Int)),
-										      SELF_TYPE, no_expr()))),
-					       single_Features(method(in_string, nil_Formals(), Str, no_expr()))),
-			       single_Features(method(in_int, nil_Formals(), Int, no_expr()))),
-	       filename);  
+    class_(IO, 
+           Object,
+           append_Features(
+                   append_Features(
+                           append_Features(
+                                   single_Features(method(out_string, single_Formals(formal(arg, Str)),
+                                              SELF_TYPE, no_expr())),
+                                   single_Features(method(out_int, single_Formals(formal(arg, Int)),
+                                              SELF_TYPE, no_expr()))),
+                           single_Features(method(in_string, nil_Formals(), Str, no_expr()))),
+                   single_Features(method(in_int, nil_Formals(), Int, no_expr()))),
+           filename);  
 
     //
     // The Int class has no methods and only a single attribute, the
     // "val" for the integer. 
     //
     Class_ Int_class =
-	class_(Int, 
-	       Object,
-	       single_Features(attr(val, prim_slot, no_expr())),
-	       filename);
+    class_(Int, 
+           Object,
+           single_Features(attr(val, prim_slot, no_expr())),
+           filename);
 
     //
     // Bool also has only the "val" slot.
     //
     Class_ Bool_class =
-	class_(Bool, Object, single_Features(attr(val, prim_slot, no_expr())),filename);
+    class_(Bool, Object, single_Features(attr(val, prim_slot, no_expr())),filename);
 
     //
     // The class Str has a number of slots and operations:
@@ -319,25 +319,25 @@ void ClassTable::install_basic_classes() {
     //       substr(arg: Int, arg2: Int): Str     substring selection
     //       
     Class_ Str_class =
-	class_(Str, 
-	       Object,
-	       append_Features(
-			       append_Features(
-					       append_Features(
-							       append_Features(
-									       single_Features(attr(val, Int, no_expr())),
-									       single_Features(attr(str_field, prim_slot, no_expr()))),
-							       single_Features(method(length, nil_Formals(), Int, no_expr()))),
-					       single_Features(method(concat, 
-								      single_Formals(formal(arg, Str)),
-								      Str, 
-								      no_expr()))),
-			       single_Features(method(substr, 
-						      append_Formals(single_Formals(formal(arg, Int)), 
-								     single_Formals(formal(arg2, Int))),
-						      Str, 
-						      no_expr()))),
-	       filename);
+    class_(Str, 
+           Object,
+           append_Features(
+                   append_Features(
+                           append_Features(
+                                   append_Features(
+                                           single_Features(attr(val, Int, no_expr())),
+                                           single_Features(attr(str_field, prim_slot, no_expr()))),
+                                   single_Features(method(length, nil_Formals(), Int, no_expr()))),
+                           single_Features(method(concat, 
+                                      single_Formals(formal(arg, Str)),
+                                      Str, 
+                                      no_expr()))),
+                   single_Features(method(substr, 
+                              append_Formals(single_Formals(formal(arg, Int)), 
+                                     single_Formals(formal(arg2, Int))),
+                              Str, 
+                              no_expr()))),
+           filename);
 
     Class_ basic_class[] = {Object_class,IO_class,Int_class,Bool_class,Str_class};
 
@@ -414,7 +414,19 @@ void program_class::recurse(ClassTable* classtable) {
     sym_tab->enterscope();
     //Do we need to loop over all classes (ie type symbols) and add them to sym_tab before recursing?
 
-    auto children = classtable->get_tree_map()[Object];
+    //We are adding the methods of the Object class to method_map
+    Class_ Object_class = classtable->get_class_map()[Object];
+    Features features = Object_class->get_features();
+    for(int i = features->first(); features->more(i); features->next(i)){
+        Method m(Object, features->nth(i)->get_name());
+        method_map[m] = std::vector<Symbol>();
+    }
+    for(int i = features->first(); features->more(i); features->next(i)){
+        features->nth(i)->recurse(classtable, Object);
+    }
+
+    // recursing over all of the children of object
+    auto children = classtable->get_parent_to_children()[Object];
     for(size_t i = 0; i < children.size(); i++){
         classtable->get_class_map()[children[i]]->recurse(classtable, main_method_defined);
     }
@@ -448,11 +460,7 @@ void class__class::recurse(ClassTable* classtable, bool& main_method_defined) {
             Method m(name, feature_name);
 
             if (method_map.find(m) != method_map.end()) {
-                //check to see if this method was already defined in THIS class
-                //Need lots of error checking here for redefinitions
-                //if typ order doesnt match->error
-                //if return type
-                //classtable->semant_error1(name, features->nth(i)) << "Method " << feature_name << " is multiply defined in class." << endl;
+                classtable->semant_error1(name, features->nth(i)) << "Method " << feature_name << " is multiply defined in class." << endl;
             } else if (parent_method_names.find(feature_name) != parent_method_names.end()) {
                 parent_method_names.erase(feature_name);
                 method_map[m] = std::vector<Symbol>();
@@ -493,7 +501,7 @@ void class__class::recurse(ClassTable* classtable, bool& main_method_defined) {
         features->nth(i)->recurse(classtable, name);
     }
 
-    auto children = classtable->get_tree_map()[name];
+    auto children = classtable->get_parent_to_children()[name];
     for(size_t i = 0; i < children.size(); i++){
         classtable->get_class_map()[children[i]]->recurse(classtable, main_method_defined);
     }
@@ -501,23 +509,50 @@ void class__class::recurse(ClassTable* classtable, bool& main_method_defined) {
     sym_tab->exitscope();
 }
 
+void ClassTable::compare(Symbol class_name, Method m, Method parent_m, tree_node *t){
+    auto formals = method_map[m];
+    auto parent_formals = method_map[parent_m];
+
+    if (formals.back() != parent_formals.back()) {
+        semant_error(class_name,t) << "In redefined method " << m.first << ", parameter type " << formals.back() << " is different from original type " << parent_formals.back() << endl;
+        return;
+    }
+
+    for (size_t i = 0; i < formals.size(); i++){
+        if (formals[i] != parent_formals[i]) {
+            semant_error(class_name,t) << "In redefined method " << m.first << ", return type " << formals[i] << " is different from original type " << parent_formals[i] << endl;
+            return;
+        }
+    }
+}
+
 void method_class::recurse(ClassTable* classtable, Symbol class_name)
 {
     sym_tab->enterscope();
     Method m(class_name, name);
+    // Here we are adding the types of the arguments in a method
     for(int i = formals->first(); formals->more(i); i = formals->next(i)) {
-        //stp f(formals->nth(i)->get_name(), formals->nth(i)->get_type());
         method_map[m].push_back(formals->nth(i)->get_type());
     }
     method_map[m].push_back(return_type);
-    Method parent_m(classtable->get_child_to_parent()[class_name],name);
-    // if(parent_m exists in methodmap) compare(m, parent_m);
+
+    // Here we are checking to make sure that the method arguments and return type for a method defined
+    // in a parent class matches the one of the child
+    Symbol parent_name = classtable->get_child_to_parent()[class_name];
+    Method parent_m(parent_name,name);
+    if (method_map.find(parent_m) != method_map.end()){
+        classtable->compare(class_name, m, parent_m, this);
+    }
 
 
     for(int i = formals->first(); formals->more(i); i = formals->next(i))
         formals->nth(i)->recurse(classtable, class_name);
 
     expr->recurse(classtable, class_name);
+    if (!classtable->conforms(expr->get_type(), return_type)){
+        classtable->semant_error1(class_name,this) << "Inferred return type " << expr->get_type() << " of method " << name << " does not conform to declared return type " << return_type << "." << endl;
+    }
+
     sym_tab->exitscope();
 }
 
@@ -525,7 +560,11 @@ void attr_class::recurse(ClassTable* classtable, Symbol class_name)
 {
     init->recurse(classtable, class_name);
     Symbol type = init->get_type();
-    //Probably want to do some type cheking with this type
+
+    if (type != type_decl) {
+        // return error message
+        classtable->semant_error1(class_name,this) << "Inferred type " << type << " of initialization of attribute " << name << " does not conform to declared type " << type_decl << "." << endl;
+    }
 }
 
 //
@@ -556,17 +595,17 @@ void branch_class::recurse(ClassTable* classtable, Symbol class_name)
 void assign_class::recurse(ClassTable* classtable, Symbol class_name)
 {
     expr->recurse(classtable, class_name);
-
+    type = expr->get_type();
     if (sym_tab->probe(name) == NULL) {
         classtable->semant_error1(class_name, this) << "Assignment to undeclared variable " << name << "." << endl;
-        type = Object;
-    } else {
-        type = expr->get_type();
-    }
+        return;
+    } 
 
+    // if (!classtable->conforms(type, sym_tab->probe(name))){
+    //     classtable->semant_error1(class_name,this) << "Type " << type << " of assigned expression does not conform to declared type " << sym_tab->probe(name) << " of identifier " << name << "." << endl;
+    //     return;
+    // }
     
-    // Probably want to do some typechecking here.
-    //sym_tab->addid(name, &type);
 }
 
 //
@@ -828,9 +867,7 @@ void program_class::semant()
     /* some semantic analysis code may go here */
 
     if (classtable->errors()) {
-	   cerr << "Compilation halted due to static semantic errors." << endl;
-	   exit(1);
+       cerr << "Compilation halted due to static semantic errors." << endl;
+       exit(1);
     }
 }
-
-
