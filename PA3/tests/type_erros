@@ -3,11 +3,7 @@ class A {
     b : Int;
 
     c() : Int { 
-        {	
-        	--a <- 5 + 5;
-        	--if let d:Int in b then d <- 5 else b fi;
-        	while let d:Int in b loop d <- 5 pool;
-        }
+        d <- 5
     };
 
     d:Bool <- 5;
@@ -17,7 +13,7 @@ class B {
     a:Bool;
 
     b(): Bool {
-            g <- 5
+        5
     };
 };
 

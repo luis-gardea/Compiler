@@ -200,7 +200,11 @@ void ClassTable::CheckInheritanceTree(){
 
 // Checks if c1 <= c2, i.e. that class c1 conforms to class c2
 bool ClassTable::conforms(Symbol c1, Symbol c2) {
-    if (c1 == NULL || c2 == NULL) return false;
+    // if (c1 == NULL || c2 == NULL) return false; 
+    // if (c2 == No_type) return false; //ERROR??
+    // if (c1 == No_type) return true;
+    cout << "c1: " << c1 << " c2: " << c2 << endl; 
+
     Symbol class_ = c1;
     while (true) {
         if (class_ == c2) {
@@ -220,7 +224,13 @@ bool ClassTable::conforms(Symbol c1, Symbol c2) {
 // (least upper bound) 
 // Finds the least common ancestor of class c1 and c2. Will always return a Symbol, as all classes have Object as common ancestor
 Symbol ClassTable::lub(Symbol c1, Symbol c2) {
-    if (c1 == NULL || c2 == NULL) return Object;
+    // if (c1 == NULL || c2 == NULL) return Object;
+    // if (c1 == No_type && c2 == No_type) return Object;
+    // if (c1 == No_type)
+    //     return c2;
+    // else if (c2 == No_type)
+    //     return c1;
+
     std::set<Symbol> c2_ancestors;
     Symbol class_ = c2;
     while (true) {
@@ -415,15 +425,15 @@ void program_class::recurse(ClassTable* classtable) {
     //Do we need to loop over all classes (ie type symbols) and add them to sym_tab before recursing?
 
     //We are adding the methods of the Object class to method_map
-    Class_ Object_class = classtable->get_class_map()[Object];
-    Features features = Object_class->get_features();
-    for(int i = features->first(); features->more(i); features->next(i)){
-        Method m(Object, features->nth(i)->get_name());
-        method_map[m] = std::vector<Symbol>();
-    }
-    for(int i = features->first(); features->more(i); features->next(i)){
-        features->nth(i)->recurse(classtable, Object);
-    }
+    // Class_ Object_class = classtable->get_class_map()[Object];
+    // Features features = Object_class->get_features();
+    // for(int i = features->first(); features->more(i); i = features->next(i)){
+    //     Method m(Object, features->nth(i)->get_name());
+    //     method_map[m] = std::vector<Symbol>(0);
+    // }
+    // for(int i = features->first(); features->more(i); i = features->next(i)){
+    //     features->nth(i)->recurse(classtable, Object);
+    // }
 
     // recursing over all of the children of object
     auto children = classtable->get_parent_to_children()[Object];
@@ -477,9 +487,9 @@ void class__class::recurse(ClassTable* classtable, bool& main_method_defined) {
                 classtable->semant_error1(name, features->nth(i)) << "Attribute " << feature_name << " is an attribute of an inherited class." << endl;
             }else {
                 Symbol feature_type = features->nth(i)->get_type();
-                if (feature_type != NULL) {
-                    sym_tab->addid(feature_name, &feature_type);
-                }
+                sym_tab->addid(feature_name, &feature_type);
+                Symbol mytype = *(sym_tab->lookup(feature_name));
+                cout << "Just put in " << feature_name << "type out " << *(sym_tab->lookup(feature_name)) << endl;
             }
         }   
     }
@@ -559,12 +569,15 @@ void method_class::recurse(ClassTable* classtable, Symbol class_name)
 void attr_class::recurse(ClassTable* classtable, Symbol class_name)
 {
     init->recurse(classtable, class_name);
-    Symbol type = init->get_type();
+    Symbol init_type = init->get_type();
 
-    if (type != type_decl) {
-        // return error message
-        classtable->semant_error1(class_name,this) << "Inferred type " << type << " of initialization of attribute " << name << " does not conform to declared type " << type_decl << "." << endl;
+    if (init_type == No_type) return;
+    cout << "name of attr: " << name << endl;
+
+    if (!classtable->conforms(init_type, type_decl)){
+        classtable->semant_error1(class_name,this) << "Inferred type " << init_type << " of initialization of attribute " << name << " does not conform to declared type " << type_decl << "." << endl;
     }
+
 }
 
 //
@@ -596,16 +609,23 @@ void assign_class::recurse(ClassTable* classtable, Symbol class_name)
 {
     expr->recurse(classtable, class_name);
     type = expr->get_type();
-    if (sym_tab->probe(name) == NULL) {
+
+    if (sym_tab->lookup(name) == NULL) {
         classtable->semant_error1(class_name, this) << "Assignment to undeclared variable " << name << "." << endl;
         return;
     } 
 
-    // if (!classtable->conforms(type, sym_tab->probe(name))){
-    //     classtable->semant_error1(class_name,this) << "Type " << type << " of assigned expression does not conform to declared type " << sym_tab->probe(name) << " of identifier " << name << "." << endl;
-    //     return;
-    // }
-    
+    Symbol type_decl = *(sym_tab->lookup(name));
+    cout << "name for assign: " << name << endl;
+    cout << "type of assign expr: " << type << endl;
+    sym_tab->dump();
+    cout << "Just looked for " << name << " type out " << *(sym_tab->lookup(name)) << endl;
+
+    cout << type_decl << endl;
+
+
+    if (!classtable->conforms(type, type_decl))
+        classtable->semant_error1(class_name,this) << "Type " << type << " of assigned expression does not conform to declared type " << type_decl << " of identifier " << name << "." << endl;
 }
 
 //
