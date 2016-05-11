@@ -51,7 +51,7 @@ public:
   std::map<Symbol,std::vector<Symbol>> get_parent_to_children() { return parent_to_children; }
   std::map<Symbol,Class_> get_class_map() { return class_map; }
   std::map<Symbol,Symbol> get_child_to_parent() { return child_to_parent; }
-  void compare(Symbol class_name, Method m, Method parent_m, tree_node *t);
+  bool compare(Symbol class_name, Method m, Method parent_m, tree_node *t);
 
 };
 

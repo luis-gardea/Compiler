@@ -10,7 +10,11 @@
 
 extern int semant_debug;
 extern char *curr_filename;
+
+//This serves as the Object Environment
 static SymbolTable<Symbol,Symbol> *sym_tab = new SymbolTable<Symbol, Symbol>();
+
+//This serves as the method environment
 static std::map<Method, std::vector<Symbol> > method_map;
 
 //////////////////////////////////////////////////////////////////////
@@ -84,20 +88,20 @@ static void initialize_constants(void)
     val         = idtable.add_string("_val");
 }
 
+// Error helper function called when checking the inheritance graph
 void static_error_exit(){
     cerr << "Compilation halted due to static semantic errors." << endl;
     exit(1);
 }
 
-
+//ClassTable contructor-
+// Sets up the classtable and does inheritance graph semantic error checking
 ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) {
-
-    /* Fill this in */
-
     install_basic_classes();
 
     // Here we are adding all of the class that are defined to a map called class_map
     // We are also adding all of the child,parent pairs to another map
+    // We also create a map from a class to all of its child classes
     for (int i = classes->first(); classes->more(i); i = classes->next(i)){
         if (class_map.find(classes->nth(i)->get_name()) != class_map.end()){
             Symbol name = classes->nth(i)->get_name();
@@ -113,17 +117,17 @@ ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) 
         }
     }
 
-    if (semant_debug) {
-        for (auto it=parent_to_children.begin(); it!=parent_to_children.end(); ++it){
-            cout << it->first << endl;
-            for (size_t i = 0; i < it->second.size(); i++){
-                cout << "\t" << it->second[i];
-            }
-            cout << endl;
-        }
-    }   
+    // if (semant_debug) {
+    //     for (auto it=parent_to_children.begin(); it!=parent_to_children.end(); ++it){
+    //         cout << it->first << endl;
+    //         for (size_t i = 0; i < it->second.size(); i++){
+    //             cout << "\t" << it->second[i];
+    //         }
+    //         cout << endl;
+    //     }
+    // }   
 
-    
+
     CheckInheritanceTree();
 
     // if (semant_debug) {
@@ -133,16 +137,15 @@ ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) 
     //     cout << lub(IO, IO) << endl;
     //     cout << lub(Int, IO) << endl;
     // }
-    for (int i = classes->first(); classes->more(i); i = classes->next(i)){
-        for (int j = classes->first(); classes->more(j); j = classes->next(j)){
-            if (semant_debug)
-                cout << classes->nth(i)->get_name() << "," << classes->nth(j)->get_name() << ":" << lub(classes->nth(i)->get_name(),classes->nth(j)->get_name()) << endl;
-        }
-    }
-
+    // for (int i = classes->first(); classes->more(i); i = classes->next(i)){
+    //     for (int j = classes->first(); classes->more(j); j = classes->next(j)){
+    //         if (semant_debug)
+    //             cout << classes->nth(i)->get_name() << "," << classes->nth(j)->get_name() << ":" << lub(classes->nth(i)->get_name(),classes->nth(j)->get_name()) << endl;
+    //     }
+    // }
 }
 
-
+//Recursively searches for any and all cycles within the inheritance graph
 bool ClassTable::CheckForCycles(Symbol child, std::set<Symbol> visited){
     Symbol parent = child_to_parent[child];
     // If the child is object then we reach the root of our inheritance tree, there are no cycles
@@ -172,10 +175,10 @@ bool ClassTable::CheckForCycles(Symbol child, std::set<Symbol> visited){
 
 }
 
+//
 void ClassTable::CheckInheritanceTree(){
     // Here we check to make sure all parent classes are defined
     for (std::map<Symbol,Symbol>::iterator it=child_to_parent.begin(); it!=child_to_parent.end(); ++it){
-        // std::cout << it->first << " => " << it->second << '\n';
         if (it->first == Object)
             continue;
         if (class_map.find(it->second) == class_map.end())
@@ -200,11 +203,6 @@ void ClassTable::CheckInheritanceTree(){
 
 // Checks if c1 <= c2, i.e. that class c1 conforms to class c2
 bool ClassTable::conforms(Symbol c1, Symbol c2) {
-    // if (c1 == NULL || c2 == NULL) return false; 
-    // if (c2 == No_type) return false; //ERROR??
-    // if (c1 == No_type) return true;
-    // cout << "c1: " << c1 << " c2: " << c2 << endl; 
-
     Symbol class_ = c1;
     while (true) {
         if (class_ == c2) {
@@ -224,13 +222,6 @@ bool ClassTable::conforms(Symbol c1, Symbol c2) {
 // (least upper bound) 
 // Finds the least common ancestor of class c1 and c2. Will always return a Symbol, as all classes have Object as common ancestor
 Symbol ClassTable::lub(Symbol c1, Symbol c2) {
-    // if (c1 == NULL || c2 == NULL) return Object;
-    // if (c1 == No_type && c2 == No_type) return Object;
-    // if (c1 == No_type)
-    //     return c2;
-    // else if (c2 == No_type)
-    //     return c1;
-
     std::set<Symbol> c2_ancestors;
     Symbol class_ = c2;
     while (true) {
@@ -352,11 +343,13 @@ void ClassTable::install_basic_classes() {
     Class_ basic_class[] = {Object_class,IO_class,Int_class,Bool_class,Str_class};
     Symbol symbols[] = {Object, IO, Int, Bool, Str};
 
+    // Add the basic classes to the ClassTable data structures. Dont need to add to parent_to_children since we never recurse into the basic classes
     for (int i = 0; i < 5; i++) {
         class_map[basic_class[i]->get_name()] = basic_class[i];
         child_to_parent[basic_class[i]->get_name()] = basic_class[i]->get_parent();
     }
 
+    // Initialize 3 things for the basic classes: Add attributes to sym_tab, add methods to method_map, add basic types to sym_tab
     sym_tab->enterscope();
     for (int i = 0; i < 5; i++) {
         sym_tab->addid(basic_class[i]->get_name(), new Symbol(basic_class[i]->get_name()));
@@ -418,18 +411,36 @@ ostream& ClassTable::semant_error1(Symbol name, tree_node *t)
 
 
 ///////
-//
+// This next set of methods do an initial pass over the AST, initializing the classes defined in the program
+// -This includes adding the declared types to the sym_tab
+// -This includes adding all methods to the method environment
+//      - makes sure that methods are inherited 
+//      - Makes sure that the signatures of redefined methods are not in conflict with previous definition
 ///////
+
+bool ClassTable::compare(Symbol class_name, Method m, Method parent_m, tree_node *t){
+    //cout << "Comparing " << m.first << " and " << parent_m.first << " on method " << m.second << endl;
+    auto formals = method_map[m];
+    auto parent_formals = method_map[parent_m];
+
+    if (formals.back() != parent_formals.back()) {
+        semant_error1(class_name,t) << "In redefined method " << m.second << ", return type " << formals.back() << " is different from original type " << parent_formals.back() << endl;
+        return false;
+    }
+
+    for (size_t i = 0; i < formals.size(); i++){
+        if (formals[i] != parent_formals[i]) {
+            semant_error1(class_name,t) << "In redefined method " << m.second << ", parameter type " << formals[i] << " is different from original type " << parent_formals[i] << endl;
+            return false;
+        }
+    }
+
+    return true;
+}
+
+// Go to the method_map and return a set of all the methods (including inherited methods) in the parent class
 std::set<Symbol> class__class::get_parent_method_names(ClassTable* classtable){
-    //Symbol p = classtable->child_to_parent[name];
-    // class__class p = classtable->get_class_map()[parent];
-    // Features feat = p.get_features();
     std::set<Symbol> parent_set;
-    // for (int i = features->first(); features->more(i); features->next(i)){
-    //     std::string feature_type = features->nth(i)->get_feature_type();
-    //     if (feature_type == "Method")
-    //         parent_set.insert(features->nth(i)->get_name());
-    // }
     for (auto it : method_map){
         if (it.first.first == parent)
             parent_set.insert(it.first.second);
@@ -437,7 +448,9 @@ std::set<Symbol> class__class::get_parent_method_names(ClassTable* classtable){
     return parent_set;
 }
 
+// Add the current method to the method_map and make sure it is the same as its parent class
 void method_class::check_methods(ClassTable* classtable, Symbol class_name){
+    // cout << "checking " << name << " in " << class_name << endl;
     Method m(class_name, name);
     // Here we are adding the types of the arguments in a method
     for(int i = formals->first(); formals->more(i); i = formals->next(i)) {
@@ -450,43 +463,61 @@ void method_class::check_methods(ClassTable* classtable, Symbol class_name){
     Symbol parent_name = classtable->get_child_to_parent()[class_name];
     Method parent_m(parent_name,name);
     if (method_map.find(parent_m) != method_map.end()){
-        classtable->compare(class_name, m, parent_m, this);
+        if (!classtable->compare(class_name, m, parent_m, this)) {
+            method_map.erase(m);
+        }
     }
 
 }
 
+// Initialize the class (i.e. put methods and type into their repective environments)
 void class__class::method_make(ClassTable *classtable, bool& main_class_defined){
+    //cout << "In class " << name << endl;
+
+    // Add the declared type to the type environment
     sym_tab->addid(name,new Symbol(name));
+
+    // A variable used if this class is named Main
+    bool main_method_defined = false;
+
+
+    // Iterate over the methods in this class, add them to the method_map, and check against their parent signature if valid
     std::set<Symbol> parent_method_names = get_parent_method_names(classtable);
     Symbol feature_name;
-    bool main_method_defined = false;
     for(int i = features->first(); features->more(i); i = features->next(i)) {
         feature_name = features->nth(i)->get_name(); 
-        
-        //feature_type = features->nth(i)->get_type();
-        // Do we need this next line of checking?
-        //if (feature_name == NULL || feature_type == NULL) continue;
-
         if (features->nth(i)->get_feature_type() == "Method") {
             if (name == Main && feature_name == main_meth)
                 main_method_defined = true;
+
+            // Create a key for the method_map, defined as (current_class_type, method_name)
             Method m(name, feature_name);
-
-
             if (method_map.find(m) != method_map.end()) {
-                classtable->semant_error1(name, features->nth(i)) << "Method " << feature_name << " is multiply defined in class." << endl;
+                // Check if method was already defined was defined in CURRENT class, raise error 
+                classtable->semant_error1(name, features->nth(i)) << "Method " << feature_name << " is multiply defined." << endl;
             } else if (parent_method_names.find(feature_name) != parent_method_names.end()) {
+                // Check if method was defined in PARENT class 
+                // Remove from set, add new method to map for THIS class
+                auto new_vec = new std::vector<Symbol>();
+                method_map[m] = *(new_vec);
+                features->nth(i)->check_methods(classtable, name);
                 parent_method_names.erase(feature_name);
-                method_map[m] = std::vector<Symbol>();
-                //check if method is defined was defined in PARENT class 
-                //remove from set
-                //add new Method to map
             } else {
-                method_map[m] = std::vector<Symbol>();
+                auto new_vec = new std::vector<Symbol>();
+                method_map[m] = *(new_vec);
+                features->nth(i)->check_methods(classtable, name);
             }
         }
     }
 
+    // Add the rest of the inherited methods that weren't redefined in this class to method_map as part of this class
+    for (auto it = parent_method_names.begin(); it != parent_method_names.end(); it++){
+        Method parent_m(parent,*it);
+        Method m(name,*it);
+        method_map[m] = method_map[parent_m];
+    }
+
+    // Extra book-keeping- Error handling for Main class and main method
     if (name == Main) {
         main_class_defined = true;
         if (!main_method_defined) {
@@ -494,15 +525,11 @@ void class__class::method_make(ClassTable *classtable, bool& main_class_defined)
         }
     }
 
-    for (auto it = parent_method_names.begin(); it != parent_method_names.end(); it++){
-        Method parent_m(parent,*it);
-        Method m(name,*it);
-        method_map[m] = method_map[parent_m];
-    }
-
-    for(int i = features->first(); features->more(i); i = features->next(i)) {
-        if (features->nth(i)->get_feature_type() == "Method")
-            features->nth(i)->check_methods(classtable, name);
+    // Finally, recurse into children, adding and checking their methods and types.
+    auto children = classtable->get_parent_to_children()[name];
+    //cout << children.size() << endl;
+    for(size_t i = 0; i < children.size(); i++){
+        classtable->get_class_map()[children[i]]->method_make(classtable, main_class_defined);
     }
 }
 
@@ -518,14 +545,14 @@ void program_class::recurse(ClassTable* classtable) {
     for(size_t i = 0; i < children.size(); i++){
         classtable->get_class_map()[children[i]]->method_make(classtable, main_class_defined);
     }
+
     if (!main_class_defined)
         classtable->semant_error() << "Class Main is not defined." << endl;
+
     for(size_t i = 0; i < children.size(); i++){
         classtable->get_class_map()[children[i]]->recurse(classtable);
     }
     sym_tab->exitscope();
-    
-
 }
 
 
@@ -601,23 +628,6 @@ void class__class::recurse(ClassTable* classtable) {
     }
 
     sym_tab->exitscope();
-}
-
-void ClassTable::compare(Symbol class_name, Method m, Method parent_m, tree_node *t){
-    auto formals = method_map[m];
-    auto parent_formals = method_map[parent_m];
-
-    if (formals.back() != parent_formals.back()) {
-        semant_error(class_name,t) << "In redefined method " << m.first << ", parameter type " << formals.back() << " is different from original type " << parent_formals.back() << endl;
-        return;
-    }
-
-    for (size_t i = 0; i < formals.size(); i++){
-        if (formals[i] != parent_formals[i]) {
-            semant_error(class_name,t) << "In redefined method " << m.first << ", return type " << formals[i] << " is different from original type " << parent_formals[i] << endl;
-            return;
-        }
-    }
 }
 
 void method_class::recurse(ClassTable* classtable, Symbol class_name)
