@@ -44,7 +44,8 @@ public:
    tree_node *copy()		 { return copy_Class_(); }
    virtual Class_ copy_Class_() = 0;
 
-   virtual void recurse(ClassTable* classtable, bool& main_method_defined) = 0;
+   virtual void method_make(ClassTable *classtable, bool& main_method_defined) = 0;
+   virtual void recurse(ClassTable* classtable) = 0;
    virtual Symbol get_name() const = 0;
    virtual Symbol get_parent() const = 0;
    virtual Symbol get_filename() const = 0;
@@ -68,6 +69,7 @@ public:
    virtual Symbol get_name() = 0;
    virtual Symbol get_type() = 0;
    virtual std::string get_feature_type() = 0; 
+   virtual void check_methods(ClassTable* classtable, Symbol class_name) = 0;
    // virtual void compare(ClassTable* classtable, Symbol class_name, Method m, Method parent_m) = 0;
 
 
@@ -194,7 +196,8 @@ public:
    Class_ copy_Class_();
    void dump(ostream& stream, int n);
 
-   void recurse(ClassTable* classtable, bool& main_method_defined);
+   void method_make(ClassTable *classtable, bool& main_method_defined);
+   void recurse(ClassTable* classtable);
    Symbol get_name() const { return name; }
    Symbol get_parent() const { return parent; }
    Symbol get_filename() const { return filename; }
@@ -229,6 +232,7 @@ public:
    Feature copy_Feature();
    void dump(ostream& stream, int n);
 
+   void check_methods(ClassTable* classtable, Symbol class_name);
    void recurse(ClassTable* classtable, Symbol class_name);
    Symbol get_name() { return name; }
    Symbol get_type() { return return_type; }
@@ -265,6 +269,7 @@ public:
    Symbol get_name() { return name; }
    Symbol get_type() { return type_decl; }
    std::string get_feature_type() { return feature_type; }
+   void check_methods(ClassTable* classtable, Symbol class_name) { return; }
 
 #ifdef Feature_SHARED_EXTRAS
    Feature_SHARED_EXTRAS

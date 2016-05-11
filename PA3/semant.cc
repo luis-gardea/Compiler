@@ -203,7 +203,7 @@ bool ClassTable::conforms(Symbol c1, Symbol c2) {
     // if (c1 == NULL || c2 == NULL) return false; 
     // if (c2 == No_type) return false; //ERROR??
     // if (c1 == No_type) return true;
-    cout << "c1: " << c1 << " c2: " << c2 << endl; 
+    // cout << "c1: " << c1 << " c2: " << c2 << endl; 
 
     Symbol class_ = c1;
     while (true) {
@@ -235,7 +235,7 @@ Symbol ClassTable::lub(Symbol c1, Symbol c2) {
     Symbol class_ = c2;
     while (true) {
         c2_ancestors.insert(class_);
-        cout << class_ << endl;
+        // cout << class_ << endl;
         if (class_ == Object) break;
         class_ = child_to_parent[class_];
     }
@@ -415,50 +415,28 @@ std::set<Symbol> class__class::get_parent_method_names(ClassTable* classtable){
     return parent_set;
 }
 
-///////
-//
-///////
-
-void program_class::recurse(ClassTable* classtable) {
-    bool main_method_defined = false;
-    sym_tab->enterscope();
-    //Do we need to loop over all classes (ie type symbols) and add them to sym_tab before recursing?
-
-    //We are adding the methods of the Object class to method_map
-    // Class_ Object_class = classtable->get_class_map()[Object];
-    // Features features = Object_class->get_features();
-    // for(int i = features->first(); features->more(i); i = features->next(i)){
-    //     Method m(Object, features->nth(i)->get_name());
-    //     method_map[m] = std::vector<Symbol>(0);
-    // }
-    // for(int i = features->first(); features->more(i); i = features->next(i)){
-    //     features->nth(i)->recurse(classtable, Object);
-    // }
-
-    // recursing over all of the children of object
-    auto children = classtable->get_parent_to_children()[Object];
-    for(size_t i = 0; i < children.size(); i++){
-        classtable->get_class_map()[children[i]]->recurse(classtable, main_method_defined);
+void method_class::check_methods(ClassTable* classtable, Symbol class_name){
+    Method m(class_name, name);
+    // Here we are adding the types of the arguments in a method
+    for(int i = formals->first(); formals->more(i); i = formals->next(i)) {
+        method_map[m].push_back(formals->nth(i)->get_type());
     }
-    sym_tab->exitscope();
-    if (!main_method_defined)
-        classtable->semant_error() << "Class Main is not defined." << endl;
+    method_map[m].push_back(return_type);
+
+    // Here we are checking to make sure that the method arguments and return type for a method defined
+    // in a parent class matches the one of the child
+    Symbol parent_name = classtable->get_child_to_parent()[class_name];
+    Method parent_m(parent_name,name);
+    if (method_map.find(parent_m) != method_map.end()){
+        classtable->compare(class_name, m, parent_m, this);
+    }
 
 }
 
-void class__class::recurse(ClassTable* classtable, bool& main_method_defined) {
-    // Enter a new scope since we just entered a new Class. All features defined here
-    // are added to this Class's scope upfront. 
-    //
-    // Add all method declarations to the global method_map data structure,
-    // which defines the method environment for the program.
-    //
-    // Add all attribute declarations to the global sym_tab data structure,
-    // which defines the type environment for the program.
-    sym_tab->enterscope();
-    Symbol feature_name;
-    Symbol feature_type;
+void class__class::method_make(ClassTable *classtable, bool& main_method_defined){
+    sym_tab->addid(name,new Symbol(name));
     std::set<Symbol> parent_method_names = get_parent_method_names(classtable);
+    Symbol feature_name;
     for(int i = features->first(); features->more(i); i = features->next(i)) {
         feature_name = features->nth(i)->get_name(); 
         
@@ -480,18 +458,14 @@ void class__class::recurse(ClassTable* classtable, bool& main_method_defined) {
             } else {
                 method_map[m] = std::vector<Symbol>();
             }
-        } else {
-            if(sym_tab->probe(feature_name) != NULL) {
-                classtable->semant_error1(name, features->nth(i)) << "Attribute " << feature_name << " is multiply defined in class." << endl;
-            } else if (sym_tab->lookup(feature_name) != NULL) {
-                classtable->semant_error1(name, features->nth(i)) << "Attribute " << feature_name << " is an attribute of an inherited class." << endl;
-            }else {
-                Symbol feature_type = features->nth(i)->get_type();
-                sym_tab->addid(feature_name, &feature_type);
-                Symbol mytype = *(sym_tab->lookup(feature_name));
-                cout << "Just put in " << feature_name << "type out " << *(sym_tab->lookup(feature_name)) << endl;
-            }
-        }   
+        }
+    }
+
+    if (name == Main) {
+        main_method_defined = true;
+        if (sym_tab->probe(main_meth) == NULL) {
+            classtable->semant_error1(name, this) << "No \'main\' method in class Main." << endl;
+        }
     }
 
     for (auto it = parent_method_names.begin(); it != parent_method_names.end(); it++){
@@ -500,20 +474,117 @@ void class__class::recurse(ClassTable* classtable, bool& main_method_defined) {
         method_map[m] = method_map[parent_m];
     }
 
-    if (name == Main) {
-        main_method_defined = true;
-        if (sym_tab->probe(main_meth) == NULL) {
-            classtable->semant_error1(name, this) << "main method not defined in class Main." << endl;
-        }
+    for(int i = features->first(); features->more(i); i = features->next(i)) {
+        if (features->nth(i)->get_feature_type() == "Method")
+            features->nth(i)->check_methods(classtable, name);
+    }
+}
+///////
+//
+///////
+
+void program_class::recurse(ClassTable* classtable) {
+    bool main_method_defined = false;
+    sym_tab->enterscope();
+    //Do we need to loop over all classes (ie type symbols) and add them to sym_tab before recursing?
+
+    //class method to initialize basic features
+    //We are adding the methods of the Object class to method_map
+    // Class_ Object_class = classtable->get_class_map()[Object];
+    // Features features = Object_class->get_features();
+    // for(int i = features->first(); features->more(i); i = features->next(i)){
+    //     Method m(Object, features->nth(i)->get_name());
+    //     method_map[m] = std::vector<Symbol>(0);
+    // }
+    // for(int i = features->first(); features->more(i); i = features->next(i)){
+    //     features->nth(i)->recurse(classtable, Object);
+    // }
+
+    // recursing over all of the children of object
+    auto children = classtable->get_parent_to_children()[Object];
+    for(size_t i = 0; i < children.size(); i++){
+        classtable->get_class_map()[children[i]]->method_make(classtable, main_method_defined);
+    }
+    if (!main_method_defined)
+        classtable->semant_error() << "Class Main is not defined." << endl;
+    for(size_t i = 0; i < children.size(); i++){
+        classtable->get_class_map()[children[i]]->recurse(classtable);
+    }
+    sym_tab->exitscope();
+    
+
+}
+
+
+void class__class::recurse(ClassTable* classtable) {
+    // Enter a new scope since we just entered a new Class. All features defined here
+    // are added to this Class's scope upfront. 
+    //
+    // Add all method declarations to the global method_map data structure,
+    // which defines the method environment for the program.
+    //
+    // Add all attribute declarations to the global sym_tab data structure,
+    // which defines the type environment for the program.
+    sym_tab->enterscope();
+    Symbol feature_name;
+    
+    for(int i = features->first(); features->more(i); i = features->next(i)) {
+        feature_name = features->nth(i)->get_name(); 
+        
+        //feature_type = features->nth(i)->get_type();
+        // Do we need this next line of checking?
+        // if (feature_name == NULL || feature_type == NULL) continue;
+
+        if (features->nth(i)->get_feature_type() == "Attribute") {
+        //     Method m(name, feature_name);
+
+        //     if (method_map.find(m) != method_map.end()) {
+        //         classtable->semant_error1(name, features->nth(i)) << "Method " << feature_name << " is multiply defined in class." << endl;
+        //     } else if (parent_method_names.find(feature_name) != parent_method_names.end()) {
+        //         parent_method_names.erase(feature_name);
+        //         method_map[m] = std::vector<Symbol>();
+        //         //check if method is defined was defined in PARENT class 
+        //         //remove from set
+        //         //add new Method to map
+        //     } else {
+        //         method_map[m] = std::vector<Symbol>();
+        //     }
+        // } else {
+            if(sym_tab->probe(feature_name) != NULL) {
+                classtable->semant_error1(name, features->nth(i)) << "Attribute " << feature_name << " is multiply defined in class." << endl;
+            } else if (sym_tab->lookup(feature_name) != NULL) {
+                classtable->semant_error1(name, features->nth(i)) << "Attribute " << feature_name << " is an attribute of an inherited class." << endl;
+            }else {
+                Symbol* feature_type = new Symbol(features->nth(i)->get_type());
+                sym_tab->addid(feature_name, feature_type);
+                // sym_tab->dump();
+                // Symbol mytype = *(sym_tab->lookup(feature_name));
+                // cout << "Just put in " << feature_name << "type out " << *(sym_tab->lookup(feature_name)) << endl;
+            }
+        }   
     }
 
+    
+
+
+    // cout << "We are right outside for loop" << endl;
+    // sym_tab->dump();
+    // int j = features->first();
+    // cout << "this is the first feature " << features->nth(j)->get_name() << endl;
+    // for(int i = features->first(); features->more(i); i = features->next(i)) {
+    //     cout << features->nth(i)->get_name() << endl;
+    //     cout << "Method name" << sym_tab->lookup(features->nth(i)->get_name()) << endl;
+    // }
     for(int i = features->first(); features->more(i); i = features->next(i)) {
+        // cout << "Inside loop " << features->nth(i)->get_name() << endl;
+        
+        // cout << "Method name" << sym_tab->lookup(features->nth(i)->get_name()) << endl;
         features->nth(i)->recurse(classtable, name);
     }
 
     auto children = classtable->get_parent_to_children()[name];
     for(size_t i = 0; i < children.size(); i++){
-        classtable->get_class_map()[children[i]]->recurse(classtable, main_method_defined);
+        classtable->get_class_map()[children[i]]->recurse(classtable);
     }
 
     sym_tab->exitscope();
@@ -539,22 +610,7 @@ void ClassTable::compare(Symbol class_name, Method m, Method parent_m, tree_node
 void method_class::recurse(ClassTable* classtable, Symbol class_name)
 {
     sym_tab->enterscope();
-    Method m(class_name, name);
-    // Here we are adding the types of the arguments in a method
-    for(int i = formals->first(); formals->more(i); i = formals->next(i)) {
-        method_map[m].push_back(formals->nth(i)->get_type());
-    }
-    method_map[m].push_back(return_type);
-
-    // Here we are checking to make sure that the method arguments and return type for a method defined
-    // in a parent class matches the one of the child
-    Symbol parent_name = classtable->get_child_to_parent()[class_name];
-    Method parent_m(parent_name,name);
-    if (method_map.find(parent_m) != method_map.end()){
-        classtable->compare(class_name, m, parent_m, this);
-    }
-
-
+    
     for(int i = formals->first(); formals->more(i); i = formals->next(i))
         formals->nth(i)->recurse(classtable, class_name);
 
@@ -569,11 +625,19 @@ void method_class::recurse(ClassTable* classtable, Symbol class_name)
 void attr_class::recurse(ClassTable* classtable, Symbol class_name)
 {
     init->recurse(classtable, class_name);
+    if (sym_tab->lookup(type_decl) == NULL){
+        classtable->semant_error1(class_name,this) << "Class " << type_decl << " of attribute " << name << " is undefined." << endl;
+    }
+
     Symbol init_type = init->get_type();
+    // cout << init_type << endl;
 
     if (init_type == No_type) return;
-    cout << "name of attr: " << name << endl;
-
+    // cout << "name of attr: " << name << endl;
+    
+    // cout << "sdhajksdad" << endl;
+    // cout << *(sym_tab->lookup(name)) << " " << type_decl << endl;
+    
     if (!classtable->conforms(init_type, type_decl)){
         classtable->semant_error1(class_name,this) << "Inferred type " << init_type << " of initialization of attribute " << name << " does not conform to declared type " << type_decl << "." << endl;
     }
@@ -586,7 +650,7 @@ void attr_class::recurse(ClassTable* classtable, Symbol class_name)
 //
 void formal_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-    sym_tab->addid(name, &type_decl);
+    sym_tab->addid(name, new Symbol(type_decl));
     return;
 }
 
@@ -616,15 +680,14 @@ void assign_class::recurse(ClassTable* classtable, Symbol class_name)
     } 
 
     Symbol type_decl = *(sym_tab->lookup(name));
-    cout << "name for assign: " << name << endl;
-    cout << "type of assign expr: " << type << endl;
-    sym_tab->dump();
-    cout << "Just looked for " << name << " type out " << *(sym_tab->lookup(name)) << endl;
+    // cout << "name for assign: " << name << endl;
+    // cout << "type of assign expr: " << type << endl;
+    // cout << type_decl << endl;
+    // sym_tab->dump();
+    // cout << "Just looked for " << name << " type out " << *(sym_tab->lookup(name)) << endl;
 
-    cout << type_decl << endl;
 
-
-    if (!classtable->conforms(type, type_decl))
+    if (!classtable->conforms(type, type_decl) && sym_tab->lookup(type_decl) != NULL)
         classtable->semant_error1(class_name,this) << "Type " << type << " of assigned expression does not conform to declared type " << type_decl << " of identifier " << name << "." << endl;
 }
 
@@ -719,7 +782,7 @@ void plus_class::recurse(ClassTable* classtable, Symbol class_name)
     e2->recurse(classtable, class_name);
 
     if (e1->get_type() != Int || e2->get_type() != Int) {
-        classtable->semant_error1(class_name,this) << "Non-Int arguments: " << e1->get_type() << " + " << e2->get_type() << endl;
+        classtable->semant_error1(class_name,this) << "non-Int arguments: " << e1->get_type() << " + " << e2->get_type() << endl;
     }
 
     type = Int;
@@ -731,7 +794,7 @@ void sub_class::recurse(ClassTable* classtable, Symbol class_name)
     e2->recurse(classtable, class_name);
 
     if (e1->get_type() != Int || e2->get_type() != Int) {
-        classtable->semant_error1(class_name,this) << "Non-Int arguments: " << e1->get_type() << " - " << e2->get_type() << endl;
+        classtable->semant_error1(class_name,this) << "non-Int arguments: " << e1->get_type() << " - " << e2->get_type() << endl;
     }
 
     type = Int;
@@ -791,7 +854,7 @@ void eq_class::recurse(ClassTable* classtable, Symbol class_name)
     e2->recurse(classtable, class_name);
 
     if (e1->get_type() !=  e2->get_type()) {
-        classtable->semant_error1(class_name,this) << "Non-mathcing arguments: " << e1->get_type() << " = " << e2->get_type() << endl;
+        classtable->semant_error1(class_name,this) << "Illegal comparison with a basic type." << endl;
     }
 
     type = Bool;
@@ -855,10 +918,14 @@ void no_expr_class::recurse(ClassTable* classtable, Symbol class_name)
 
 void object_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-    if (sym_tab->probe(name) == NULL) {
-        classtable->semant_error1(class_name,this) << "undeclared identifier " << name << endl;
+    if (sym_tab->lookup(name) == NULL) {
+        classtable->semant_error1(class_name,this) << "Undeclared identifier " << name << endl;
+        type = Object;
+        return;
     }
-    type = Object;
+    type = *(sym_tab->lookup(name));
+    
+   
     //this is just place holder for now-- should get type from sym_tab
 }
 

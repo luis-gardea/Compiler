@@ -1,23 +1,27 @@
 class Main {
-    a : Int <- a + 5;
+    a : Main <- a + 5;
 
-    a : Int;
+    a : Main;
 
-    a : Int;
+    a : Main;
     
-    b(x : Int) : Int {
+    b(x : Main) : Main {
         b <- x
     };
 
-    d : Bool;
+    d : Main;
 
-    c : Int <- if d then e <- 5 else e <- 6 fi;
+    c : Main <- if d then e <- 5 else e <- 6 fi;
 
-    g : Int <- if d then e <- e + e else e fi;
+    g : Main <- if d then e <- e + e else e fi;
 
-    h: Bool <- "" = 7;
+    h: Main <- "" = 7;
 
-    j: A <- new B;
+    j() : Main {
+        k <- 5
+    };
+
+    -- j: A <- new B;
 
     k: B;
 };
