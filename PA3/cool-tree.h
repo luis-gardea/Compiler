@@ -44,7 +44,7 @@ public:
    tree_node *copy()		 { return copy_Class_(); }
    virtual Class_ copy_Class_() = 0;
 
-   virtual void method_make(ClassTable *classtable, bool& main_method_defined) = 0;
+   virtual void method_make(ClassTable *classtable, bool& main_class_defined) = 0;
    virtual void recurse(ClassTable* classtable) = 0;
    virtual Symbol get_name() const = 0;
    virtual Symbol get_parent() const = 0;
@@ -70,6 +70,7 @@ public:
    virtual Symbol get_type() = 0;
    virtual std::string get_feature_type() = 0; 
    virtual void check_methods(ClassTable* classtable, Symbol class_name) = 0;
+   virtual Formals get_formals() = 0;
    // virtual void compare(ClassTable* classtable, Symbol class_name, Method m, Method parent_m) = 0;
 
 
@@ -121,7 +122,11 @@ public:
    tree_node *copy()		 { return copy_Case(); }
    virtual Case copy_Case() = 0;
 
-   virtual void recurse(ClassTable* classtable, Symbol class_name) = 0;
+   virtual void recurse(ClassTable* classtable, Symbol class_name, std::set<Symbol>& case_types) = 0;
+   virtual Symbol get_expr_type() = 0;
+   virtual Symbol get_name() = 0;
+   virtual Symbol get_type_decl() = 0;
+
 
 #ifdef Case_EXTRAS
    Case_EXTRAS
@@ -196,7 +201,7 @@ public:
    Class_ copy_Class_();
    void dump(ostream& stream, int n);
 
-   void method_make(ClassTable *classtable, bool& main_method_defined);
+   void method_make(ClassTable *classtable, bool& main_class_defined);
    void recurse(ClassTable* classtable);
    Symbol get_name() const { return name; }
    Symbol get_parent() const { return parent; }
@@ -237,6 +242,7 @@ public:
    Symbol get_name() { return name; }
    Symbol get_type() { return return_type; }
    std::string get_feature_type() { return feature_type; }
+   Formals get_formals() { return formals; }
    // void compare(ClassTable* classtable, Symbol class_name, Method m, Method parent_m);
 
 #ifdef Feature_SHARED_EXTRAS
@@ -270,6 +276,7 @@ public:
    Symbol get_type() { return type_decl; }
    std::string get_feature_type() { return feature_type; }
    void check_methods(ClassTable* classtable, Symbol class_name) { return; }
+   Formals get_formals() { return NULL; }
 
 #ifdef Feature_SHARED_EXTRAS
    Feature_SHARED_EXTRAS
@@ -321,7 +328,10 @@ public:
    Case copy_Case();
    void dump(ostream& stream, int n);
 
-   void recurse(ClassTable* classtable, Symbol class_name);
+   void recurse(ClassTable* classtable, Symbol class_name, std::set<Symbol>& case_types);
+   Symbol get_name() { return name; }
+   Symbol get_expr_type() { return expr->get_type(); }
+   Symbol get_type_decl() { return type_decl; }
 
 #ifdef Case_SHARED_EXTRAS
    Case_SHARED_EXTRAS

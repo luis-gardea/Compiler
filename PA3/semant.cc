@@ -302,7 +302,7 @@ void ClassTable::install_basic_classes() {
                                               SELF_TYPE, no_expr()))),
                            single_Features(method(in_string, nil_Formals(), Str, no_expr()))),
                    single_Features(method(in_int, nil_Formals(), Int, no_expr()))),
-           filename);  
+           filename); 
 
     //
     // The Int class has no methods and only a single attribute, the
@@ -350,10 +350,32 @@ void ClassTable::install_basic_classes() {
            filename);
 
     Class_ basic_class[] = {Object_class,IO_class,Int_class,Bool_class,Str_class};
+    Symbol symbols[] = {Object, IO, Int, Bool, Str};
 
     for (int i = 0; i < 5; i++) {
         class_map[basic_class[i]->get_name()] = basic_class[i];
         child_to_parent[basic_class[i]->get_name()] = basic_class[i]->get_parent();
+    }
+
+    sym_tab->enterscope();
+    for (int i = 0; i < 5; i++) {
+        sym_tab->addid(basic_class[i]->get_name(), new Symbol(basic_class[i]->get_name()));
+
+        Features features = basic_class[i]->get_features();
+        for(int i = features->first(); features->more(i); i = features->next(i)) {
+            Symbol name = features->nth(i)->get_name();
+            Symbol type = features->nth(i)->get_type();
+            if (features->nth(i)->get_feature_type() == "Method") {
+                Method m(symbols[i], name);
+                Formals formals = features->nth(i)->get_formals();
+                for(int i = formals->first(); formals->more(i); i = formals->next(i)) {
+                    method_map[m].push_back(formals->nth(i)->get_type());
+                }
+                method_map[m].push_back(type);
+            } else {
+                sym_tab->addid(name, new Symbol(type));
+            }
+        }
     }
 }
 
@@ -433,10 +455,11 @@ void method_class::check_methods(ClassTable* classtable, Symbol class_name){
 
 }
 
-void class__class::method_make(ClassTable *classtable, bool& main_method_defined){
+void class__class::method_make(ClassTable *classtable, bool& main_class_defined){
     sym_tab->addid(name,new Symbol(name));
     std::set<Symbol> parent_method_names = get_parent_method_names(classtable);
     Symbol feature_name;
+    bool main_method_defined = false;
     for(int i = features->first(); features->more(i); i = features->next(i)) {
         feature_name = features->nth(i)->get_name(); 
         
@@ -445,7 +468,10 @@ void class__class::method_make(ClassTable *classtable, bool& main_method_defined
         //if (feature_name == NULL || feature_type == NULL) continue;
 
         if (features->nth(i)->get_feature_type() == "Method") {
+            if (name == Main && feature_name == main_meth)
+                main_method_defined = true;
             Method m(name, feature_name);
+
 
             if (method_map.find(m) != method_map.end()) {
                 classtable->semant_error1(name, features->nth(i)) << "Method " << feature_name << " is multiply defined in class." << endl;
@@ -462,8 +488,8 @@ void class__class::method_make(ClassTable *classtable, bool& main_method_defined
     }
 
     if (name == Main) {
-        main_method_defined = true;
-        if (sym_tab->probe(main_meth) == NULL) {
+        main_class_defined = true;
+        if (!main_method_defined) {
             classtable->semant_error1(name, this) << "No \'main\' method in class Main." << endl;
         }
     }
@@ -479,33 +505,20 @@ void class__class::method_make(ClassTable *classtable, bool& main_method_defined
             features->nth(i)->check_methods(classtable, name);
     }
 }
+
 ///////
 //
 ///////
 
 void program_class::recurse(ClassTable* classtable) {
-    bool main_method_defined = false;
-    sym_tab->enterscope();
-    //Do we need to loop over all classes (ie type symbols) and add them to sym_tab before recursing?
-
-    //class method to initialize basic features
-    //We are adding the methods of the Object class to method_map
-    // Class_ Object_class = classtable->get_class_map()[Object];
-    // Features features = Object_class->get_features();
-    // for(int i = features->first(); features->more(i); i = features->next(i)){
-    //     Method m(Object, features->nth(i)->get_name());
-    //     method_map[m] = std::vector<Symbol>(0);
-    // }
-    // for(int i = features->first(); features->more(i); i = features->next(i)){
-    //     features->nth(i)->recurse(classtable, Object);
-    // }
+    bool main_class_defined = false;
 
     // recursing over all of the children of object
     auto children = classtable->get_parent_to_children()[Object];
     for(size_t i = 0; i < children.size(); i++){
-        classtable->get_class_map()[children[i]]->method_make(classtable, main_method_defined);
+        classtable->get_class_map()[children[i]]->method_make(classtable, main_class_defined);
     }
-    if (!main_method_defined)
+    if (!main_class_defined)
         classtable->semant_error() << "Class Main is not defined." << endl;
     for(size_t i = 0; i < children.size(); i++){
         classtable->get_class_map()[children[i]]->recurse(classtable);
@@ -658,9 +671,25 @@ void formal_class::recurse(ClassTable* classtable, Symbol class_name)
 // branch_class::dump_with_types dumps the name, type declaration,
 // and body of any case branch.
 //
-void branch_class::recurse(ClassTable* classtable, Symbol class_name)
+void branch_class::recurse(ClassTable* classtable, Symbol class_name, std::set<Symbol>& case_types)
 {
-    return;
+    sym_tab->enterscope();
+    if (sym_tab->lookup(type_decl) == NULL){
+        classtable->semant_error1(class_name,this) << "Class " << type_decl << " of case branch is undefined." << endl;
+        // expr->set_type(Object);
+        // return;
+    }
+
+    if (case_types.find(type_decl) != case_types.end()){
+        classtable->semant_error1(class_name, this) << "Duplicate branch " << type_decl << " in case statement." << endl;
+    } else {
+        case_types.insert(type_decl);
+    }
+    
+    sym_tab->addid(name, new Symbol(type_decl));
+
+    expr->recurse(classtable,class_name);
+    sym_tab->exitscope();
 }
 
 //
@@ -680,13 +709,6 @@ void assign_class::recurse(ClassTable* classtable, Symbol class_name)
     } 
 
     Symbol type_decl = *(sym_tab->lookup(name));
-    // cout << "name for assign: " << name << endl;
-    // cout << "type of assign expr: " << type << endl;
-    // cout << type_decl << endl;
-    // sym_tab->dump();
-    // cout << "Just looked for " << name << " type out " << *(sym_tab->lookup(name)) << endl;
-
-
     if (!classtable->conforms(type, type_decl) && sym_tab->lookup(type_decl) != NULL)
         classtable->semant_error1(class_name,this) << "Type " << type << " of assigned expression does not conform to declared type " << type_decl << " of identifier " << name << "." << endl;
 }
@@ -755,7 +777,20 @@ void loop_class::recurse(ClassTable* classtable, Symbol class_name)
 //
 void typcase_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-   return;
+    expr->recurse(classtable,class_name);
+    std::set<Symbol> case_types;
+    // type = No_type;
+    
+    for (int i = cases->first(); cases->more(i); i = cases->next(i)){
+        cases->nth(i)->recurse(classtable, class_name, case_types);
+        
+        if (i == cases->first()){
+            type = cases->nth(i)->get_expr_type();
+        } else {
+            type = classtable->lub(type,cases->nth(i)->get_expr_type());
+        }
+        
+    }
 }
 
 //
@@ -773,7 +808,22 @@ void block_class::recurse(ClassTable* classtable, Symbol class_name)
 
 void let_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-   return;
+    sym_tab->enterscope();
+    sym_tab->addid(identifier, new Symbol(type_decl));
+    init->recurse(classtable, class_name);
+
+
+    Symbol init_type = init->get_type();
+
+    if (init_type != No_type) {
+        if(!classtable->conforms(init_type, type_decl)) {
+            classtable->semant_error1(class_name, this) << "Let Error" << endl;
+        }
+    }
+
+    body->recurse(classtable, class_name);
+    sym_tab->exitscope();
+    type = body->get_type();
 }
 
 void plus_class::recurse(ClassTable* classtable, Symbol class_name)
@@ -924,9 +974,6 @@ void object_class::recurse(ClassTable* classtable, Symbol class_name)
         return;
     }
     type = *(sym_tab->lookup(name));
-    
-   
-    //this is just place holder for now-- should get type from sym_tab
 }
 
 /*   This is the entry point to the semantic checker.
