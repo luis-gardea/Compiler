@@ -6,9 +6,15 @@ class A {
 };
 
 class B inherits A {
-    a(b:Bool, c:Int): Int {
+    a(j:Int, k:Bool, x:Bool): Int {
         5
     };
+
+
+};
+
+class E inherits B {
+    a : B <- (new B).a(true, true);
 };
 
 class Main inherits A {
@@ -16,15 +22,14 @@ class Main inherits A {
 };
 
 class C inherits A {
-    
 
     a(b:Bool, c:Int): Int {
         5
     };
 
-	a(b:Int, c:Bool): Int {
+	(*a(b:Int, c:Bool): Int {
         5
-    };
+    };*)
 };
 
 class D inherits C {

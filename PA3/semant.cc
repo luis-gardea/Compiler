@@ -15,7 +15,7 @@ extern char *curr_filename;
 static SymbolTable<Symbol,Symbol> *sym_tab = new SymbolTable<Symbol, Symbol>();
 
 //This serves as the method environment
-static std::map<Method, std::vector<Symbol> > method_map;
+static std::map<Method, std::vector<std::pair<Symbol,Symbol>>> method_map;
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -362,9 +362,9 @@ void ClassTable::install_basic_classes() {
                 Method m(symbols[i], name);
                 Formals formals = features->nth(i)->get_formals();
                 for(int i = formals->first(); formals->more(i); i = formals->next(i)) {
-                    method_map[m].push_back(formals->nth(i)->get_type());
+                    method_map[m].push_back( std::make_pair(formals->nth(i)->get_type(),formals->nth(i)->get_name()) );
                 }
-                method_map[m].push_back(type);
+                method_map[m].push_back( std::make_pair(type,type) );
             } else {
                 sym_tab->addid(name, new Symbol(type));
             }
@@ -423,14 +423,19 @@ bool ClassTable::compare(Symbol class_name, Method m, Method parent_m, tree_node
     auto formals = method_map[m];
     auto parent_formals = method_map[parent_m];
 
-    if (formals.back() != parent_formals.back()) {
-        semant_error1(class_name,t) << "In redefined method " << m.second << ", return type " << formals.back() << " is different from original type " << parent_formals.back() << endl;
+    if (formals.size() != parent_formals.size()) {
+        semant_error1(class_name,t) << "Incompatible number of formal parameters in redefined method " << m.second << endl;
+        return false;
+    }
+
+    if (formals.back().first != parent_formals.back().first) {
+        semant_error1(class_name,t) << "In redefined method " << m.second << ", return type " << formals.back().first << " is different from original type " << parent_formals.back().first << endl;
         return false;
     }
 
     for (size_t i = 0; i < formals.size(); i++){
-        if (formals[i] != parent_formals[i]) {
-            semant_error1(class_name,t) << "In redefined method " << m.second << ", parameter type " << formals[i] << " is different from original type " << parent_formals[i] << endl;
+        if (formals[i].first != parent_formals[i].first) {
+            semant_error1(class_name,t) << "In redefined method " << m.second << ", parameter type " << formals[i].first << " is different from original type " << parent_formals[i].first << endl;
             return false;
         }
     }
@@ -454,9 +459,12 @@ void method_class::check_methods(ClassTable* classtable, Symbol class_name){
     Method m(class_name, name);
     // Here we are adding the types of the arguments in a method
     for(int i = formals->first(); formals->more(i); i = formals->next(i)) {
-        method_map[m].push_back(formals->nth(i)->get_type());
+        if (sym_tab->lookup(formals->nth(i)->get_type()) == NULL) {
+            classtable->semant_error1(class_name,this) << "Class " << formals->nth(i)->get_type() << " of formal parameter " << formals->nth(i)->get_name() << " is undefined." << endl;
+        }
+        method_map[m].push_back( std::make_pair(formals->nth(i)->get_type(), formals->nth(i)->get_name()) );
     }
-    method_map[m].push_back(return_type);
+    method_map[m].push_back( std::make_pair(return_type,return_type) );
 
     // Here we are checking to make sure that the method arguments and return type for a method defined
     // in a parent class matches the one of the child
@@ -464,7 +472,7 @@ void method_class::check_methods(ClassTable* classtable, Symbol class_name){
     Method parent_m(parent_name,name);
     if (method_map.find(parent_m) != method_map.end()){
         if (!classtable->compare(class_name, m, parent_m, this)) {
-            method_map.erase(m);
+            method_map[m] = method_map[parent_m];
         }
     }
 
@@ -472,14 +480,8 @@ void method_class::check_methods(ClassTable* classtable, Symbol class_name){
 
 // Initialize the class (i.e. put methods and type into their repective environments)
 void class__class::method_make(ClassTable *classtable, bool& main_class_defined){
-    //cout << "In class " << name << endl;
-
-    // Add the declared type to the type environment
-    sym_tab->addid(name,new Symbol(name));
-
     // A variable used if this class is named Main
     bool main_method_defined = false;
-
 
     // Iterate over the methods in this class, add them to the method_map, and check against their parent signature if valid
     std::set<Symbol> parent_method_names = get_parent_method_names(classtable);
@@ -498,12 +500,12 @@ void class__class::method_make(ClassTable *classtable, bool& main_class_defined)
             } else if (parent_method_names.find(feature_name) != parent_method_names.end()) {
                 // Check if method was defined in PARENT class 
                 // Remove from set, add new method to map for THIS class
-                auto new_vec = new std::vector<Symbol>();
+                auto new_vec = new std::vector<std::pair<Symbol,Symbol>>();
                 method_map[m] = *(new_vec);
                 features->nth(i)->check_methods(classtable, name);
                 parent_method_names.erase(feature_name);
             } else {
-                auto new_vec = new std::vector<Symbol>();
+                auto new_vec = new std::vector<std::pair<Symbol,Symbol>>();
                 method_map[m] = *(new_vec);
                 features->nth(i)->check_methods(classtable, name);
             }
@@ -533,6 +535,12 @@ void class__class::method_make(ClassTable *classtable, bool& main_class_defined)
     }
 }
 
+void program_class::add_class_types() {
+    for (int i = classes->first(); classes->more(i); i = classes->next(i)) {
+        sym_tab->addid(classes->nth(i)->get_name(), new Symbol(classes->nth(i)->get_name()));
+    }
+}
+
 ///////
 // All of the ASt traversal happens here. 
 // Recurse is a member of every phyla and takes a pointer to the class table and the class which the node is part of
@@ -541,6 +549,10 @@ void class__class::method_make(ClassTable *classtable, bool& main_class_defined)
 void program_class::recurse(ClassTable* classtable) {
     bool main_class_defined = false;
 
+    // Add the declared type to the type environment
+
+    add_class_types();
+    //exit(1);
     // First initiliaze all globals
     auto children = classtable->get_parent_to_children()[Object];
     for(size_t i = 0; i < children.size(); i++){
@@ -573,6 +585,7 @@ void class__class::recurse(ClassTable* classtable) {
             if(sym_tab->probe(feature_name) != NULL) {
                 classtable->semant_error1(name, features->nth(i)) << "Attribute " << feature_name << " is multiply defined in class." << endl;
             } else if (sym_tab->lookup(feature_name) != NULL) {
+                
                 classtable->semant_error1(name, features->nth(i)) << "Attribute " << feature_name << " is an attribute of an inherited class." << endl;
             }else {
                 sym_tab->addid(feature_name, new Symbol(features->nth(i)->get_type()));
@@ -630,7 +643,7 @@ void attr_class::recurse(ClassTable* classtable, Symbol class_name)
     sym_tab->enterscope();
     // Here is where we need to add self/SLEF_TYPE to environment
     init->recurse(classtable, class_name);
-    sym_tab->enterscope();
+    sym_tab->exitscope();
 
     // If initilization is omitted, we don't do the conformity check
     Symbol init_type = init->get_type();
@@ -693,12 +706,92 @@ void assign_class::recurse(ClassTable* classtable, Symbol class_name)
 
 void static_dispatch_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-    type = Object;
+    type = No_type;
+
+    expr->recurse(classtable, class_name);
+    if (sym_tab->lookup(type_name) == NULL){
+        classtable->semant_error1(class_name,this) << "Static dispact type name not in symbol table" << endl;
+        return;
+    } else if (!classtable->conforms(expr->get_type(),type_name)) {
+        type = Object;
+        classtable->semant_error1(class_name,this) << "Expression type " << expr->get_type() << " does not conform to declared static dispatch type "  << type_name << "." << endl;
+        return;
+    }
+    Method m(type_name, name);
+    std::vector<std::pair<Symbol,Symbol>> args;
+    if(method_map.find(m) == method_map.end()) {
+        classtable->semant_error1(class_name,this) << "Dispatch to undefined method " << name << "." << endl;
+        return;
+    } else {
+        args = method_map[m];
+    }
+
+    std::vector<Symbol> expr_types;
+    //sym_tab->dump();
+    for(int i = actual->first(); actual->more(i); i = actual->next(i)) {
+        actual->nth(i)->recurse(classtable, class_name);
+        if (sym_tab->lookup(actual->nth(i)->get_type()) == NULL)
+            classtable->semant_error1(class_name,this) << "Class " << actual->nth(i)->get_type() << " of formal parameter "<< args[i].second << " is undefined." << endl;
+        expr_types.push_back(actual->nth(i)->get_type());
+    }
+
+    if (args.size() != expr_types.size() + 1) {
+        classtable->semant_error1(class_name,this) << "Method " << name << " called with wrong number of arguments." << endl;
+        type = args.back().first;
+        return;
+    }
+    size_t min_size = (expr_types.size() < args.size()) ? expr_types.size() : args.size();
+    for (size_t i = 0; i < min_size; i++) {
+        if (!classtable->conforms(expr_types[i], args[i].first)) {
+            classtable->semant_error1(class_name,this) << "In call of method " << name << ", type " << expr_types[i] << " of parameter " << args[i].second << " does not conform to declared type " << args[i].first << "." << endl;
+        }
+    }
+
+    if (args.size() != 0) 
+        type = args.back().first;
+    else
+        type = Object;
 }
 
 void dispatch_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-    type = Int;
+    type = No_type;
+    expr->recurse(classtable, class_name);
+    Method m(expr->get_type(), name);
+    std::vector<std::pair<Symbol,Symbol>> args;
+    if(method_map.find(m) == method_map.end()) {
+        classtable->semant_error1(class_name,this) << "Dispatch to undefined method " << name << "." << endl;
+        return;
+    } else {
+        args = method_map[m];
+    }
+
+    std::vector<Symbol> expr_types;
+    //sym_tab->dump();
+    for(int i = actual->first(); actual->more(i); i = actual->next(i)) {
+        actual->nth(i)->recurse(classtable, class_name);
+        if (sym_tab->lookup(actual->nth(i)->get_type()) == NULL)
+            classtable->semant_error1(class_name,this) << "Class " << actual->nth(i)->get_type() << " of formal parameter "<< args[i].second << " is undefined." << endl;
+        expr_types.push_back(actual->nth(i)->get_type());
+    }
+
+    if (args.size() != expr_types.size() + 1) {
+        classtable->semant_error1(class_name,this) << "Method " << name << " called with wrong number of arguments." << endl;
+        type = args.back().first;
+        return;
+    }
+    size_t min_size = (expr_types.size() < args.size()) ? expr_types.size() : args.size();
+    for (size_t i = 0; i < min_size; i++) {
+        if (!classtable->conforms(expr_types[i], args[i].first)) {
+            classtable->semant_error1(class_name,this) << "In call of method " << name << ", type " << expr_types[i] << " of parameter " << args[i].second << " does not conform to declared type " << args[i].first << "." << endl;
+        }
+    }
+
+    if (args.size() != 0) 
+        type = args.back().first;
+    else
+        type = Object;
+
 }
 
 void cond_class::recurse(ClassTable* classtable, Symbol class_name)
@@ -975,6 +1068,15 @@ void object_class::recurse(ClassTable* classtable, Symbol class_name)
  */
 void program_class::semant()
 {
+    // sym_tab->enterscope();
+    // Symbol MS= idtable.add_string("MS");
+    // sym_tab->addid(MS, new Symbol(MS));
+    // sym_tab->dump();
+    // sym_tab->exitscope();
+    // sym_tab->dump();
+
+    // exit(1);
+
     initialize_constants();
     ClassTable *classtable = new ClassTable(classes);
     recurse(classtable);

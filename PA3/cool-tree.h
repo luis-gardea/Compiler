@@ -29,6 +29,7 @@ public:
    virtual Program copy_Program() = 0;
 
    virtual void recurse(ClassTable* classtable) = 0;
+   virtual void add_class_types() = 0;
 
 #ifdef Program_EXTRAS
    Program_EXTRAS
@@ -173,6 +174,7 @@ public:
    void dump(ostream& stream, int n);
 
    void recurse(ClassTable* classtable);
+   void add_class_types();
 
 #ifdef Program_SHARED_EXTRAS
    Program_SHARED_EXTRAS
