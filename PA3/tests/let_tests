@@ -1,0 +1,9 @@
+class Main {
+	a: Bool;
+
+	c: Int;
+
+    main() : Int {
+        let a:Int <- c , b:Bool <- true in a <- c
+    };
+};

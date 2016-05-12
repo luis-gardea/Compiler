@@ -1,0 +1,22 @@
+class A {
+    a : Bool;
+    b : Int;
+
+    c(d:Int) : Int { 
+        d <- 5
+    };
+
+    d:Bool <- 5;
+};
+
+class B {
+    a:Bool;
+
+    b(): Bool {
+        5
+    };
+};
+
+class C inherits B {
+
+};
