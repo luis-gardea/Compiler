@@ -534,13 +534,14 @@ void class__class::method_make(ClassTable *classtable, bool& main_class_defined)
 }
 
 ///////
-//
+// All of the ASt traversal happens here. 
+// Recurse is a member of every phyla and takes a pointer to the class table and the class which the node is part of
 ///////
 
 void program_class::recurse(ClassTable* classtable) {
     bool main_class_defined = false;
 
-    // recursing over all of the children of object
+    // First initiliaze all globals
     auto children = classtable->get_parent_to_children()[Object];
     for(size_t i = 0; i < children.size(); i++){
         classtable->get_class_map()[children[i]]->method_make(classtable, main_class_defined);
@@ -549,79 +550,42 @@ void program_class::recurse(ClassTable* classtable) {
     if (!main_class_defined)
         classtable->semant_error() << "Class Main is not defined." << endl;
 
+
+    // This is the next pass of the AST, where we do all the scope and type checking. At this point, the Inheritcance graph and all global 
+    // instances have been added to their respective environements.
     for(size_t i = 0; i < children.size(); i++){
         classtable->get_class_map()[children[i]]->recurse(classtable);
     }
     sym_tab->exitscope();
 }
 
-
 void class__class::recurse(ClassTable* classtable) {
     // Enter a new scope since we just entered a new Class. All features defined here
     // are added to this Class's scope upfront. 
-    //
-    // Add all method declarations to the global method_map data structure,
-    // which defines the method environment for the program.
-    //
+    sym_tab->enterscope();
+    
     // Add all attribute declarations to the global sym_tab data structure,
     // which defines the type environment for the program.
-    sym_tab->enterscope();
     Symbol feature_name;
-    
     for(int i = features->first(); features->more(i); i = features->next(i)) {
         feature_name = features->nth(i)->get_name(); 
-        
-        //feature_type = features->nth(i)->get_type();
-        // Do we need this next line of checking?
-        // if (feature_name == NULL || feature_type == NULL) continue;
-
         if (features->nth(i)->get_feature_type() == "Attribute") {
-        //     Method m(name, feature_name);
-
-        //     if (method_map.find(m) != method_map.end()) {
-        //         classtable->semant_error1(name, features->nth(i)) << "Method " << feature_name << " is multiply defined in class." << endl;
-        //     } else if (parent_method_names.find(feature_name) != parent_method_names.end()) {
-        //         parent_method_names.erase(feature_name);
-        //         method_map[m] = std::vector<Symbol>();
-        //         //check if method is defined was defined in PARENT class 
-        //         //remove from set
-        //         //add new Method to map
-        //     } else {
-        //         method_map[m] = std::vector<Symbol>();
-        //     }
-        // } else {
             if(sym_tab->probe(feature_name) != NULL) {
                 classtable->semant_error1(name, features->nth(i)) << "Attribute " << feature_name << " is multiply defined in class." << endl;
             } else if (sym_tab->lookup(feature_name) != NULL) {
                 classtable->semant_error1(name, features->nth(i)) << "Attribute " << feature_name << " is an attribute of an inherited class." << endl;
             }else {
-                Symbol* feature_type = new Symbol(features->nth(i)->get_type());
-                sym_tab->addid(feature_name, feature_type);
-                // sym_tab->dump();
-                // Symbol mytype = *(sym_tab->lookup(feature_name));
-                // cout << "Just put in " << feature_name << "type out " << *(sym_tab->lookup(feature_name)) << endl;
+                sym_tab->addid(feature_name, new Symbol(features->nth(i)->get_type()));
             }
         }   
     }
 
-    
-
-
-    // cout << "We are right outside for loop" << endl;
-    // sym_tab->dump();
-    // int j = features->first();
-    // cout << "this is the first feature " << features->nth(j)->get_name() << endl;
-    // for(int i = features->first(); features->more(i); i = features->next(i)) {
-    //     cout << features->nth(i)->get_name() << endl;
-    //     cout << "Method name" << sym_tab->lookup(features->nth(i)->get_name()) << endl;
-    // }
+    // Recurse into all features to traverse the AST
     for(int i = features->first(); features->more(i); i = features->next(i)) {
-        // cout << "Inside loop " << features->nth(i)->get_name() << endl;
-        
-        // cout << "Method name" << sym_tab->lookup(features->nth(i)->get_name()) << endl;
         features->nth(i)->recurse(classtable, name);
     }
 
+    // Walk down the inheritance graph, adding scope as we go down
     auto children = classtable->get_parent_to_children()[name];
     for(size_t i = 0; i < children.size(); i++){
         classtable->get_class_map()[children[i]]->recurse(classtable);
@@ -632,11 +596,20 @@ void class__class::recurse(ClassTable* classtable) {
 
 void method_class::recurse(ClassTable* classtable, Symbol class_name)
 {
+    // Enter new scope since we are introducing variables
     sym_tab->enterscope();
-    
-    for(int i = formals->first(); formals->more(i); i = formals->next(i))
-        formals->nth(i)->recurse(classtable, class_name);
 
+    // Add formal variables to scope and make sure there are no multiples
+    std::set<Symbol> formal_names;
+    for(int i = formals->first(); formals->more(i); i = formals->next(i)) {
+        if (formal_names.find(formals->nth(i)->get_name()) != formal_names.end()) {
+            classtable->semant_error1(class_name,this) << "Formal parameter "<< formals->nth(i)->get_name() << " is multiply defined." << endl;
+        }
+        formal_names.insert(formals->nth(i)->get_name());
+        formals->nth(i)->recurse(classtable, class_name);
+    }
+
+    // Recurse into the body of the method and check that the type of the expression conforms to the declared type
     expr->recurse(classtable, class_name);
     if (!classtable->conforms(expr->get_type(), return_type)){
         classtable->semant_error1(class_name,this) << "Inferred return type " << expr->get_type() << " of method " << name << " does not conform to declared return type " << return_type << "." << endl;
@@ -647,128 +620,110 @@ void method_class::recurse(ClassTable* classtable, Symbol class_name)
 
 void attr_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-    init->recurse(classtable, class_name);
+    // First check if the declared type is a valid type in the program
     if (sym_tab->lookup(type_decl) == NULL){
         classtable->semant_error1(class_name,this) << "Class " << type_decl << " of attribute " << name << " is undefined." << endl;
     }
 
-    Symbol init_type = init->get_type();
-    // cout << init_type << endl;
+    // Recurse into init expression. We always enter scope and add push self since the only case where we don't need self is 
+    // in No_expr, which does not do anything with self
+    sym_tab->enterscope();
+    // Here is where we need to add self/SLEF_TYPE to environment
+    init->recurse(classtable, class_name);
+    sym_tab->enterscope();
 
+    // If initilization is omitted, we don't do the conformity check
+    Symbol init_type = init->get_type();
     if (init_type == No_type) return;
-    // cout << "name of attr: " << name << endl;
     
-    // cout << "sdhajksdad" << endl;
-    // cout << *(sym_tab->lookup(name)) << " " << type_decl << endl;
-    
+    // Check that the expression type conforms to the declared type
     if (!classtable->conforms(init_type, type_decl)){
         classtable->semant_error1(class_name,this) << "Inferred type " << init_type << " of initialization of attribute " << name << " does not conform to declared type " << type_decl << "." << endl;
     }
 
 }
 
-//
-// formal_class::dump_with_types dumps the name and type declaration
-// of a formal parameter.
-//
 void formal_class::recurse(ClassTable* classtable, Symbol class_name)
 {
+    // Just add the varibale to the symbol table since we are already in a method scope
     sym_tab->addid(name, new Symbol(type_decl));
-    return;
 }
 
-//
-// branch_class::dump_with_types dumps the name, type declaration,
-// and body of any case branch.
-//
 void branch_class::recurse(ClassTable* classtable, Symbol class_name, std::set<Symbol>& case_types)
 {
+    // Enterscope since we are pushing a new variable
     sym_tab->enterscope();
+
+    // Check that the declared type is valid
     if (sym_tab->lookup(type_decl) == NULL){
         classtable->semant_error1(class_name,this) << "Class " << type_decl << " of case branch is undefined." << endl;
-        // expr->set_type(Object);
-        // return;
     }
 
+    // Check that the type of this branch has not been seen yet
     if (case_types.find(type_decl) != case_types.end()){
         classtable->semant_error1(class_name, this) << "Duplicate branch " << type_decl << " in case statement." << endl;
     } else {
         case_types.insert(type_decl);
     }
     
+    // Add the variable to the scope
     sym_tab->addid(name, new Symbol(type_decl));
 
     expr->recurse(classtable,class_name);
     sym_tab->exitscope();
 }
 
-//
-// assign_class::dump_with_types prints "assign" and then (indented)
-// the variable being assigned, the expression, and finally the type
-// of the result.  Note the call to dump_type (see above) at the
-// end of the method.
-//
 void assign_class::recurse(ClassTable* classtable, Symbol class_name)
 {
+    // Assign always takes on the type of the expression, so we recurse first
     expr->recurse(classtable, class_name);
     type = expr->get_type();
 
+    // Raise error and don't check conformity if variable is undeclared
     if (sym_tab->lookup(name) == NULL) {
         classtable->semant_error1(class_name, this) << "Assignment to undeclared variable " << name << "." << endl;
         return;
     } 
 
+    // Check that the expression type conforms to the declared type of the variable
     Symbol type_decl = *(sym_tab->lookup(name));
     if (!classtable->conforms(type, type_decl) && sym_tab->lookup(type_decl) != NULL)
         classtable->semant_error1(class_name,this) << "Type " << type << " of assigned expression does not conform to declared type " << type_decl << " of identifier " << name << "." << endl;
 }
 
-//
-// static_dispatch_class::dump_with_types prints the expression,
-// static dispatch class, function name, and actual arguments
-// of any static dispatch.  
-//
 void static_dispatch_class::recurse(ClassTable* classtable, Symbol class_name)
 {
     type = Object;
 }
 
-//
-//   dispatch_class::dump_with_types is similar to 
-//   static_dispatch_class::dump_with_types 
-//
 void dispatch_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-    type = Object;
+    type = Int;
 }
 
-//
-// cond_class::dump_with_types dumps each of the three expressions
-// in the conditional and then the type of the entire expression.
-//
 void cond_class::recurse(ClassTable* classtable, Symbol class_name)
 {   
+    // make sure predicate expr is type Bool
     pred->recurse(classtable, class_name);
     Symbol pred_type = pred->get_type();
     if (pred_type != Bool) {
         classtable->semant_error1(class_name, this) << "Predicate of \'if\' does not have type Bool." << endl; 
     }
 
+    // Evaluate branches
     then_exp->recurse(classtable, class_name);
     Symbol then_type = then_exp->get_type();
     
     else_exp->recurse(classtable, class_name);
     Symbol else_type = else_exp->get_type();
 
+    // The type of if expression is lub of branch expressions
     type = classtable->lub(then_type,else_type);
 }
 
-//
-// loop_class::dump_with_types dumps the predicate and then the
-// body of the loop, and finally the type of the entire expression.
-//
 void loop_class::recurse(ClassTable* classtable, Symbol class_name)
 {
+    // make sure predicate expr is type Bool    
     pred->recurse(classtable,class_name);
     Symbol pred_type = pred->get_type();
     if (pred_type != Bool) {
@@ -776,40 +731,32 @@ void loop_class::recurse(ClassTable* classtable, Symbol class_name)
     }
 
     body->recurse(classtable, class_name);
-
     type = Object;
 }
 
-//
-//  typcase_class::dump_with_types dumps each branch of the
-//  the Case_ one at a time.  The type of the entire expression
-//  is dumped at the end.
-//
 void typcase_class::recurse(ClassTable* classtable, Symbol class_name)
 {
+    // Evaluate first expression
     expr->recurse(classtable,class_name);
+
+    // Loop over the branches and evaluate them, keep track of the variables defined
     std::set<Symbol> case_types;
-    // type = No_type;
-    
     for (int i = cases->first(); cases->more(i); i = cases->next(i)){
         cases->nth(i)->recurse(classtable, class_name, case_types);
         
+        // After recursing on the first branch, type is still no_type so we just set type to the branch type
+        // otherwise the type is a running lub of all the branch types
         if (i == cases->first()){
             type = cases->nth(i)->get_expr_type();
         } else {
             type = classtable->lub(type,cases->nth(i)->get_expr_type());
         }
-        
     }
 }
 
-//
-//  The rest of the cases for Expression are very straightforward
-//  and introduce nothing that isn't already in the code discussed
-//  above.
-//
 void block_class::recurse(ClassTable* classtable, Symbol class_name)
 {
+    // Evaluate all expressions and set tyep to the type of the last expression 
     for (int i = body->first(); body->more(i); i = body->next(i)) {
         body->nth(i)->recurse(classtable, class_name);
         type = body->nth(i)->get_type();
@@ -818,33 +765,41 @@ void block_class::recurse(ClassTable* classtable, Symbol class_name)
 
 void let_class::recurse(ClassTable* classtable, Symbol class_name)
 {
-    sym_tab->enterscope();
-    sym_tab->addid(identifier, new Symbol(type_decl));
+    // Evaluate the init expression
     init->recurse(classtable, class_name);
-
-
     Symbol init_type = init->get_type();
 
-    if (init_type != No_type) {
+    // If there is no initilization, we don't do a conformity check
+    // Otherwise raise error if init expression does not conform to declared type;
+    if (sym_tab->lookup(init_type) == NULL) {
+        classtable->semant_error1(class_name, this) << "Class " << type_decl << " of let-bound identifier " << identifier << " is undefined." << endl;
+    } else if (init_type != No_type) {
         if(!classtable->conforms(init_type, type_decl)) {
-            classtable->semant_error1(class_name, this) << "Let Error" << endl;
+            classtable->semant_error1(class_name, this) << "Inferred type " <<  init_type << " of initialization of " << identifier << " does not conform to identifier's declared type " << type_decl << "." << endl;
         }
     }
 
+    // Enter scope since we push a new variable
+    sym_tab->enterscope();
+    sym_tab->addid(identifier, new Symbol(type_decl));
     body->recurse(classtable, class_name);
     sym_tab->exitscope();
+
     type = body->get_type();
 }
 
 void plus_class::recurse(ClassTable* classtable, Symbol class_name)
 {
+    // Evaluate both expressions
     e1->recurse(classtable, class_name);
     e2->recurse(classtable, class_name);
 
+    // Make sure that both expressions are Int
     if (e1->get_type() != Int || e2->get_type() != Int) {
         classtable->semant_error1(class_name,this) << "non-Int arguments: " << e1->get_type() << " + " << e2->get_type() << endl;
     }
 
+    // We know the type of this expression will be Int
     type = Int;
 }
 
@@ -866,7 +821,7 @@ void mul_class::recurse(ClassTable* classtable, Symbol class_name)
     e2->recurse(classtable, class_name);
 
     if (e1->get_type() != Int || e2->get_type() != Int) {
-        classtable->semant_error1(class_name,this) << "Non-Int arguments: " << e1->get_type() << " * " << e2->get_type() << endl;
+        classtable->semant_error1(class_name,this) << "non-Int arguments: " << e1->get_type() << " * " << e2->get_type() << endl;
     }
 
     type = Int;
@@ -878,7 +833,7 @@ void divide_class::recurse(ClassTable* classtable, Symbol class_name)
     e2->recurse(classtable, class_name);
 
     if (e1->get_type() != Int || e2->get_type() != Int) {
-        classtable->semant_error1(class_name,this) << "Non-Int arguments: " << e1->get_type() << " / " << e2->get_type() << endl;
+        classtable->semant_error1(class_name,this) << "non-Int arguments: " << e1->get_type() << " / " << e2->get_type() << endl;
     }
 
     type = Int;
@@ -889,7 +844,7 @@ void neg_class::recurse(ClassTable* classtable, Symbol class_name)
     e1->recurse(classtable, class_name);
 
     if (e1->get_type() != Int) {
-        classtable->semant_error1(class_name,this) << "Non-Int argument: " << e1->get_type() << endl;
+        classtable->semant_error1(class_name,this) << "Argument of \'~\' has type " << e1->get_type() << " instead of Int." << endl;
     }
 
     type = Int;
@@ -900,8 +855,8 @@ void lt_class::recurse(ClassTable* classtable, Symbol class_name)
     e1->recurse(classtable, class_name);
     e2->recurse(classtable, class_name);
 
-    if (e1->get_type() != Bool || e2->get_type() != Bool) {
-        classtable->semant_error1(class_name,this) << "Non-Bool arguments: " << e1->get_type() << " < " << e2->get_type() << endl;
+    if (e1->get_type() != Int || e2->get_type() != Int) {
+        classtable->semant_error1(class_name,this) << "non-Int arguments: " << e1->get_type() << " < " << e2->get_type() << endl;
     }
 
     type = Bool;
@@ -912,12 +867,26 @@ void eq_class::recurse(ClassTable* classtable, Symbol class_name)
 {
     e1->recurse(classtable, class_name);
     e2->recurse(classtable, class_name);
+    type = Bool;
 
-    if (e1->get_type() !=  e2->get_type()) {
-        classtable->semant_error1(class_name,this) << "Illegal comparison with a basic type." << endl;
+    std::set<Symbol> basic_types = {Int, Bool, IO, Str};
+    if (basic_types.find(e1->get_type()) !=  basic_types.end()) {
+        if (basic_types.find(e2->get_type()) !=  basic_types.end()) {
+            if (e1->get_type() != e2->get_type()) {
+                classtable->semant_error1(class_name,this) << "Illegal comparison with a basic type." << endl;
+                return;
+            }
+        }
     }
 
-    type = Bool;
+    if (basic_types.find(e2->get_type()) !=  basic_types.end()) {
+        if (basic_types.find(e1->get_type()) !=  basic_types.end()) {
+            if (e1->get_type() != e2->get_type()) {
+                classtable->semant_error1(class_name,this) << "Illegal comparison with a basic type." << endl;
+                return;
+            }
+        }
+    }
 }
 
 void leq_class::recurse(ClassTable* classtable, Symbol class_name)
@@ -925,8 +894,8 @@ void leq_class::recurse(ClassTable* classtable, Symbol class_name)
     e1->recurse(classtable, class_name);
     e2->recurse(classtable, class_name);
 
-    if (e1->get_type() != Bool || e2->get_type() != Bool) {
-        classtable->semant_error1(class_name,this) << "Non-Bool arguments: " << e1->get_type() << " <= " << e2->get_type() << endl;
+    if (e1->get_type() != Int || e2->get_type() != Int) {
+        classtable->semant_error1(class_name,this) << "non-Int arguments: " << e1->get_type() << " <= " << e2->get_type() << endl;
     }
 
     type = Bool;
@@ -937,7 +906,7 @@ void comp_class::recurse(ClassTable* classtable, Symbol class_name)
     e1->recurse(classtable, class_name);
 
     if (e1->get_type() !=  Bool) {
-        classtable->semant_error1(class_name,this) << "Non-Bool argument: " << e1->get_type() << endl;
+        classtable->semant_error1(class_name,this) << "Argument of \'not\' has type " << e1->get_type() << " instead of Bool." << endl;
     }
 
     type = Bool;
@@ -960,14 +929,17 @@ void string_const_class::recurse(ClassTable* classtable, Symbol class_name)
 
 void new__class::recurse(ClassTable* classtable, Symbol class_name)
 {
-    //type check
     type = type_name;
+
+    if (sym_tab->lookup(type_name) == NULL) {
+        classtable->semant_error1(class_name,this) << "\'new\' used with undefined class " << type_name << "." << endl;
+        type = Object;
+    }
 }
 
 void isvoid_class::recurse(ClassTable* classtable, Symbol class_name)
 {
     e1->recurse(classtable, class_name);
-    //do some sort of type check here with No_class ?
     type = Bool;
 }
 
@@ -1002,13 +974,8 @@ void object_class::recurse(ClassTable* classtable, Symbol class_name)
 void program_class::semant()
 {
     initialize_constants();
-
-    /* ClassTable constructor may do some semantic analysis */
     ClassTable *classtable = new ClassTable(classes);
-
     recurse(classtable);
-
-    /* some semantic analysis code may go here */
 
     if (classtable->errors()) {
        cerr << "Compilation halted due to static semantic errors." << endl;

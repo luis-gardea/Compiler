@@ -1,0 +1,34 @@
+class A {
+    a(b:Int, c:Bool): Int {
+        (new A).f(5, true)
+    };
+    f(d:Int, d:Int): Int {5};
+};
+
+class B inherits A {
+    a(b:Bool, c:Int): Int {
+        5
+    };
+};
+
+class Main inherits A {
+    --main() : Int { a(5,true) };
+};
+
+class C inherits A {
+    
+
+    a(b:Bool, c:Int): Int {
+        5
+    };
+
+	a(b:Int, c:Bool): Int {
+        5
+    };
+};
+
+class D inherits C {
+    a(b:Bool, c:Int): Int {
+        5
+    };
+};
