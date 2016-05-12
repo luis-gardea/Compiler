@@ -7,7 +7,7 @@ class Main {
         ~true;
         Not 4;
         5;
-        new D;
+        --new D;
         }
     };
 

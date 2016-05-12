@@ -768,17 +768,16 @@ void let_class::recurse(ClassTable* classtable, Symbol class_name)
     // Evaluate the init expression
     init->recurse(classtable, class_name);
     Symbol init_type = init->get_type();
-
     // If there is no initilization, we don't do a conformity check
     // Otherwise raise error if init expression does not conform to declared type;
-    if (sym_tab->lookup(init_type) == NULL) {
+    // cout << *(sym_tab->lookup(init_type)) << endl;
+    if (sym_tab->lookup(type_decl) == NULL) {
         classtable->semant_error1(class_name, this) << "Class " << type_decl << " of let-bound identifier " << identifier << " is undefined." << endl;
     } else if (init_type != No_type) {
         if(!classtable->conforms(init_type, type_decl)) {
             classtable->semant_error1(class_name, this) << "Inferred type " <<  init_type << " of initialization of " << identifier << " does not conform to identifier's declared type " << type_decl << "." << endl;
         }
     }
-
     // Enter scope since we push a new variable
     sym_tab->enterscope();
     sym_tab->addid(identifier, new Symbol(type_decl));
@@ -786,6 +785,9 @@ void let_class::recurse(ClassTable* classtable, Symbol class_name)
     sym_tab->exitscope();
 
     type = body->get_type();
+    if (sym_tab->lookup(type) == NULL){
+        type = Object;
+    }
 }
 
 void plus_class::recurse(ClassTable* classtable, Symbol class_name)
