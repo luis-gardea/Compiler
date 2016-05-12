@@ -1,7 +1,9 @@
 class Main {
 
     main() : Int {
-        case 1 + 2 of x : String => 1;
-        c : String => 3; esac
+        case 1 + 2 of 
+        	x : String => 1;
+        	c : String => 3; 
+    	esac
     };
 };

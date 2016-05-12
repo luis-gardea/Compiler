@@ -1,0 +1,35 @@
+class Main {
+    main() : Int {
+    	{
+        case true of 
+        	x : SELF_TYPE => 1 + "";
+        	c : SELF_TYPE => 3; 
+    	esac;
+
+        case true of 
+        	x : SELF_TYPE => 1 + x;
+        	c : Int => 3; 
+    	esac;
+
+    	self@Int.copy();
+    	}
+    };
+
+    (*x(): SELF_TYPE {
+    	self
+    };*)
+}; 
+
+(*class A inherits Main {
+    (*a(): A {
+    	self.x()
+    };*)
+	
+};*)
+
+class B {
+    b(): Int {
+    	let x : SELF_TYPE <- self in x
+    };
+	
+};

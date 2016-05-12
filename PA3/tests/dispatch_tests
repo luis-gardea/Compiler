@@ -1,0 +1,10 @@
+class Main {
+	a:Str <- (new Str).j();	
+	f(x:Int, y:Bool, z:Str) : Int {
+		55
+	};
+
+	main(): Int{
+		(new Main)@Int.f(55,true,"Hi", 6)
+	};
+};
