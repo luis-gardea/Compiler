@@ -189,6 +189,7 @@ void ClassTable::CheckInheritanceTree(){
 
 // Checks if c1 <= c2, i.e. that class c1 conforms to class c2
 bool ClassTable::conforms(Symbol c1, Symbol c2) {
+    if (sym_tab->lookup(c1) == NULL || sym_tab->lookup(c2) == NULL) return false;
     if (c1 == SELF_TYPE && c2 == SELF_TYPE) return true;
     if (c1 == SELF_TYPE) {        
         // sets c1 to the class that SELF_TYPE refers to
@@ -349,7 +350,7 @@ void ClassTable::install_basic_classes() {
            filename);
 
     Class_ basic_class[] = {Object_class,IO_class,Int_class,Bool_class,Str_class};
-    Symbol symbols[] = {Object, Int, Bool, Str};
+    Symbol symbols[] = {Object,  IO, Int, Bool, Str};
 
     // Add the basic classes to the ClassTable data structures.
     for (int i = 0; i < 5; i++) {
@@ -363,6 +364,7 @@ void ClassTable::install_basic_classes() {
     sym_tab->enterscope();
     for (int i = 0; i < 5; i++) {
         sym_tab->addid(basic_class[i]->get_name(), new Symbol(basic_class[i]->get_name()));
+        if (symbols[i] == IO) continue;
 
         Features features = basic_class[i]->get_features();
         for(int j = features->first(); features->more(j); j = features->next(j)) {
@@ -380,7 +382,7 @@ void ClassTable::install_basic_classes() {
                 method_map[m].push_back(std::make_pair(type,type));
                 // Because all other basic types inherit from object, we must add the methods of object to their method map
                 if (basic_class[i] == Object_class) {
-                    for(int k = 0; k < 4; k++) {
+                    for(int k = 0; k < 5; k++) {
                         if (symbols[k] != Object) {
                             Method child_m(symbols[k], name);
                             method_map[child_m] = method_map[m];
@@ -585,7 +587,11 @@ void program_class::recurse(ClassTable* classtable) {
     if (!main_class_defined)
         classtable->semant_error() << "Class Main is not defined." << endl;
 
-
+    // sym_tab->dump();
+    // for (auto it : method_map){
+    //     Method m = it.first;
+    //     cout << m.first << " " << m.second << endl;
+    // }
     // This is the next pass of the AST, where we do all the scope and type checking. At this point, the Inheritcance graph and all global 
     // instances have been added to their respective environements.
     for(size_t i = 0; i < children.size(); i++){
