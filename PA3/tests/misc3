@@ -1,0 +1,26 @@
+Class Main {
+    main() : Object { new SELF_TYPE };
+};
+class A {
+  clone() : SELF_TYPE { new SELF_TYPE };
+};
+class B inherits A {
+	a:A <- (new A).clone();
+	b:B <- (new B).clone();
+};
+
+class C {
+  foo(x : Int) : Int {
+    x
+  };
+};
+
+class D inherits C {
+  foo(x : Int) : Int {
+    x + 2
+  };
+};
+
+class E inherits D {
+	i:Int<-(new C).foo(1);
+};

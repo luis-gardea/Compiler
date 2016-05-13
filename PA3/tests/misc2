@@ -1,8 +1,17 @@
 Class Main inherits IO {
     main() : Int { 3 };
-    jump(b : Int, c : Int) : Int { 3 };
 };
 
 class Y inherits Main {
-    jump(a : Bool, b : String) : Bool { 4 };
+    main() : String { "a" };
+};
+
+class V {
+	do_nothing() : Int { 2 };
+  	x : Object <- {
+      case true of
+            self : Int => self.do_nothing();
+      esac;
+      let self : Int in self.do_nothing();
+    };
 };
