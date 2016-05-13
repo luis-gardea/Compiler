@@ -117,6 +117,7 @@ ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) 
         }
     }
 
+    // Here we check the inheritance tree for correctness and to check the existence of cycles
     CheckInheritanceTree();
 }
 
@@ -147,7 +148,6 @@ bool ClassTable::CheckForCycles(Symbol child, std::set<Symbol> visited){
     has_cycle[child] = cycle;
 
     return cycle;
-
 }
 
 //
@@ -157,17 +157,21 @@ void ClassTable::CheckInheritanceTree(){
         if (it->first == Object)
             continue;
 
+        // Checking for a redefintion of SELF_TYPE
         if (it->first == SELF_TYPE)
             semant_error(class_map[it->first]) << "Redefinition of basic class SELF_TYPE." << endl;
+        // Checking inheritance of SELF_TYPE
         else if (it->second == SELF_TYPE)
             semant_error(class_map[it->first]) << "Class " << it->first << " cannot inherit class SELF_TYPE." << endl;
+        // Checking to see if parent class is defined
         else if (class_map.find(it->second) == class_map.end())
             semant_error(class_map[it->first]) << "Class " << it->first << " inherits from an undefined class " << it->second << "." << endl;
-        else if (it->second == Str || it->second == IO || it->second == Int || it->second == Bool) {
+        // Checking to see if parent class is one of basic classes besides object
+        else if (it->second == Str || it->second == Int || it->second == Bool) {
             semant_error(class_map[it->first]) << "Class " << it->first << " cannot inherit class " << it->second << "." << endl;
         }
     }
-
+    // If our inheritance tree is wrong, we must exit
     if (get_semant_errors() > 0){
         static_error_exit();
     }
@@ -177,6 +181,7 @@ void ClassTable::CheckInheritanceTree(){
         std::set<Symbol> visited;
         CheckForCycles(it->first, visited);
     }
+    // If we have cycles, we must exit
     if (get_semant_errors() > 0){
         static_error_exit();
     }
@@ -185,46 +190,39 @@ void ClassTable::CheckInheritanceTree(){
 // Checks if c1 <= c2, i.e. that class c1 conforms to class c2
 bool ClassTable::conforms(Symbol c1, Symbol c2) {
     if (c1 == SELF_TYPE && c2 == SELF_TYPE) return true;
-    if (c1 == SELF_TYPE) {
-        // sym_tab->dump();
-        
+    if (c1 == SELF_TYPE) {        
+        // sets c1 to the class that SELF_TYPE refers to
         c1 = *(sym_tab->lookup(SELF_TYPE));
-
-        // cout << "c1 type"  << c1 << endl;
-        // cout << "Does main conform" << conforms(c1,c2) << endl;
-                // exit(1);
         return conforms(c1,c2);
     }
+    // If c2 is SELF_TYPE but c1 isn't, automatically doesn't conform
     if (c2 == SELF_TYPE) return false;
-    Symbol class_ = c1;
-    while (true) {
-        
 
+    Symbol class_ = c1;
+    // Here we climb up the tree of c1 and keep setting it to its parent
+    // If c1 conforms to c2, then when traversing upwards, we will find it
+    // If we reach Object first, then c1 cannot conform to c2 because it was not found
+    while (true) {
         if (class_ == c2) {
-            // cout << "were in here" << endl;
-            // exit(1);
             if (semant_debug)
                 cout << c1 << " conforms to " << c2 << endl;
             return true;
         } else if (class_ == Object) {
-            // cout << "were in here" << endl;
-            // exit(1);
             if (semant_debug)
                 cout << c1 << " does not conform to " << c2 << endl;
             break;
         }
         class_ = child_to_parent[class_];
-        // cout << class_ << endl;
     }
-        // exit(1);
-
     return false;
 }
 
 // (least upper bound) 
 // Finds the least common ancestor of class c1 and c2. Will always return a Symbol, as all classes have Object as common ancestor
 Symbol ClassTable::lub(Symbol c1, Symbol c2) {
+    // If both are SELF_TYPE, then we return SELF_TYPE
     if (c1 == SELF_TYPE && c2 == SELF_TYPE) return SELF_TYPE;
+    // If either c1 or c2 are SELF_TYPE, then we replace with their class type
     if (c1 == SELF_TYPE) {
         c1 = *(sym_tab->lookup(c1));
     } else if (c2 == SELF_TYPE) {
@@ -233,6 +231,8 @@ Symbol ClassTable::lub(Symbol c1, Symbol c2) {
 
     std::set<Symbol> c2_ancestors;
     Symbol class_ = c2;
+    // We add all ancestors of c2 to a set and then traverse the ancestors of 
+    // c1, when the first ancestor of c1 is found in the set of c2, then that ancestor is the lub
     while (true) {
         c2_ancestors.insert(class_);
         // cout << class_ << endl;
@@ -367,6 +367,7 @@ void ClassTable::install_basic_classes() {
         for(int j = features->first(); features->more(j); j = features->next(j)) {
             Symbol name = features->nth(j)->get_name();
             Symbol type = features->nth(j)->get_type();
+
             if (features->nth(j)->get_feature_type() == "Method") {
                 Method m(symbols[i], name);
                 Formals formals = features->nth(j)->get_formals();
@@ -376,7 +377,7 @@ void ClassTable::install_basic_classes() {
                     method_map[m].push_back(std::make_pair(formals->nth(k)->get_type(),formals->nth(k)->get_name()));
                 }
                 method_map[m].push_back(std::make_pair(type,type));
-
+                // Because all other basic types inherit from object, we must add the methods of object to their method map
                 if (symbols[i] == Object) {
                     for(int k = 0; k < 5; k++) {
                         if (symbols[k] != Object) {
@@ -446,7 +447,7 @@ bool ClassTable::compare(Symbol class_name, Method m, Method parent_m, tree_node
     auto parent_formals = method_map[parent_m];
 
     if (formals.size() != parent_formals.size()) {
-        semant_error1(class_name,t) << "Incompatible number of formal parameters in redefined method " << m.second << endl;
+        semant_error1(class_name,t) << "Incompatible number of formal parameters in redefined method " << m.second << "." << endl;
         return false;
     }
 
