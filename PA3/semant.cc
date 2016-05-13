@@ -112,39 +112,12 @@ ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) 
             }
         } else {
             class_map[classes->nth(i)->get_name()] = classes->nth(i);
-            // cout << classes->nth(i)->get_name() << " " << classes->nth(i)->get_parent();
             child_to_parent[classes->nth(i)->get_name()] = classes->nth(i)->get_parent();
             parent_to_children[classes->nth(i)->get_parent()].push_back(classes->nth(i)->get_name());
         }
     }
-    // exit(1);
-
-    // if (semant_debug) {
-    //     for (auto it=parent_to_children.begin(); it!=parent_to_children.end(); ++it){
-    //         cout << it->first << endl;
-    //         for (size_t i = 0; i < it->second.size(); i++){
-    //             cout << "\t" << it->second[i];
-    //         }
-    //         cout << endl;
-    //     }
-    // }   
-
 
     CheckInheritanceTree();
-
-    // if (semant_debug) {
-    //     cout << lub(Object, IO) << endl;
-    //     cout << lub(IO, Object) << endl;
-    //     cout << lub(Object, Object) << endl;
-    //     cout << lub(IO, IO) << endl;
-    //     cout << lub(Int, IO) << endl;
-    // }
-    // for (int i = classes->first(); classes->more(i); i = classes->next(i)){
-    //     for (int j = classes->first(); classes->more(j); j = classes->next(j)){
-    //         if (semant_debug)
-    //             cout << classes->nth(i)->get_name() << "," << classes->nth(j)->get_name() << ":" << lub(classes->nth(i)->get_name(),classes->nth(j)->get_name()) << endl;
-    //     }
-    // }
 }
 
 //Recursively searches for any and all cycles within the inheritance graph
@@ -469,7 +442,6 @@ ostream& ClassTable::semant_error1(Symbol name, tree_node *t)
 ///////
 
 bool ClassTable::compare(Symbol class_name, Method m, Method parent_m, tree_node *t){
-    //cout << "Comparing " << m.first << " and " << parent_m.first << " on method " << m.second << endl;
     auto formals = method_map[m];
     auto parent_formals = method_map[parent_m];
 
@@ -505,7 +477,6 @@ std::set<Symbol> class__class::get_parent_method_names(ClassTable* classtable){
 
 // Add the current method to the method_map and make sure it is the same as its parent class
 void method_class::check_methods(ClassTable* classtable, Symbol class_name){
-    // cout << "checking " << name << " in " << class_name << endl;
     Method m(class_name, name);
     // Here we are adding the types of the arguments in a method
     for(int i = formals->first(); formals->more(i); i = formals->next(i)) {
@@ -581,7 +552,6 @@ void class__class::method_make(ClassTable *classtable, bool& main_class_defined)
 
     // Finally, recurse into children, adding and checking their methods and types.
     auto children = classtable->get_parent_to_children()[name];
-    //cout << children.size() << endl;
     for(size_t i = 0; i < children.size(); i++){
         classtable->get_class_map()[children[i]]->method_make(classtable, main_class_defined);
     }
@@ -602,23 +572,12 @@ void program_class::recurse(ClassTable* classtable) {
     bool main_class_defined = false;
 
     // Add the declared type to the type environment
-    // cout << "right after init" << endl;
-    // for (auto it : method_map){
-    //         //Symbol u = it.first.first;
-    //         cout << it.first.first << " " << it.first.second << endl;
-    // }
     add_class_types();
-    //exit(1);
     // First initiliaze all globals
     auto children = classtable->get_parent_to_children()[Object];
     for(size_t i = 0; i < children.size(); i++){
         classtable->get_class_map()[children[i]]->method_make(classtable, main_class_defined);
     }
-    // for (auto it : method_map){
-    //     Method m = it.first;
-    //     cout << m.first << " " << m.second << endl;
-    // }
-    // exit(1);
     if (!main_class_defined)
         classtable->semant_error() << "Class Main is not defined." << endl;
 
@@ -701,12 +660,9 @@ void attr_class::recurse(ClassTable* classtable, Symbol class_name)
         classtable->semant_error1(class_name,this) << "Class " << type_decl << " of attribute " << name << " is undefined." << endl;
     }
 
-    // Recurse into init expression. We always enter scope and add push self since the only case where we don't need self is 
-    // in No_expr, which does not do anything with self
-    sym_tab->enterscope();
+    
     // Here is where we need to add self/SLEF_TYPE to environment
     init->recurse(classtable, class_name);
-    sym_tab->exitscope();
 
     // If initilization is omitted, we don't do the conformity check
     Symbol init_type = init->get_type();
@@ -730,15 +686,16 @@ void branch_class::recurse(ClassTable* classtable, Symbol class_name, std::set<S
     // Enterscope since we are pushing a new variable
     sym_tab->enterscope();
 
-    // Check that the declared type is valid
+    // If the declared type is SELF_TYPE, we raise an error
     if (type_decl == SELF_TYPE) {
         classtable->semant_error1(class_name,this) << "Identifier " << name << " declared with type SELF_TYPE in case branch." << endl;        
     }
+    // Check that the declared type is valid
     if (sym_tab->lookup(type_decl) == NULL){
         classtable->semant_error1(class_name,this) << "Class " << type_decl << " of case branch is undefined." << endl;
     }
 
-    // Check that the type of this branch has not been seen yet
+    // Check that the type of this branch has not been seen yet, if not seen then insert
     if (case_types.find(type_decl) != case_types.end()){
         classtable->semant_error1(class_name, this) << "Duplicate branch " << type_decl << " in case statement." << endl;
     } else {
@@ -834,17 +791,16 @@ void dispatch_class::recurse(ClassTable* classtable, Symbol class_name)
     if (expr->get_type() == SELF_TYPE)
         class_type = class_name;
     Method m(class_type, name);
-    std::vector<std::pair<Symbol,Symbol>> args;
-    // cout << m.first << " " << m.second << endl;
+    std::vector<std::pair<Symbol,Symbol>> args;    
     if(method_map.find(m) == method_map.end()) {
-        classtable->semant_error1(class_name,this) << "Dispatch to undefined method " << name << "." << endl;
+        classtable->semant_error1(class_name,this) << "Dispatch to undefined method " << name << "." << endl; 
+        type = class_type;
         return;
     } else {
         args = method_map[m];
     }
-
+   
     std::vector<Symbol> expr_types;
-    //sym_tab->dump();
     for(int i = actual->first(); actual->more(i); i = actual->next(i)) {
         actual->nth(i)->recurse(classtable, class_name);
         if (sym_tab->lookup(actual->nth(i)->get_type()) == NULL)
@@ -941,7 +897,6 @@ void let_class::recurse(ClassTable* classtable, Symbol class_name)
     Symbol init_type = init->get_type();
     // If there is no initilization, we don't do a conformity check
     // Otherwise raise error if init expression does not conform to declared type;
-    // cout << *(sym_tab->lookup(init_type)) << endl;
     if (sym_tab->lookup(type_decl) == NULL) {
         classtable->semant_error1(class_name, this) << "Class " << type_decl << " of let-bound identifier " << identifier << " is undefined." << endl;
     } else if (init_type != No_type) {
@@ -1044,21 +999,21 @@ void eq_class::recurse(ClassTable* classtable, Symbol class_name)
 
     std::set<Symbol> basic_types = {Int, Bool, IO, Str};
     if (basic_types.find(e1->get_type()) !=  basic_types.end()) {
-        if (basic_types.find(e2->get_type()) !=  basic_types.end()) {
+        // if (basic_types.find(e2->get_type()) !=  basic_types.end()) {
             if (e1->get_type() != e2->get_type()) {
                 classtable->semant_error1(class_name,this) << "Illegal comparison with a basic type." << endl;
                 return;
             }
-        }
+        // }
     }
 
     if (basic_types.find(e2->get_type()) !=  basic_types.end()) {
-        if (basic_types.find(e1->get_type()) !=  basic_types.end()) {
+        // if (basic_types.find(e1->get_type()) !=  basic_types.end()) {
             if (e1->get_type() != e2->get_type()) {
                 classtable->semant_error1(class_name,this) << "Illegal comparison with a basic type." << endl;
                 return;
             }
-        }
+        // }
     }
 }
 
@@ -1124,7 +1079,7 @@ void no_expr_class::recurse(ClassTable* classtable, Symbol class_name)
 void object_class::recurse(ClassTable* classtable, Symbol class_name)
 {
     if (sym_tab->lookup(name) == NULL) {
-        classtable->semant_error1(class_name,this) << "Undeclared identifier " << name << endl;
+        classtable->semant_error1(class_name,this) << "Undeclared identifier " << name << "." << endl;
         type = Object;
         return;
     }
@@ -1146,15 +1101,6 @@ void object_class::recurse(ClassTable* classtable, Symbol class_name)
  */
 void program_class::semant()
 {
-    // sym_tab->enterscope();
-    // Symbol MS= idtable.add_string("MS");
-    // sym_tab->addid(MS, new Symbol(MS));
-    // sym_tab->dump();
-    // sym_tab->exitscope();
-    // sym_tab->dump();
-
-    // exit(1);
-
     initialize_constants();
     ClassTable *classtable = new ClassTable(classes);
     recurse(classtable);
