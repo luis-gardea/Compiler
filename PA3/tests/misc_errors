@@ -31,6 +31,6 @@ class Main {
 
 };
 
-class A {};
+class A {    a : Int <- (new M);};
 
 class B {};
