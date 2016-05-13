@@ -1,4 +1,6 @@
 class Main {
+    b : SELF_TYPE <- 1;
+
     main() : Int {
     	{
         case true of 
