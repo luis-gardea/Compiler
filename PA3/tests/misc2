@@ -1,4 +1,4 @@
-Class Main inherits Bool {
+Class Main inherits IO {
     main() : Int { 3 };
     jump(b : Int, c : Int) : Int { 3 };
 };
