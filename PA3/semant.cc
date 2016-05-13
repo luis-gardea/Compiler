@@ -479,7 +479,7 @@ bool ClassTable::compare(Symbol class_name, Method m, Method parent_m, tree_node
     }
 
     if (formals.back().first != parent_formals.back().first) {
-        semant_error1(class_name,t) << "In redefined method " << m.second << ", return type " << formals.back().first << " is different from original type " << parent_formals.back().first << endl;
+        semant_error1(class_name,t) << "In redefined method " << m.second << ", return type " << formals.back().first << " is different from original return type " << parent_formals.back().first << endl;
         return false;
     }
 
@@ -509,6 +509,8 @@ void method_class::check_methods(ClassTable* classtable, Symbol class_name){
     Method m(class_name, name);
     // Here we are adding the types of the arguments in a method
     for(int i = formals->first(); formals->more(i); i = formals->next(i)) {
+        if (formals->nth(i)->get_type() == SELF_TYPE)
+            classtable->semant_error1(class_name,this) << "Formal parameter " << formals->nth(i)->get_name() <<" cannot have type SELF_TYPE." << endl;
         if (sym_tab->lookup(formals->nth(i)->get_type()) == NULL) {
             classtable->semant_error1(class_name,this) << "Class " << formals->nth(i)->get_type() << " of formal parameter " << formals->nth(i)->get_name() << " is undefined." << endl;
         }
@@ -612,7 +614,11 @@ void program_class::recurse(ClassTable* classtable) {
     for(size_t i = 0; i < children.size(); i++){
         classtable->get_class_map()[children[i]]->method_make(classtable, main_class_defined);
     }
-
+    // for (auto it : method_map){
+    //     Method m = it.first;
+    //     cout << m.first << " " << m.second << endl;
+    // }
+    // exit(1);
     if (!main_class_defined)
         classtable->semant_error() << "Class Main is not defined." << endl;
 
@@ -824,9 +830,12 @@ void dispatch_class::recurse(ClassTable* classtable, Symbol class_name)
 {
     type = No_type;
     expr->recurse(classtable, class_name);
-
-    Method m(expr->get_type(), name);
+    Symbol class_type = expr->get_type();
+    if (expr->get_type() == SELF_TYPE)
+        class_type = class_name;
+    Method m(class_type, name);
     std::vector<std::pair<Symbol,Symbol>> args;
+    // cout << m.first << " " << m.second << endl;
     if(method_map.find(m) == method_map.end()) {
         classtable->semant_error1(class_name,this) << "Dispatch to undefined method " << name << "." << endl;
         return;

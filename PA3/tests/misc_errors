@@ -11,7 +11,7 @@ class Main {
         }
     };
 
-    a(): Int{
+    a(): SELF_TYPE {
         {
             " " = " ";
             5 = " ";
@@ -21,6 +21,7 @@ class Main {
             new Int;
             (new Object) = (new Object);
             (new Object) = (new A);
+            (new SELF_TYPE).copy();
         }
     };
 

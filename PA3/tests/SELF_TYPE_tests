@@ -15,20 +15,24 @@ class Main {
     	}
     };
 
-    (*x(): SELF_TYPE {
+    x(): SELF_TYPE {
     	self
-    };*)
+    };
 }; 
 
-(*class A inherits Main {
-    (*a(): A {
-    	self.x()
-    };*)
+class A inherits Main {
+    x() : A {
+        new A
+    };
+
+    a(): A {
+    	(new Main).x()
+    };
 	
-};*)
+};
 
 class B {
-    b(): Int {
+    b(a:SELF_TYPE, b: SELF_TYPE): Int {
     	let x : SELF_TYPE <- self in x
     };
 	
