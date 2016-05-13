@@ -659,6 +659,7 @@ void method_class::recurse(ClassTable* classtable, Symbol class_name)
 void attr_class::recurse(ClassTable* classtable, Symbol class_name)
 {
     // First check if the declared type is a valid type in the program
+    // cout << name << " " << type_decl <<  endl;
     if (sym_tab->lookup(type_decl) == NULL){
         classtable->semant_error1(class_name,this) << "Class " << type_decl << " of attribute " << name << " is undefined." << endl;
         return;
@@ -670,8 +671,11 @@ void attr_class::recurse(ClassTable* classtable, Symbol class_name)
     // If initilization is omitted, we don't do the conformity check
     Symbol init_type = init->get_type();
     if (init_type == No_type) return;
+    if (sym_tab->lookup(init_type) == NULL) return;
     
     // Check that the expression type conforms to the declared type
+    // cout << name << " " << type_decl << " " << init_type << endl;
+    
     if (!classtable->conforms(init_type, type_decl)){
         classtable->semant_error1(class_name,this) << "Inferred type " << init_type << " of initialization of attribute " << name << " does not conform to declared type " << type_decl << "." << endl;
     }

@@ -6,4 +6,5 @@ class Main {
     main() : Int {
         let a:Int <- c , b:Bool <- true in a <- c
     };
+    d:IO <- let x:Y in 5+"";
 };

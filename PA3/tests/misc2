@@ -1,19 +1,35 @@
 Class Main inherits IO {
     main() : Int { 3 };
+	y : Undefined <- 10;
+	--x : Int <- y + 2;
+	z : Int <- y;
 };
 
-class Y inherits Main {
+(*class Y inherits Main {
     main() : String { "a" };
 };
 
 class V {
 	do_nothing() : Int { 2 };
   	x : Object <- {
-      case true of
+      	case true of
             x : String => 5;
             self : Int => self.do_nothing();
             self : String => 5;
+      	esac;
+
+      	let self : Int, y:Int <- "Hi" in self.do_nothing();
+
+    	case true of
+            x : String => 5;
+            self : SELF_TYPE => self.do_nothing();
+            self : SELF_TYPE => 5;
       esac;
-      let self : Int, y:Int <- "Hi" in self.do_nothing();
     };
-};
+};*)
+
+(*class F {
+	y : Undefined <- 10;
+	x : Int <- y + 2;
+	z : Int <- y;
+};*)
