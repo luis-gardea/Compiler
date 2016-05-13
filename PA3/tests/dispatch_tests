@@ -1,5 +1,5 @@
 class Main {
-	a:Str <- (new Str).j();	
+	a:Str <- 5;	
 	f(x:Int, y:Bool, z:Str) : Int {
 		55
 	};

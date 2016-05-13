@@ -235,7 +235,6 @@ Symbol ClassTable::lub(Symbol c1, Symbol c2) {
     // c1, when the first ancestor of c1 is found in the set of c2, then that ancestor is the lub
     while (true) {
         c2_ancestors.insert(class_);
-        // cout << class_ << endl;
         if (class_ == Object) break;
         class_ = child_to_parent[class_];
     }
@@ -350,12 +349,14 @@ void ClassTable::install_basic_classes() {
            filename);
 
     Class_ basic_class[] = {Object_class,IO_class,Int_class,Bool_class,Str_class};
-    Symbol symbols[] = {Object, IO, Int, Bool, Str};
+    Symbol symbols[] = {Object, Int, Bool, Str};
 
-    // Add the basic classes to the ClassTable data structures. Dont need to add to parent_to_children since we never recurse into the basic classes
+    // Add the basic classes to the ClassTable data structures.
     for (int i = 0; i < 5; i++) {
         class_map[basic_class[i]->get_name()] = basic_class[i];
         child_to_parent[basic_class[i]->get_name()] = basic_class[i]->get_parent();
+        if (symbols[i] == Object)
+            parent_to_children[Object].push_back(IO);
     }
 
     // Initialize 3 things for the basic classes: Add attributes of Object to sym_tab, add methods to method_map, add basic types to sym_tab
@@ -647,7 +648,8 @@ void method_class::recurse(ClassTable* classtable, Symbol class_name)
 
     // Recurse into the body of the method and check that the type of the expression conforms to the declared type
     expr->recurse(classtable, class_name);
-    if (!classtable->conforms(expr->get_type(), return_type)){
+    // exit(1);
+    if (expr->get_type() != No_type && !classtable->conforms(expr->get_type(), return_type)){
         classtable->semant_error1(class_name,this) << "Inferred return type " << expr->get_type() << " of method " << name << " does not conform to declared return type " << return_type << "." << endl;
     }
 
@@ -659,6 +661,7 @@ void attr_class::recurse(ClassTable* classtable, Symbol class_name)
     // First check if the declared type is a valid type in the program
     if (sym_tab->lookup(type_decl) == NULL){
         classtable->semant_error1(class_name,this) << "Class " << type_decl << " of attribute " << name << " is undefined." << endl;
+        return;
     }
 
     
@@ -707,7 +710,10 @@ void branch_class::recurse(ClassTable* classtable, Symbol class_name, std::set<S
     sym_tab->addid(name, new Symbol(type_decl));
 
     expr->recurse(classtable,class_name);
+    // if (expr->get_type() == No_type)
+    //     exit(1);
     sym_tab->exitscope();
+
 }
 
 void assign_class::recurse(ClassTable* classtable, Symbol class_name)
@@ -795,7 +801,7 @@ void dispatch_class::recurse(ClassTable* classtable, Symbol class_name)
     std::vector<std::pair<Symbol,Symbol>> args;    
     if(method_map.find(m) == method_map.end()) {
         classtable->semant_error1(class_name,this) << "Dispatch to undefined method " << name << "." << endl; 
-        type = class_type;
+        // type = No_type;
         return;
     } else {
         args = method_map[m];
@@ -877,6 +883,10 @@ void typcase_class::recurse(ClassTable* classtable, Symbol class_name)
         if (i == cases->first()){
             type = cases->nth(i)->get_expr_type();
         } else {
+            if (cases->nth(i)->get_expr_type() == No_type){
+                type = Object;
+                continue;
+            }
             type = classtable->lub(type,cases->nth(i)->get_expr_type());
         }
     }
@@ -998,7 +1008,7 @@ void eq_class::recurse(ClassTable* classtable, Symbol class_name)
     e2->recurse(classtable, class_name);
     type = Bool;
 
-    std::set<Symbol> basic_types = {Int, Bool, IO, Str};
+    std::set<Symbol> basic_types = {Int, Bool, Str};
     if (basic_types.find(e1->get_type()) !=  basic_types.end()) {
         // if (basic_types.find(e2->get_type()) !=  basic_types.end()) {
             if (e1->get_type() != e2->get_type()) {
