@@ -665,7 +665,6 @@ void attr_class::recurse(ClassTable* classtable, Symbol class_name)
         return;
     }
 
-    // Here is where we need to add self/SLEF_TYPE to environment
     init->recurse(classtable, class_name);
 
     // If initilization is omitted, we don't do the conformity check
@@ -674,8 +673,6 @@ void attr_class::recurse(ClassTable* classtable, Symbol class_name)
     if (sym_tab->lookup(init_type) == NULL) return;
     
     // Check that the expression type conforms to the declared type
-    // cout << name << " " << type_decl << " " << init_type << endl;
-    
     if (!classtable->conforms(init_type, type_decl)){
         classtable->semant_error1(class_name,this) << "Inferred type " << init_type << " of initialization of attribute " << name << " does not conform to declared type " << type_decl << "." << endl;
     }
@@ -751,7 +748,8 @@ void static_dispatch_class::recurse(ClassTable* classtable, Symbol class_name)
     }
     // Raise error if type_name not in symbol table
     if (sym_tab->lookup(type_name) == NULL){
-        classtable->semant_error1(class_name,this) << "Static dispatch type name not in symbol table" << endl;
+        classtable->semant_error1(class_name,this) << "Static dispatch to undefined class " << type_name << "." << endl;
+        type = Object;
         return;
     // else raise error if expression type does not comform to dispatch type
     } else if (!classtable->conforms(expr->get_type(),type_name)) {
@@ -807,13 +805,17 @@ void dispatch_class::recurse(ClassTable* classtable, Symbol class_name)
     // If expression type is SELF_TYPE, then we change the class_type to be the class_name
     if (expr->get_type() == SELF_TYPE)
         class_type = class_name;
+    if (sym_tab->lookup(class_type) == NULL) {
+        classtable->semant_error1(class_name,this) << "Dispatch on undefined class " << class_type << "." << endl; 
+        type = Object;
+        return;
+    }
     Method m(class_type, name);
     std::vector<std::pair<Symbol,Symbol>> args;   
     // cout << class_type << " " << name << " " << *(sym_tab->lookup(SELF_TYPE)) <<  endl;
     // sym_tab->dump(); 
     if(method_map.find(m) == method_map.end()) {
         classtable->semant_error1(class_name,this) << "Dispatch to undefined method " << name << "." << endl; 
-        // type = No_type;
         return;
     } else {
         args = method_map[m];
@@ -864,7 +866,10 @@ void cond_class::recurse(ClassTable* classtable, Symbol class_name)
     Symbol else_type = else_exp->get_type();
 
     // The type of if expression is lub of branch expressions
-    type = classtable->lub(then_type,else_type);
+    if (sym_tab->lookup(then_type) == NULL || sym_tab->lookup(else_type) == NULL)
+        type = Object;
+    else
+        type = classtable->lub(then_type,else_type);
 }
 
 void loop_class::recurse(ClassTable* classtable, Symbol class_name)

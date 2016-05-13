@@ -24,3 +24,28 @@ class D inherits C {
 class E inherits D {
 	i:Int<-(new C).foo(1);
 };
+
+class Foo {
+   a: IDontExist;
+   b: IDontExistToo;
+   c() :Object{
+       if true then a else b fi
+   };
+};
+
+class C {
+	a : Int;
+	init(x : Int) : C { -- our analyzer validates this fine
+           {
+		a <- x;
+		self;
+           }
+	};
+
+	init(x : Int) : C { -- our analyzer doesnt validate the contents of this since it is a redefinition. The reference analyzer does
+           {
+		b <- x; -- invalid assign! -- should throw error
+		self;
+           }
+	};
+};

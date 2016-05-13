@@ -31,3 +31,5 @@ Class Main {
 	  (new C).init(1,true)
 	};
 };
+
+

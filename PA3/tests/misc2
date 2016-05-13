@@ -1,11 +1,8 @@
 Class Main inherits IO {
     main() : Int { 3 };
-	y : Undefined <- 10;
-	--x : Int <- y + 2;
-	z : Int <- y;
 };
 
-(*class Y inherits Main {
+class Y inherits Main {
     main() : String { "a" };
 };
 
@@ -15,7 +12,7 @@ class V {
       	case true of
             x : String => 5;
             self : Int => self.do_nothing();
-            self : String => 5;
+            self : String => self + 5;
       	esac;
 
       	let self : Int, y:Int <- "Hi" in self.do_nothing();
@@ -23,13 +20,18 @@ class V {
     	case true of
             x : String => 5;
             self : SELF_TYPE => self.do_nothing();
-            self : SELF_TYPE => 5;
-      esac;
+            self : SELF_TYPE => self + 5;
+      	esac;
     };
-};*)
+};
 
-(*class F {
+class F {
 	y : Undefined <- 10;
 	x : Int <- y + 2;
 	z : Int <- y;
-};*)
+};
+
+class G {
+	z : Undefined <- 2;
+	x : Int <- z@U.foo();
+};
