@@ -10,8 +10,10 @@ class V {
 	do_nothing() : Int { 2 };
   	x : Object <- {
       case true of
+            x : String => 5;
             self : Int => self.do_nothing();
+            self : String => 5;
       esac;
-      let self : Int in self.do_nothing();
+      let self : Int, y:Int <- "Hi" in self.do_nothing();
     };
 };

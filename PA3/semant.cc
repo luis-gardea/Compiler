@@ -355,7 +355,7 @@ void ClassTable::install_basic_classes() {
     for (int i = 0; i < 5; i++) {
         class_map[basic_class[i]->get_name()] = basic_class[i];
         child_to_parent[basic_class[i]->get_name()] = basic_class[i]->get_parent();
-        if (symbols[i] == Object)
+        if (basic_class[i] == Object_class)
             parent_to_children[Object].push_back(IO);
     }
 
@@ -379,20 +379,20 @@ void ClassTable::install_basic_classes() {
                 }
                 method_map[m].push_back(std::make_pair(type,type));
                 // Because all other basic types inherit from object, we must add the methods of object to their method map
-                if (symbols[i] == Object) {
-                    for(int k = 0; k < 5; k++) {
+                if (basic_class[i] == Object_class) {
+                    for(int k = 0; k < 4; k++) {
                         if (symbols[k] != Object) {
                             Method child_m(symbols[k], name);
                             method_map[child_m] = method_map[m];
                         }
                     }
                 }
-            } else if(symbols[i] == Object) {
+            } else if(basic_class[i] == Object_class) {
                 sym_tab->addid(name, new Symbol(type));             
             }
         }
     }
-
+    // Adding self and SELF_TYPE to symbol table because self always refers to SELF_TYPE
     sym_tab->addid(SELF_TYPE, new Symbol(Object));
     sym_tab->addid(self, new Symbol(SELF_TYPE));
 }
@@ -447,16 +447,17 @@ bool ClassTable::compare(Symbol class_name, Method m, Method parent_m, tree_node
     auto formals = method_map[m];
     auto parent_formals = method_map[parent_m];
 
+    // If number of parent args and child args don't match then raise error
     if (formals.size() != parent_formals.size()) {
         semant_error1(class_name,t) << "Incompatible number of formal parameters in redefined method " << m.second << "." << endl;
         return false;
     }
-
+    // If the last element does not match, then return type is wrong
     if (formals.back().first != parent_formals.back().first) {
         semant_error1(class_name,t) << "In redefined method " << m.second << ", return type " << formals.back().first << " is different from original return type " << parent_formals.back().first << endl;
         return false;
     }
-
+    // If any element does not match that isnt the last, then parameter type is wrong
     for (size_t i = 0; i < formals.size(); i++){
         if (formals[i].first != parent_formals[i].first) {
             semant_error1(class_name,t) << "In redefined method " << m.second << ", parameter type " << formals[i].first << " is different from original type " << parent_formals[i].first << endl;
@@ -610,7 +611,6 @@ void class__class::recurse(ClassTable* classtable) {
             if(sym_tab->probe(feature_name) != NULL) {
                 classtable->semant_error1(name, features->nth(i)) << "Attribute " << feature_name << " is multiply defined in class." << endl;
             } else if (sym_tab->lookup(feature_name) != NULL) {
-                
                 classtable->semant_error1(name, features->nth(i)) << "Attribute " << feature_name << " is an attribute of an inherited class." << endl;
             }else {
                 sym_tab->addid(feature_name, new Symbol(features->nth(i)->get_type()));
@@ -628,7 +628,6 @@ void class__class::recurse(ClassTable* classtable) {
     for(size_t i = 0; i < children.size(); i++){
         classtable->get_class_map()[children[i]]->recurse(classtable);
     }
-
     sym_tab->exitscope();
 }
 
@@ -649,7 +648,7 @@ void method_class::recurse(ClassTable* classtable, Symbol class_name)
 
     // Recurse into the body of the method and check that the type of the expression conforms to the declared type
     expr->recurse(classtable, class_name);
-    // exit(1);
+
     if (expr->get_type() != No_type && !classtable->conforms(expr->get_type(), return_type)){
         classtable->semant_error1(class_name,this) << "Inferred return type " << expr->get_type() << " of method " << name << " does not conform to declared return type " << return_type << "." << endl;
     }
@@ -665,7 +664,6 @@ void attr_class::recurse(ClassTable* classtable, Symbol class_name)
         return;
     }
 
-    
     // Here is where we need to add self/SLEF_TYPE to environment
     init->recurse(classtable, class_name);
 
@@ -677,7 +675,6 @@ void attr_class::recurse(ClassTable* classtable, Symbol class_name)
     if (!classtable->conforms(init_type, type_decl)){
         classtable->semant_error1(class_name,this) << "Inferred type " << init_type << " of initialization of attribute " << name << " does not conform to declared type " << type_decl << "." << endl;
     }
-
 }
 
 void formal_class::recurse(ClassTable* classtable, Symbol class_name)
@@ -690,6 +687,10 @@ void branch_class::recurse(ClassTable* classtable, Symbol class_name, std::set<S
 {
     // Enterscope since we are pushing a new variable
     sym_tab->enterscope();
+
+    // cout << name << endl;
+    if (name == self) 
+        classtable->semant_error1(class_name,this) << "\'self\' bound in \'case\'." << endl;
 
     // If the declared type is SELF_TYPE, we raise an error
     if (type_decl == SELF_TYPE) {
@@ -710,9 +711,8 @@ void branch_class::recurse(ClassTable* classtable, Symbol class_name, std::set<S
     // Add the variable to the scope
     sym_tab->addid(name, new Symbol(type_decl));
 
-    expr->recurse(classtable,class_name);
-    // if (expr->get_type() == No_type)
-    //     exit(1);
+    expr->recurse(classtable,class_name); 
+    // exit(1);
     sym_tab->exitscope();
 
 }
@@ -739,15 +739,17 @@ void static_dispatch_class::recurse(ClassTable* classtable, Symbol class_name)
 {
     type = No_type;
     expr->recurse(classtable, class_name);
+    // Cannot dispatch to self type
     if (type_name == SELF_TYPE) {
         classtable->semant_error1(class_name,this) << "Static dispatch to SELF_TYPE." << endl;
         type = Object;
         return;
     }
-
+    // Raise error if type_name not in symbol table
     if (sym_tab->lookup(type_name) == NULL){
         classtable->semant_error1(class_name,this) << "Static dispatch type name not in symbol table" << endl;
         return;
+    // else raise error if expression type does not comform to dispatch type
     } else if (!classtable->conforms(expr->get_type(),type_name)) {
         type = Object;
         classtable->semant_error1(class_name,this) << "Expression type " << expr->get_type() << " does not conform to declared static dispatch type "  << type_name << "." << endl;
@@ -758,6 +760,7 @@ void static_dispatch_class::recurse(ClassTable* classtable, Symbol class_name)
     std::vector<std::pair<Symbol,Symbol>> args;
     if(method_map.find(m) == method_map.end()) {
         type = type_name;
+        // If method is undefined, then raise error and return
         classtable->semant_error1(class_name,this) << "Static dispatch to undefined method " << name << "." << endl;
         return;
     } else {
@@ -765,6 +768,7 @@ void static_dispatch_class::recurse(ClassTable* classtable, Symbol class_name)
     }
 
     std::vector<Symbol> expr_types;
+    // Here we are adding all of the arguments to an array
     for(int i = actual->first(); actual->more(i); i = actual->next(i)) {
         actual->nth(i)->recurse(classtable, class_name);
         if (sym_tab->lookup(actual->nth(i)->get_type()) == NULL)
@@ -796,10 +800,13 @@ void dispatch_class::recurse(ClassTable* classtable, Symbol class_name)
     type = No_type;
     expr->recurse(classtable, class_name);
     Symbol class_type = expr->get_type();
+    // If expression type is SELF_TYPE, then we change the class_type to be the class_name
     if (expr->get_type() == SELF_TYPE)
         class_type = class_name;
     Method m(class_type, name);
-    std::vector<std::pair<Symbol,Symbol>> args;    
+    std::vector<std::pair<Symbol,Symbol>> args;   
+    // cout << class_type << " " << name << " " << *(sym_tab->lookup(SELF_TYPE)) <<  endl;
+    // sym_tab->dump(); 
     if(method_map.find(m) == method_map.end()) {
         classtable->semant_error1(class_name,this) << "Dispatch to undefined method " << name << "." << endl; 
         // type = No_type;
@@ -883,6 +890,8 @@ void typcase_class::recurse(ClassTable* classtable, Symbol class_name)
         // otherwise the type is a running lub of all the branch types
         if (i == cases->first()){
             type = cases->nth(i)->get_expr_type();
+            if (type == No_type)
+                type = Object;
         } else {
             if (cases->nth(i)->get_expr_type() == No_type){
                 type = Object;
@@ -905,6 +914,8 @@ void block_class::recurse(ClassTable* classtable, Symbol class_name)
 void let_class::recurse(ClassTable* classtable, Symbol class_name)
 {
     // Evaluate the init expression
+    // cout << identifier << endl;
+
     init->recurse(classtable, class_name);
     Symbol init_type = init->get_type();
     // If there is no initilization, we don't do a conformity check
@@ -916,11 +927,21 @@ void let_class::recurse(ClassTable* classtable, Symbol class_name)
             classtable->semant_error1(class_name, this) << "Inferred type " <<  init_type << " of initialization of " << identifier << " does not conform to identifier's declared type " << type_decl << "." << endl;
         }
     }
+
+
     // Enter scope since we push a new variable
     sym_tab->enterscope();
-    sym_tab->addid(identifier, new Symbol(type_decl));
+    
+    if (identifier == self){
+        // cout << "were here"<< endl;
+        classtable->semant_error1(class_name,this) << "\'self\' cannot be bound in a \'let\' expression." << endl;
+        // type = No_type;
+    } else {
+        sym_tab->addid(identifier, new Symbol(type_decl));
+    }
     body->recurse(classtable, class_name);
     sym_tab->exitscope();
+    
 
     type = body->get_type();
     if (sym_tab->lookup(type) == NULL){
