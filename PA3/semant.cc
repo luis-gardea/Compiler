@@ -559,6 +559,7 @@ void class__class::method_make(ClassTable *classtable, bool& main_class_defined)
     }
 }
 
+// We are adding all of the classes to the symbol table
 void program_class::add_class_types() {
     for (int i = classes->first(); classes->more(i); i = classes->next(i)) {
         sym_tab->addid(classes->nth(i)->get_name(), new Symbol(classes->nth(i)->get_name()));
