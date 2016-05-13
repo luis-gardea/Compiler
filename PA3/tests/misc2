@@ -1,0 +1,8 @@
+Class Main inherits Bool {
+    main() : Int { 3 };
+    jump(b : Int, c : Int) : Int { 3 };
+};
+
+class Y inherits Main {
+    jump(a : Bool, b : String) : Bool { 4 };
+};

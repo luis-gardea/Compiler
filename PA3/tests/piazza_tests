@@ -6,6 +6,7 @@ class Main {
 	main() : Int {
 		if self = self then 2 else self fi
 	};
+	
 	class_type(var : A) : Object {
 	    case var of
 		a : A => self.out_string("Class type is now A\n");
