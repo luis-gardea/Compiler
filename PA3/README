@@ -176,3 +176,39 @@ Instructions
 
 Write-up for PA3
 ----------------
+Inheritance graph checking:
+We first setup data structures that store Symbol name to Class_, child to parent, and parent to 
+children relationships. We also check for redefinition and illegal inheritance and naming errors.
+We then check for all cycles in the graph in a recursive method and make sure that all cycles 
+are only printed once.
+
+Scope checking:
+We use the provided Symbol table for scope checking. In the Symbol table we store objects and 
+their types. We open and close scopes as we recurse overthe AST tree. The AST nodes we open and 
+close scopes for are: Classes, since they introduce attributes; methods, since they introduce 
+variables; let statements, since they introduce variables; and in a branch since it introduces a 
+new variable. We push the self variable at the very beginning of the recursion with type 
+SELF_TYPE. One important note about our recursion is that we are actually traversing two trees 
+simultaneously.  We first recurse into the inheritance graph, adding scopes and variables as we 
+go deeper. Thenwithin the class AST nodes, we recurse into the features and the rest of its AST 
+nodes. This allows us to build up scope as we visit inherited classes, and easily pop them once 
+we are done evaluating features for that class.
+
+Type checking
+We use the Symbol table as the type environment for the program. Before recursing, we add all 
+types to the very beginning of the Symbol table stack, and they are never popped until recursing 
+is finished since they are in the Object class scope. We push SELF_TYPE everytime we enter a 
+class node with its value set to the current class name. We set up a global data 
+structure for the method environment since all methods are global. We pass down the current
+class within the recursive methods that traverse the AST. We then follow the rules for type 
+checking in the Cool manual using these data structures.
+
+Testing strategy:
+We used a testing script we developed in the last assignment. We tested incrementally. We first 
+completed the code for the class table and the inheritance graph checking, and developed a 
+handful of test cases for the Inheritance graph. We then implemented lub and conformity methods
+because we knew we would need these later and tested these with edge cases.
+We then incrementally testes with both good and bad cases for every AST node as we did the type 
+and scope checking for that node. Finally we went back through all the nodes adding 
+functionality for self and SELF_TYPE and testing incrementally for all sorts of wierd scenarios 
+and edge cases involving self and SELF_TYPE.
