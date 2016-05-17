@@ -382,6 +382,7 @@ static void emit_gc_check(char *source, ostream &s)
 void StringEntry::code_ref(ostream& s)
 {
   s << STRCONST_PREFIX << index;
+  //cout << str << " " << index << endl;
 }
 
 //
@@ -400,11 +401,7 @@ void StringEntry::code_def(ostream& s, int stringclasstag)
       << WORD << stringclasstag << endl                                 // tag
       << WORD << (DEFAULT_OBJFIELDS + STRING_SLOTS + (len+4)/4) << endl // size
       << WORD;
-
-
- /***** Add dispatch information for class String ******/
-      //s << string_dipatch_table;
-
+      emit_disptable_ref(Str, s);
       s << endl;                                              // dispatch table
       s << WORD;  lensym->code_ref(s);  s << endl;            // string length
   emit_string_constant(s,str);                                // ascii string
@@ -444,9 +441,7 @@ void IntEntry::code_def(ostream &s, int intclasstag)
       << WORD << intclasstag << endl                      // class tag
       << WORD << (DEFAULT_OBJFIELDS + INT_SLOTS) << endl  // object size
       << WORD; 
-
- /***** Add dispatch information for class Int ******/
-
+      emit_disptable_ref(Int, s);
       s << endl;                                          // dispatch table
       s << WORD << str << endl;                           // integer value
 }
@@ -488,9 +483,7 @@ void BoolConst::code_def(ostream& s, int boolclasstag)
       << WORD << boolclasstag << endl                       // class tag
       << WORD << (DEFAULT_OBJFIELDS + BOOL_SLOTS) << endl   // object size
       << WORD;
-
- /***** Add dispatch information for class Bool ******/
-
+      emit_disptable_ref(Bool, s);
       s << endl;                                            // dispatch table
       s << WORD << val << endl;                             // value (0 or 1)
 }
@@ -842,17 +835,105 @@ void CgenClassTable::code_protObjs(CgenNodeP p, std::vector<Symbol> attributes)
 void CgenNode::code_protObj(ostream& s, std::vector<Symbol> attributes) 
 {
   int CLASS_SLOTS = attributes.size();
+  //cout << name << " " << CLASS_SLOTS << endl;
 
   // Add -1 eye catcher
   s << WORD << "-1" << endl;
-  s << name << "_protObj:" << endl;           // label
-  s << WORD << 4 << endl                     // class tag
+  emit_protobj_ref(name, s);
+  s << ":" << endl;          // label
+  s << WORD << 4 << endl                     // EMIT correct class tag here.. needs some thought
   << WORD << (DEFAULT_OBJFIELDS + CLASS_SLOTS) << endl;  // object size
-  s << WORD << name << "_dispTab" << endl; // dispatch table  
+  s << WORD;
+  emit_disptable_ref(name, s);
+  s << endl; // dispatch table  
   for(Symbol attr : attributes) { // attributes
     s << WORD << attr << endl;
   }                                        
 }
+
+void CgenClassTable::code_class_nameTab() {
+  str << "class_nameTab:" << endl;
+  root()->code_class_nameTab(str);
+}
+
+void CgenNode::code_class_nameTab(ostream& s) { 
+  s << WORD;
+  ((StringEntryP) name)->code_ref(s); // not emitting right index.. not sure what the api is...
+  s << endl;
+  for(List<CgenNode> *l = children; l; l = l->tl()) {
+    l->hd()->code_class_nameTab(s);
+  }
+}
+
+void CgenClassTable::code_class_objTab() {
+  str << "class_objTab:" << endl;
+  root()->code_class_objTab(str);
+}
+
+void CgenNode::code_class_objTab(ostream& s) { 
+  s << WORD;
+  emit_protobj_ref(name, s);
+  s << endl;
+
+  s << WORD;
+  emit_init_ref(name, s);
+  s << endl;
+
+  for(List<CgenNode> *l = children; l; l = l->tl()) {
+    l->hd()->code_class_objTab(s);
+  }
+}
+
+void CgenClassTable::code_dispTabs(CgenNodeP p, std::vector<std::pair<Symbol, Symbol>> methods) 
+{
+  int num_methods = 0;
+  Features features = p->get_features();
+  for(int i = features->first(); features->more(i); i = features->next(i)) {
+    if (features->nth(i)->get_feature_type() == "Method") {
+      num_methods++;
+      methods.push_back(std::make_pair(p->get_name(), features->nth(i)->get_name()));
+    }
+  }
+
+  List<CgenNode> *children = p->get_children(); 
+  for(List<CgenNode> *l = children; l; l = l->tl()) {
+    code_dispTabs(l->hd(), methods);
+  }
+
+  p->code_dispTab(str, methods);
+
+  for(int i = 0; i < num_methods; i++) {
+    methods.pop_back();
+  }
+}
+
+void CgenNode::code_dispTab(ostream& s, std::vector<std::pair<Symbol, Symbol>> methods) 
+{
+  emit_disptable_ref(name, s);  //label
+  s << ":" << endl;
+  for(auto method : methods) { // method
+    s << WORD;
+    emit_method_ref(method.first, method.second, s);
+    s << endl;
+  }                                        
+}
+
+// static void emit_disptable_ref(Symbol sym, ostream& s)
+// {  s << sym << DISPTAB_SUFFIX; }
+
+// static void emit_init_ref(Symbol sym, ostream& s)
+// { s << sym << CLASSINIT_SUFFIX; }
+
+// static void emit_label_ref(int l, ostream &s)
+// { s << "label" << l; }
+
+// static void emit_protobj_ref(Symbol sym, ostream& s)
+// { s << sym << PROTOBJ_SUFFIX; }
+
+// static void emit_method_ref(Symbol classname, Symbol methodname, ostream& s)
+// { s << classname << METHOD_SEP << methodname; }
+
+// static void emit_label_def(int l, ostream &s)
 
 void CgenClassTable::code()
 {
@@ -868,9 +949,18 @@ void CgenClassTable::code()
   if (cgen_debug) cout << "coding prototype objects" << endl;
   code_protObjs(root(), std::vector<Symbol>());
 
+  if (cgen_debug) cout << "coding class name table" << endl;
+  code_class_nameTab();
+
+  if (cgen_debug) cout << "coding class object table" << endl;
+  code_class_objTab();
+
+  if (cgen_debug) cout << "coding dispatch tables" << endl;
+  code_dispTabs(root(), std::vector<std::pair<Symbol, Symbol>>());
+
 //                 Add your code to emit
-//                   - prototype objects
-//                   - class_nameTab
+//                   - prototype objects check
+//                   - class_nameTab check
 //                   - dispatch tables
 //
 

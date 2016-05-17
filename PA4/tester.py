@@ -6,13 +6,6 @@ import os, sys
 path = "tests/"
 dirs = os.listdir( path )
 
-
-
-#command1 = "/usr/class/cs143/bin/lexer good.cl | /usr/class/cs143/bin/parser | ./semant -s" 
-#command2 = "/usr/class/cs143/bin/lexer good.cl | /usr/class/cs143/bin/parser | /usr/class/cs143/bin/semant" 
-#os.system(command1)
-#print "\n"
-#os.system(command2)
 if len(sys.argv) == 2:
 	path = str(sys.argv[1])
 	filename = path[path.find('/')+1:]

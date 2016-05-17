@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <utility>
 #include <vector>
 #include <stdio.h>
 #include "emit.h"
@@ -48,6 +49,10 @@ private:
 // of the non-basic classes.
 
    void code_protObjs(CgenNodeP p, std::vector<Symbol> attributes);
+   void code_class_nameTab();
+   void code_class_objTab();
+   void code_dispTabs(CgenNodeP p, std::vector<std::pair<Symbol, Symbol>> methods);
+   
 public:
    CgenClassTable(Classes, ostream& str);
    void code();
@@ -74,6 +79,9 @@ public:
    int basic() { return (basic_status == Basic); }
    void code_protObj(ostream& s, std::vector<Symbol> attributes);
    Features get_features() { return features; }
+   void code_class_nameTab(ostream& s);
+   void code_class_objTab(ostream& s);
+   void code_dispTab(ostream& s, std::vector<std::pair<Symbol, Symbol>> methods);
 };
 
 class BoolConst 
