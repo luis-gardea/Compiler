@@ -68,11 +68,16 @@ Symbol get_filename() { return filename; }             \
 void dump_with_types(ostream&,int);                    
 
 
-#define Feature_EXTRAS                                        \
-virtual void dump_with_types(ostream&,int) = 0; 
+#define Feature_EXTRAS       \
+virtual Symbol get_name() = 0; \
+virtual void dump_with_types(ostream&,int) = 0;	\
+virtual std::string get_feature_type() = 0;	
 
 
-#define Feature_SHARED_EXTRAS                                       \
+#define Feature_SHARED_EXTRAS  \
+Symbol get_name() { return name; } \
+std::string get_feature_type() { return feature_type; } \
+std::string feature_type;                                     \
 void dump_with_types(ostream&,int);    
 
 

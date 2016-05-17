@@ -403,6 +403,7 @@ void StringEntry::code_def(ostream& s, int stringclasstag)
 
 
  /***** Add dispatch information for class String ******/
+      //s << string_dipatch_table;
 
       s << endl;                                              // dispatch table
       s << WORD;  lensym->code_ref(s);  s << endl;            // string length
@@ -619,9 +620,9 @@ void CgenClassTable::code_constants()
 
 CgenClassTable::CgenClassTable(Classes classes, ostream& s) : nds(NULL) , str(s)
 {
-   stringclasstag = 0 /* Change to your String class tag here */;
-   intclasstag =    0 /* Change to your Int class tag here */;
-   boolclasstag =   0 /* Change to your Bool class tag here */;
+   stringclasstag = 1 /* Change to your String class tag here */;
+   intclasstag =    2 /* Change to your Int class tag here */;
+   boolclasstag =   3 /* Change to your Bool class tag here */;
 
    enterscope();
    if (cgen_debug) cout << "Building CgenClassTable" << endl;
@@ -815,7 +816,43 @@ void CgenNode::set_parentnd(CgenNodeP p)
   parentnd = p;
 }
 
+void CgenClassTable::code_protObjs(CgenNodeP p, std::vector<Symbol> attributes) 
+{
+  int num_attributes = 0;
+  Features features = p->get_features();
+  for(int i = features->first(); features->more(i); i = features->next(i)) {
+    if (features->nth(i)->get_feature_type() == "Attribute") {
+      num_attributes++;
+      attributes.push_back(features->nth(i)->get_name());
+    }
+  }
 
+  List<CgenNode> *children = p->get_children(); 
+  for(List<CgenNode> *l = children; l; l = l->tl()) {
+    code_protObjs(l->hd(), attributes);
+  }
+
+  p->code_protObj(str, attributes);
+
+  for(int i = 0; i < num_attributes; i++) {
+    attributes.pop_back();
+  }
+}
+
+void CgenNode::code_protObj(ostream& s, std::vector<Symbol> attributes) 
+{
+  int CLASS_SLOTS = attributes.size();
+
+  // Add -1 eye catcher
+  s << WORD << "-1" << endl;
+  s << name << "_protObj:" << endl;           // label
+  s << WORD << 4 << endl                     // class tag
+  << WORD << (DEFAULT_OBJFIELDS + CLASS_SLOTS) << endl;  // object size
+  s << WORD << name << "_dispTab" << endl; // dispatch table  
+  for(Symbol attr : attributes) { // attributes
+    s << WORD << attr << endl;
+  }                                        
+}
 
 void CgenClassTable::code()
 {
@@ -827,6 +864,9 @@ void CgenClassTable::code()
 
   if (cgen_debug) cout << "coding constants" << endl;
   code_constants();
+
+  if (cgen_debug) cout << "coding prototype objects" << endl;
+  code_protObjs(root(), std::vector<Symbol>());
 
 //                 Add your code to emit
 //                   - prototype objects

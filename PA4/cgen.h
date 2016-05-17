@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <vector>
 #include <stdio.h>
 #include "emit.h"
 #include "cool-tree.h"
@@ -42,6 +43,11 @@ private:
    void install_classes(Classes cs);
    void build_inheritance_tree();
    void set_relations(CgenNodeP nd);
+
+// Helper functions to code the prototype objects 
+// of the non-basic classes.
+
+   void code_protObjs(CgenNodeP p, std::vector<Symbol> attributes);
 public:
    CgenClassTable(Classes, ostream& str);
    void code();
@@ -66,6 +72,8 @@ public:
    void set_parentnd(CgenNodeP p);
    CgenNodeP get_parentnd() { return parentnd; }
    int basic() { return (basic_status == Basic); }
+   void code_protObj(ostream& s, std::vector<Symbol> attributes);
+   Features get_features() { return features; }
 };
 
 class BoolConst 

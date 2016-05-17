@@ -184,6 +184,7 @@ public:
       formals = a2;
       return_type = a3;
       expr = a4;
+      feature_type = "Method";
    }
    Feature copy_Feature();
    void dump(ostream& stream, int n);
@@ -208,6 +209,7 @@ public:
       name = a1;
       type_decl = a2;
       init = a3;
+      feature_type = "Attribute";
    }
    Feature copy_Feature();
    void dump(ostream& stream, int n);
