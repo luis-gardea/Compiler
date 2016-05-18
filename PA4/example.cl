@@ -9,6 +9,8 @@ class Main {
 
 class A {
 	a : Int;
+	b : Bool;
+	c : B <- new B;
 
 	a() : Int {
 		5

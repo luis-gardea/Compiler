@@ -825,14 +825,14 @@ void CgenNode::set_parentnd(CgenNodeP p)
   parentnd = p;
 }
 
-void CgenClassTable::code_protObjs(CgenNodeP p, std::vector<Symbol> attributes) 
+void CgenClassTable::code_protObjs(CgenNodeP p, std::vector<Feature> attributes) 
 {
   int num_attributes = 0;
   Features features = p->get_features();
   for(int i = features->first(); features->more(i); i = features->next(i)) {
     if (features->nth(i)->get_feature_type() == "Attribute") {
       num_attributes++;
-      attributes.push_back(features->nth(i)->get_name());
+      attributes.push_back(features->nth(i));
     }
   }
 
@@ -840,6 +840,7 @@ void CgenClassTable::code_protObjs(CgenNodeP p, std::vector<Symbol> attributes)
   for(List<CgenNode> *l = children; l; l = l->tl()) {
     code_protObjs(l->hd(), attributes);
   }
+  cout << "HERE" << endl;
 
   int classTag = classTag_map[p->get_name()];
   p->code_protObj(str, attributes, classTag);
@@ -849,7 +850,7 @@ void CgenClassTable::code_protObjs(CgenNodeP p, std::vector<Symbol> attributes)
   }
 }
 
-void CgenNode::code_protObj(ostream& s, std::vector<Symbol> attributes, int classTag) 
+void CgenNode::code_protObj(ostream& s, std::vector<Feature> attributes, int classTag) 
 {
   int CLASS_SLOTS = attributes.size();
   //cout << name << " " << CLASS_SLOTS << endl;
@@ -863,8 +864,22 @@ void CgenNode::code_protObj(ostream& s, std::vector<Symbol> attributes, int clas
   s << WORD;
   emit_disptable_ref(name, s);
   s << endl; // dispatch table  
-  for(Symbol attr : attributes) { // attributes
-    s << WORD << attr << endl;
+  for(auto attr : attributes) { // attributes
+    s << WORD; 
+
+    Symbol name = attr->get_name();
+    Symbol type = attr->get_type();
+    cout << name << " " << type << endl;
+    if (name == Str)
+      stringtable.lookup_string(name->get_string())->code_ref(s);
+    else if (name == Int)
+      inttable.lookup_string(name->get_string())->code_ref(s);
+    else if (name == Bool) 
+      s << "0";
+    else
+      s << "0";
+    
+    s << endl;
   }                                        
 }
 
@@ -958,7 +973,7 @@ void CgenClassTable::code()
   code_constants();
 
   if (cgen_debug) cout << "coding prototype objects" << endl;
-  code_protObjs(root(), std::vector<Symbol>());
+  code_protObjs(root(), std::vector<Feature>());
 
   if (cgen_debug) cout << "coding class name table" << endl;
   code_class_nameTab();

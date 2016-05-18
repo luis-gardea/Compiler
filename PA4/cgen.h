@@ -51,7 +51,7 @@ private:
 
 // Helper functions to code the tables and object initializations of all methods.
 
-   void code_protObjs(CgenNodeP p, std::vector<Symbol> attributes);
+   void code_protObjs(CgenNodeP p, std::vector<Feature> attributes);
    void code_class_nameTab();
    void code_class_objTab();
    void code_dispTabs(CgenNodeP p, std::vector<std::pair<Symbol, Symbol>> methods);
@@ -81,7 +81,7 @@ public:
    void set_parentnd(CgenNodeP p);
    CgenNodeP get_parentnd() { return parentnd; }
    int basic() { return (basic_status == Basic); }
-   void code_protObj(ostream& s, std::vector<Symbol> attributes, int classTag);
+   void code_protObj(ostream& s, std::vector<Feature> attributes, int classTag);
    Features get_features() { return features; }
    void code_class_nameTab(ostream& s);
    void code_class_objTab(ostream& s);
