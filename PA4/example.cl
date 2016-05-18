@@ -8,9 +8,10 @@ class Main {
 };
 
 class A {
-	a : Int;
+	a : Int <- 5;
 	b : Bool;
 	c : B <- new B;
+	d : String <- "Hello";
 
 	a() : Int {
 		5

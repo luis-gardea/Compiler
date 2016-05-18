@@ -840,7 +840,6 @@ void CgenClassTable::code_protObjs(CgenNodeP p, std::vector<Feature> attributes)
   for(List<CgenNode> *l = children; l; l = l->tl()) {
     code_protObjs(l->hd(), attributes);
   }
-  cout << "HERE" << endl;
 
   int classTag = classTag_map[p->get_name()];
   p->code_protObj(str, attributes, classTag);
@@ -848,6 +847,18 @@ void CgenClassTable::code_protObjs(CgenNodeP p, std::vector<Feature> attributes)
   for(int i = 0; i < num_attributes; i++) {
     attributes.pop_back();
   }
+}
+
+static void emit_const_ref(Symbol type, ostream &s)
+{ 
+    if (type == Str)
+      stringtable.lookup_string("")->code_ref(s);
+    else if (type == Int)
+      inttable.lookup_string("0")->code_ref(s);
+    else if (type == Bool) 
+      BoolConst(0).code_ref(s);
+    else
+      s << "0"; 
 }
 
 void CgenNode::code_protObj(ostream& s, std::vector<Feature> attributes, int classTag) 
@@ -863,22 +874,11 @@ void CgenNode::code_protObj(ostream& s, std::vector<Feature> attributes, int cla
   << WORD << (DEFAULT_OBJFIELDS + CLASS_SLOTS) << endl;  // object size
   s << WORD;
   emit_disptable_ref(name, s);
-  s << endl; // dispatch table  
-  for(auto attr : attributes) { // attributes
+  s << endl; // dispatch table 
+  for(Feature attr : attributes) { // attributes
     s << WORD; 
-
-    Symbol name = attr->get_name();
     Symbol type = attr->get_type();
-    cout << name << " " << type << endl;
-    if (name == Str)
-      stringtable.lookup_string(name->get_string())->code_ref(s);
-    else if (name == Int)
-      inttable.lookup_string(name->get_string())->code_ref(s);
-    else if (name == Bool) 
-      s << "0";
-    else
-      s << "0";
-    
+    emit_const_ref(type, s);
     s << endl;
   }                                        
 }
@@ -890,7 +890,7 @@ void CgenClassTable::code_class_nameTab() {
 
 void CgenNode::code_class_nameTab(ostream& s) { 
   s << WORD;
-  ((StringEntry *) name)->code_ref(s); // not emitting right index.. not sure what the api is...
+  stringtable.lookup_string(name->get_string())->code_ref(s);
   s << endl;
   for(List<CgenNode> *l = children; l; l = l->tl()) {
     l->hd()->code_class_nameTab(s);
