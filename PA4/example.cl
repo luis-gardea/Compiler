@@ -9,5 +9,15 @@ class Main {
 
 class A {
 	a : Int;
+
+	a() : Int {
+		5
+	};
 };
+
+class D inherits A {};
+class E inherits A {};
+class B {};
+class C {};
+
 

@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <utility>
 #include <vector>
+#include <map>
 #include <stdio.h>
 #include "emit.h"
 #include "cool-tree.h"
@@ -23,6 +24,8 @@ private:
    int stringclasstag;
    int intclasstag;
    int boolclasstag;
+   std::map<Symbol, int> classTag_map;
+
 
 
 // The following methods emit code for
@@ -44,15 +47,16 @@ private:
    void install_classes(Classes cs);
    void build_inheritance_tree();
    void set_relations(CgenNodeP nd);
+   void set_class_tags(CgenNodeP p, int& counter);
 
-// Helper functions to code the prototype objects 
-// of the non-basic classes.
+// Helper functions to code the tables and object initializations of all methods.
 
    void code_protObjs(CgenNodeP p, std::vector<Symbol> attributes);
    void code_class_nameTab();
    void code_class_objTab();
    void code_dispTabs(CgenNodeP p, std::vector<std::pair<Symbol, Symbol>> methods);
-   
+   void code_object_inits();
+
 public:
    CgenClassTable(Classes, ostream& str);
    void code();
@@ -77,11 +81,13 @@ public:
    void set_parentnd(CgenNodeP p);
    CgenNodeP get_parentnd() { return parentnd; }
    int basic() { return (basic_status == Basic); }
-   void code_protObj(ostream& s, std::vector<Symbol> attributes);
+   void code_protObj(ostream& s, std::vector<Symbol> attributes, int classTag);
    Features get_features() { return features; }
    void code_class_nameTab(ostream& s);
    void code_class_objTab(ostream& s);
    void code_dispTab(ostream& s, std::vector<std::pair<Symbol, Symbol>> methods);
+   Symbol get_name() { return name; }
+   void code_object_init();
 };
 
 class BoolConst 

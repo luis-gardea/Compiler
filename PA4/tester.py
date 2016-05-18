@@ -16,7 +16,7 @@ if len(sys.argv) == 2:
 	os.system(command2)
 	print filename
 	diff_cmd = "diff output/" + name + "out.s" + " output/" + name + "ref.s"
-	os.system(diff_cmd)
+	#os.system(diff_cmd)
 else:
 # This would print all the files and directories
 	for file in dirs:

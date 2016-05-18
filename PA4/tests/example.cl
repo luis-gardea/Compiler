@@ -11,3 +11,8 @@ class A {
 	a : Int;
 };
 
+class D inherits A {};
+class E inherits A {};
+class B {};
+class C {};
+

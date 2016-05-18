@@ -610,18 +610,34 @@ void CgenClassTable::code_constants()
   code_bools(boolclasstag);
 }
 
+void CgenClassTable::set_class_tags(CgenNodeP p, int& counter) {
+  classTag_map[p->get_name()] = counter;
+  counter++;
+
+  List<CgenNode> *children = p->get_children(); 
+  for(List<CgenNode> *l = children; l; l = l->tl()) {
+    set_class_tags(l->hd(), counter);
+  }
+}
 
 CgenClassTable::CgenClassTable(Classes classes, ostream& s) : nds(NULL) , str(s)
 {
-   stringclasstag = 1 /* Change to your String class tag here */;
-   intclasstag =    2 /* Change to your Int class tag here */;
-   boolclasstag =   3 /* Change to your Bool class tag here */;
+   stringclasstag = 4;
+   intclasstag =    2;
+   boolclasstag =   3;
+
 
    enterscope();
    if (cgen_debug) cout << "Building CgenClassTable" << endl;
    install_basic_classes();
    install_classes(classes);
    build_inheritance_tree();
+
+  if (cgen_debug) cout << "setting class tags" << endl;
+  int classTag = 0;
+  classTag_map[Object] = 0;
+
+  set_class_tags(root(), classTag);
 
    code();
    exitscope();
@@ -825,14 +841,15 @@ void CgenClassTable::code_protObjs(CgenNodeP p, std::vector<Symbol> attributes)
     code_protObjs(l->hd(), attributes);
   }
 
-  p->code_protObj(str, attributes);
+  int classTag = classTag_map[p->get_name()];
+  p->code_protObj(str, attributes, classTag);
 
   for(int i = 0; i < num_attributes; i++) {
     attributes.pop_back();
   }
 }
 
-void CgenNode::code_protObj(ostream& s, std::vector<Symbol> attributes) 
+void CgenNode::code_protObj(ostream& s, std::vector<Symbol> attributes, int classTag) 
 {
   int CLASS_SLOTS = attributes.size();
   //cout << name << " " << CLASS_SLOTS << endl;
@@ -841,7 +858,7 @@ void CgenNode::code_protObj(ostream& s, std::vector<Symbol> attributes)
   s << WORD << "-1" << endl;
   emit_protobj_ref(name, s);
   s << ":" << endl;          // label
-  s << WORD << 4 << endl                     // EMIT correct class tag here.. needs some thought
+  s << WORD << classTag << endl                     // class tag
   << WORD << (DEFAULT_OBJFIELDS + CLASS_SLOTS) << endl;  // object size
   s << WORD;
   emit_disptable_ref(name, s);
@@ -858,7 +875,7 @@ void CgenClassTable::code_class_nameTab() {
 
 void CgenNode::code_class_nameTab(ostream& s) { 
   s << WORD;
-  ((StringEntryP) name)->code_ref(s); // not emitting right index.. not sure what the api is...
+  ((StringEntry *) name)->code_ref(s); // not emitting right index.. not sure what the api is...
   s << endl;
   for(List<CgenNode> *l = children; l; l = l->tl()) {
     l->hd()->code_class_nameTab(s);
@@ -918,22 +935,16 @@ void CgenNode::code_dispTab(ostream& s, std::vector<std::pair<Symbol, Symbol>> m
   }                                        
 }
 
-// static void emit_disptable_ref(Symbol sym, ostream& s)
-// {  s << sym << DISPTAB_SUFFIX; }
+void CgenClassTable::code_object_inits() {
+  for(List<CgenNode> *l = nds; l; l = l->tl()) {
+    l->hd()->code_object_init();
+  }
+}
 
-// static void emit_init_ref(Symbol sym, ostream& s)
-// { s << sym << CLASSINIT_SUFFIX; }
+void CgenNode::code_object_init() {
+  return;
+}
 
-// static void emit_label_ref(int l, ostream &s)
-// { s << "label" << l; }
-
-// static void emit_protobj_ref(Symbol sym, ostream& s)
-// { s << sym << PROTOBJ_SUFFIX; }
-
-// static void emit_method_ref(Symbol classname, Symbol methodname, ostream& s)
-// { s << classname << METHOD_SEP << methodname; }
-
-// static void emit_label_def(int l, ostream &s)
 
 void CgenClassTable::code()
 {
@@ -959,13 +970,16 @@ void CgenClassTable::code()
   code_dispTabs(root(), std::vector<std::pair<Symbol, Symbol>>());
 
 //                 Add your code to emit
-//                   - prototype objects check
-//                   - class_nameTab check
-//                   - dispatch tables
+//                   - prototype objects --check
+//                   - class_nameTab --check
+//                   - dispatch tables --check
 //
 
   if (cgen_debug) cout << "coding global text" << endl;
   code_global_text();
+
+  if (cgen_debug) cout << "coding object initializers" << endl;
+  code_object_inits();
 
 //                 Add your code to emit
 //                   - object initializer
