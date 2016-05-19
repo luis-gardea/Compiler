@@ -4,11 +4,13 @@
  *)
 
 class Main {
-  main():Int { 0 };
+  main():Int { 5 };
+  m : Int <- 5;
+  n : Int <- 4;
 };
 
-class A {
-	a : Int <- 5;
+(*class A {
+	a : Int <- 5 + 4;
 	b : Bool;
 	c : B <- new B;
 	d : String <- "Hello";
@@ -22,5 +24,6 @@ class D inherits A {};
 class E inherits A {};
 class B {};
 class C {};
+*)
 
 

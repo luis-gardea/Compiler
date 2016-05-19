@@ -952,12 +952,40 @@ void CgenNode::code_dispTab(ostream& s, std::vector<std::pair<Symbol, Symbol>> m
 
 void CgenClassTable::code_object_inits() {
   for(List<CgenNode> *l = nds; l; l = l->tl()) {
-    l->hd()->code_object_init();
+    l->hd()->code_object_init(str);
   }
 }
 
-void CgenNode::code_object_init() {
-  return;
+static void emit_jal_init(Symbol name, ostream &s)
+{ s << JAL << name << CLASSINIT_SUFFIX << endl; }
+
+void CgenNode::code_object_init(ostream& s) {
+  emit_init_ref(name, s);
+  s << endl;
+  emit_addiu(SP, SP, -12, s);
+  emit_store(SP, 3, FP, s);
+  emit_store(SP, 2, SELF, s);
+  emit_store(SP, 1, RA, s);
+  emit_addiu(FP, SP, 4, s);
+  emit_move(SELF, ACC, s);
+  if (parentnd->get_name() != No_class) {
+    emit_jal_init(parentnd->get_name(), s);
+  }
+  for(int i = features->first(); features->more(i); i = features->next(i)) {
+    Feature feature = features->nth(i);
+    if (feature->get_feature_type() == "Attribute" && feature->get_type() != No_type) {
+      emit_partial_load_address(ACC, s);
+      emit_const_ref(feature->get_type(),s);
+      s << endl;
+
+      emit_store(SELF, 2 + i, ACC, s);
+    }
+  }
+  emit_load(SP, 3, FP, s);
+  emit_load(SP, 2, SELF, s);
+  emit_load(SP, 1, RA, s);
+  emit_addiu(SP, SP, 12, s);
+  emit_return(s);
 }
 
 

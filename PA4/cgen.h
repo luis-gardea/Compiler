@@ -87,7 +87,7 @@ public:
    void code_class_objTab(ostream& s);
    void code_dispTab(ostream& s, std::vector<std::pair<Symbol, Symbol>> methods);
    Symbol get_name() { return name; }
-   void code_object_init();
+   void code_object_init(ostream& s);
 };
 
 class BoolConst 
