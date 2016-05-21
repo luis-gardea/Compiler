@@ -5,7 +5,7 @@
 
 class Main {
   main():Int { 5 };
-  m : Int <- 5;
+  m : Int <- 5 + 5;
   n : Int <- 4;
 };
 
