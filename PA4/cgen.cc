@@ -963,9 +963,9 @@ void CgenNode::code_object_init(ostream& s) {
   emit_init_ref(name, s);
   s << endl;
   emit_addiu(SP, SP, -12, s);
-  emit_store(SP, 3, FP, s);
-  emit_store(SP, 2, SELF, s);
-  emit_store(SP, 1, RA, s);
+  emit_store(FP, 3, SP, s);
+  emit_store(SELF, 2, SP, s);
+  emit_store(RA, 1, SP, s);
   emit_addiu(FP, SP, 4, s);
   emit_move(SELF, ACC, s);
   if (parentnd->get_name() != No_class) {
@@ -978,12 +978,13 @@ void CgenNode::code_object_init(ostream& s) {
       emit_const_ref(feature->get_type(),s);
       s << endl;
 
-      emit_store(SELF, 2 + i, ACC, s);
+      emit_store(ACC, 3 + i, SELF, s);
     }
   }
-  emit_load(SP, 3, FP, s);
-  emit_load(SP, 2, SELF, s);
-  emit_load(SP, 1, RA, s);
+  emit_move(ACC, SELF, s);
+  emit_load(FP, 3, SP, s);
+  emit_load(SELF, 2, SP, s);
+  emit_load(RA, 1, SP, s);
   emit_addiu(SP, SP, 12, s);
   emit_return(s);
 }
