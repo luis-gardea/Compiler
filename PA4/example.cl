@@ -7,6 +7,7 @@ class Main {
   main():Int { 5 };
   m : Int <- 5;
   n : Int <- 4;
+  r : Main <- new Main;
 };
 
 (*class A {
