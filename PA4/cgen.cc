@@ -1010,12 +1010,18 @@ void CgenClassTable::code_dispTabs(CgenNodeP p, std::vector<std::pair<Symbol, Sy
   for (auto method : methods) {
     Symbol *method_name = new Symbol(method.second);
     method_names.push_back(*method_name);
-    cerr << "HERE " << method.first << " " << method.second << endl;
+    // cerr << "HERE " << method.first << " " << *(method_name) << endl;
   }
 
   List<CgenNode> *children = p->get_children(); 
+  // cerr << p->get_name() << endl;
+  disp_tables[p->get_name()] = method_names;
+  // for (auto i : method_names){
+  //   cerr << i << endl;
+  // }
   for(List<CgenNode> *l = children; l; l = l->tl()) {
-    disp_tables[l->hd()->get_name()] = method_names;
+    // cerr << l->hd()->get_name() << endl;
+    // disp_tables[l->hd()->get_name()] = method_names;
 
     code_dispTabs(l->hd(), methods);
   }
@@ -1134,6 +1140,7 @@ void CgenNode::code_class_method(CgenClassTableP table, ostream& s)
       Feature method = features->nth(i);
       if (method->get_feature_type() == "Method") {
         table->enterscope();
+        table->addid(SELF_TYPE, table->lookup(name));
 
         // Emit label and method setup
         emit_method_def(name, method->get_name(), s);
@@ -1314,16 +1321,18 @@ void dispatch_class::code(CgenClassTableP table, ostream &s)
 
   // Find method offset in dipatch table
   Symbol expr_type = expr->get_type();
+  cerr << "Old type" << expr_type << endl;
   if (expr_type == SELF_TYPE) {
     expr_type = (table->lookup(SELF_TYPE))->get_name();
   }
+  cerr << "Here " << expr_type << endl;
   auto method_names = table->disp_tables[expr_type];
 
   size_t i;
   for (i = 0; i < method_names.size(); i++) {
     cerr << method_names[i] << " " << name << endl;
-    //if (method_names[i] == name)
-      //break;
+    if (method_names[i] == name)
+      break;
   }
 
   table->addid(SELF_TYPE, table->lookup(expr_type));
