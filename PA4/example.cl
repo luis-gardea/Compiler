@@ -5,12 +5,21 @@
 
 class Main {
 	main():Object {
-		(new IO).out_int((new Main).m(7))
+    let io : IO <- new IO in {
+      io.out_string(j);
+      j <- "\nnew string\n";
+		  io.out_int(m(7));
+      io@IO.out_string(j);
+    }
 	};
 
-	m(a:Int):Int {a+5};
+	m(a:Int):Int {a+k};
 
-	k: Object <- (new Int)@Int.copy();--if 5=6 then 5 else 6 fi;
+  j: String <- "my string\n";
+
+	k: Int <- 4;
+
+  a:Int <- 8;
 };
 
 (*m(x:Int):Int {

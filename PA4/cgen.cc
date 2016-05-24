@@ -28,6 +28,7 @@
 extern void emit_string_constant(ostream& str, char *s);
 extern int cgen_debug;
 
+static SymbolTable<Symbol, int>* var_table = new SymbolTable<Symbol, int>();
 //
 // Three symbols from the semantic analyzer (semant.cc) are used.
 // If e : No_type, then no code is generated for e.
@@ -641,6 +642,12 @@ void CgenClassTable::set_class_tags(CgenNodeP p, int& counter) {
 void CgenClassTable::create_implementation_map(CgenNodeP p, std::vector<Method> methods)
 {
   Symbol class_name = p->get_name();
+  if (class_name == Object) {
+    for(List<CgenNode> *l = nds; l; l = l->tl()) {
+      Method m(l->hd()->get_name(), l->hd()->get_name());
+      implementation_map[m] = std::vector<Symbol>();
+    }
+  }
 
   for (auto parent_method : methods) {
     Symbol parent_method_name = parent_method.second;
@@ -659,10 +666,7 @@ void CgenClassTable::create_implementation_map(CgenNodeP p, std::vector<Method> 
       Formals formals = features->nth(i)->get_formals();
       std::vector<Symbol> formal_names;
       for(int i = formals->first(); formals->more(i); i = formals->next(i)) {
-        formal_names.push_back(formals->nth(i));
-        // Feature* method_P = new Feature(features->nth(i));
-        // Feature method = *method_P;
-        // method = features->nth(i);
+        formal_names.push_back(formals->nth(i)->get_name());
       }
       implementation_map[m] = formal_names;
     }
@@ -1082,7 +1086,8 @@ void emit_method_setup(ostream& s)
 
   // Move FP down- we are starting a new frame
   // **Note: args are 12 + 4*n up from FP
-  emit_addiu(FP, SP, 16, s);
+  emit_addiu(FP, SP, 4, s);
+
   // Move self into SELF
   emit_move(SELF, ACC ,s);
 }
@@ -1107,7 +1112,13 @@ void emit_method_cleanup(int n, ostream& s)
 
 // Init methods are called after an object of type *name* is created on heap. Pointer o that object is in ACC
 // We want to initilize all atttributes of the object with values from the init expressions
-void CgenNode::code_object_init(ostream& s, int num_inherited_attributes, int& num_self_attributes, CgenClassTableP table) {
+void CgenNode::code_object_init(ostream& s, int num_inherited_attributes, int& num_self_attributes, CgenClassTableP table) 
+{
+  var_table->enterscope();
+  table->var_count = 0;
+  table->addid(SELF_TYPE, table->lookup(name));
+  table->current_method = name;
+
   // Treat this like any other method call, no parameters
   emit_init_def(name, s);
   emit_method_setup(s);
@@ -1120,13 +1131,14 @@ void CgenNode::code_object_init(ostream& s, int num_inherited_attributes, int& n
   if (basic_status == NotBasic) {
     for(int i = features->first(); features->more(i); i = features->next(i)) {
       Feature attribute = features->nth(i);
-      if (attribute->get_feature_type() == "Attribute" && attribute->get_type() != No_type) {
+      if (attribute->get_feature_type() == "Attribute") {
         num_self_attributes++;
         attribute->code(table, s);
 
         // Return value of attribute is left in a0 (ACC). We want to store this value (which is always a reference to an object)
         // in the correct position in the object we are initializing. Initialization object reference is s0 (SELF).
-        emit_store(ACC, 2 + num_inherited_attributes + num_self_attributes, SELF, s);
+        if (attribute->get_type() != No_type)
+          emit_store(ACC, 2 + num_inherited_attributes + num_self_attributes, SELF, s);
       }
     }
   }
@@ -1135,6 +1147,8 @@ void CgenNode::code_object_init(ostream& s, int num_inherited_attributes, int& n
   // We stored the object in SELF, so we put self back in AC because self is the return value of the init method
   emit_move(ACC, SELF, s);
   emit_method_cleanup(0, s);
+
+  var_table->exitscope();
 }
 
 void CgenClassTable::code_class_methods() {
@@ -1150,8 +1164,10 @@ void CgenNode::code_class_method(CgenClassTableP table, ostream& s)
     for(int i = features->first(); features->more(i); i = features->next(i)) {
       Feature method = features->nth(i);
       if (method->get_feature_type() == "Method") {
-        table->enterscope();
+        var_table->enterscope();
+        table->var_count = 0;
         table->addid(SELF_TYPE, table->lookup(name));
+        table->current_method = method->get_name();
 
         // Emit label and method setup
         emit_method_def(name, method->get_name(), s);
@@ -1164,7 +1180,7 @@ void CgenNode::code_class_method(CgenClassTableP table, ostream& s)
         int n = method->get_formals()->len();
         emit_method_cleanup(n, s);
 
-        table->exitscope();
+        var_table->exitscope();
       }
     }
   } 
@@ -1249,7 +1265,43 @@ CgenNode::CgenNode(Class_ nd, Basicness bstatus, CgenClassTableP ct) :
 //
 //*****************************************************************
 
-void assign_class::code(CgenClassTableP table, ostream &s) {
+void assign_class::code(CgenClassTableP table, ostream &s) 
+{
+  // evaluate expression, 
+  expr->code(table, s);
+
+  // Next we lookup to see if this object is a variable in scope,
+  // since variables in scope shadow everything else
+  if (var_table->probe(name) != NULL){
+    int offset = *(var_table->probe(name));
+    emit_store(ACC,-offset,FP,s);
+    return;
+  }
+
+  auto class_ = table->lookup(SELF_TYPE);
+  Symbol type_name = class_->get_name();
+    
+  // Next we see if this object is a parameter,
+  // since parameters shadow atrributes
+  Method m(type_name, table->current_method);
+  std::vector<Symbol> implementation = table->implementation_map[m];
+  for (size_t i = 0; i < implementation.size(); i++) {
+    if (name == implementation[i]){
+      emit_store(ACC,3 + i,FP,s);
+      return;
+    }
+  }
+
+  // Finally, if the object is not a variable or formal, it must be an attribute
+  if (table->class_map.find(type_name) != table->class_map.end()){
+    std::vector<Symbol> v = table->class_map[type_name];
+    for (size_t i = 0; i < v.size(); i++){
+      if (name == v[i]){
+        emit_store(ACC,3+i,SELF,s);
+        return;
+      }
+    }
+  }
 }
 
 void static_dispatch_class::code(CgenClassTableP table, ostream &s) 
@@ -1332,11 +1384,9 @@ void dispatch_class::code(CgenClassTableP table, ostream &s)
 
   // Find method offset in dipatch table
   Symbol expr_type = expr->get_type();
-  // cerr << "Old type" << expr_type << endl;
   if (expr_type == SELF_TYPE) {
     expr_type = (table->lookup(SELF_TYPE))->get_name();
   }
-  // cerr << "Here " << expr_type << endl;
   auto method_names = table->disp_tables[expr_type];
 
   size_t i;
@@ -1346,7 +1396,6 @@ void dispatch_class::code(CgenClassTableP table, ostream &s)
       break;
   }
 
-  table->addid(SELF_TYPE, table->lookup(expr_type));
   // Load address of method code and jump there
   emit_load(T1, i, T1, s);
   emit_jalr(T1, s);
@@ -1384,9 +1433,18 @@ void typcase_class::code(CgenClassTableP table, ostream &s) {
 }
 
 void block_class::code(CgenClassTableP table, ostream &s) {
+  for (int i = body->first(); body->more(i); i = body->next(i)) {
+    body->nth(i)->code(table, s);
+  }
 }
 
-void let_class::code(CgenClassTableP table, ostream &s) {
+void let_class::code(CgenClassTableP table, ostream &s) 
+{
+  init->code(table, s);
+  table->var_count++;
+  var_table->addid(identifier, &(table->var_count));
+  emit_push(ACC, s);
+  body->code(table, s);
 }
 
 void plus_class::code(CgenClassTableP table, ostream &s) {
@@ -1583,32 +1641,43 @@ void isvoid_class::code(CgenClassTableP table, ostream &s) {
 void no_expr_class::code(CgenClassTableP table, ostream &s) {
 }
 
-void object_class::code(CgenClassTableP table, ostream &s) {
-  Method m(type_name, name);
+void object_class::code(CgenClassTableP table, ostream &s) 
+{
+  // If the object is self, just move SELF into ACC
+  if (name == self) {
+    emit_move(ACC, SELF, s);
+    return;
+  }
 
-  // Here is where we crash
-  std::vector<Symbol> formal_names = table->implementation_map[m];
+  // Next we lookup to see if this object is a variable in scope,
+  // since variables in scope shadow everything else
+  if (var_table->probe(name) != NULL){
+    int offset = *(var_table->probe(name));
+    emit_load(ACC,-offset,FP,s);
+    return;
+  }
 
-  cerr << "Here we are" << endl;
-  int offset = -1;
-  if (table->probe(name) != NULL){
-    // offset = *(table->probe(name));
-  } else {
-    for (size_t i = 0; formals->more(i); i = formals->next(i)){
-      cerr << name << endl;
-      if (name == formals->nth(i)->get_name()){
-        emit_load(ACC,i,FP,s);
-      }
+  auto class_ = table->lookup(SELF_TYPE);
+  Symbol type_name = class_->get_name();
+    
+  // Next we see if this object is a parameter,
+  // since parameters shadow atrributes
+  Method m(type_name, table->current_method);
+  std::vector<Symbol> implementation = table->implementation_map[m];
+  for (size_t i = 0; i < implementation.size(); i++) {
+    if (name == implementation[i]){
+      emit_load(ACC,3 + i,FP,s);
+      return;
     }
-    if (offset == -1){
-      auto class_ = table->lookup(SELF_TYPE);
-      if (table->class_map.find(class_->get_name()) != table->class_map.end()){
-        std::vector<Symbol> v = table->class_map[class_->get_name()];
-        for (size_t i = 0; i < v.size(); i++){
-          if (name == v[i]){
-            emit_load(ACC,i,SELF,s);
-          }
-        }
+  }
+
+  // Finally, if the object is not a variable or formal, it must be an attribute
+  if (table->class_map.find(type_name) != table->class_map.end()){
+    std::vector<Symbol> v = table->class_map[type_name];
+    for (size_t i = 0; i < v.size(); i++){
+      if (name == v[i]){
+        emit_load(ACC,3+i,SELF,s);
+        return;
       }
     }
   }

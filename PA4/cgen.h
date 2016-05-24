@@ -68,6 +68,8 @@ public:
    CgenNodeP root();
    int new_label() { label_counter++; return label_counter; };
    Symbol filename;
+   Symbol current_method;
+   int var_count;
    std::map<Symbol, std::vector<Symbol>> disp_tables;
    std::map<Method, std::vector<Symbol>> implementation_map;
    std::map<Symbol, std::vector<Symbol>> class_map;
