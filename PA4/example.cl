@@ -8,7 +8,7 @@ class Main {
 		(new IO).out_int(m(7))
 	};
 
-	m(a:Int):Int {a+5};
+	m(a:Int):Int {5+5};
 
 	k: Object <- (new Int)@Int.copy();--if 5=6 then 5 else 6 fi;
 };

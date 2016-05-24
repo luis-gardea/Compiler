@@ -1071,7 +1071,7 @@ void emit_method_setup(ostream& s)
 
   // Move FP down- we are starting a new frame
   // **Note: args are 12 + 4*n up from FP
-  emit_addiu(FP, SP, 4, s);
+  emit_addiu(FP, SP, 16, s);
   // Move self into SELF
   emit_move(SELF, ACC ,s);
 }
@@ -1321,16 +1321,16 @@ void dispatch_class::code(CgenClassTableP table, ostream &s)
 
   // Find method offset in dipatch table
   Symbol expr_type = expr->get_type();
-  cerr << "Old type" << expr_type << endl;
+  // cerr << "Old type" << expr_type << endl;
   if (expr_type == SELF_TYPE) {
     expr_type = (table->lookup(SELF_TYPE))->get_name();
   }
-  cerr << "Here " << expr_type << endl;
+  // cerr << "Here " << expr_type << endl;
   auto method_names = table->disp_tables[expr_type];
 
   size_t i;
   for (i = 0; i < method_names.size(); i++) {
-    cerr << method_names[i] << " " << name << endl;
+    // cerr << method_names[i] << " " << name << endl;
     if (method_names[i] == name)
       break;
   }
