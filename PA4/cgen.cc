@@ -715,6 +715,8 @@ CgenClassTable::CgenClassTable(Classes classes, ostream& s) : nds(NULL) , str(s)
   create_implementation_map(root(), std::vector<Method>());
   create_class_map(root(), std::vector<Symbol>());
 
+  addid(SELF_TYPE, lookup(Main));
+
    code();
    exitscope();
 }
@@ -1003,8 +1005,18 @@ void CgenClassTable::code_dispTabs(CgenNodeP p, std::vector<std::pair<Symbol, Sy
     }
   }
 
+  std::vector<Symbol>* method_names_p = new std::vector<Symbol>();
+  auto method_names = *(method_names_p);
+  for (auto method : methods) {
+    Symbol *method_name = new Symbol(method.second);
+    method_names.push_back(*method_name);
+    cerr << "HERE " << method.first << " " << method.second << endl;
+  }
+
   List<CgenNode> *children = p->get_children(); 
   for(List<CgenNode> *l = children; l; l = l->tl()) {
+    disp_tables[l->hd()->get_name()] = method_names;
+
     code_dispTabs(l->hd(), methods);
   }
 
@@ -1027,6 +1039,7 @@ void CgenNode::code_dispTab(ostream& s, std::vector<std::pair<Symbol, Symbol>> m
 }
 
 void CgenClassTable::code_object_inits(CgenNodeP p, int num_inherited_attributes, CgenClassTableP table) {
+  filename = p->get_filename();
   int num_self_attributes = 0;
   p->code_object_init(str, num_inherited_attributes, num_self_attributes, table);
 
@@ -1047,8 +1060,8 @@ void emit_method_setup(ostream& s)
   emit_store(FP, 3, SP, s);
   // Don't let SELF get clobbered
   emit_store(SELF, 2, SP, s);
-  // Don't let FP get clobbered
-  emit_store(SELF, 1, SP, s);
+  // Store RA for when we return
+  emit_store(RA, 1, SP, s);
 
   // Move FP down- we are starting a new frame
   // **Note: args are 12 + 4*n up from FP
@@ -1109,6 +1122,7 @@ void CgenNode::code_object_init(ostream& s, int num_inherited_attributes, int& n
 
 void CgenClassTable::code_class_methods() {
   for(List<CgenNode> *l = nds; l; l = l->tl()) {
+    filename = l->hd()->get_filename();
     l->hd()->code_class_method(this, str);
   }
 }
@@ -1119,6 +1133,8 @@ void CgenNode::code_class_method(CgenClassTableP table, ostream& s)
     for(int i = features->first(); features->more(i); i = features->next(i)) {
       Feature method = features->nth(i);
       if (method->get_feature_type() == "Method") {
+        table->enterscope();
+
         // Emit label and method setup
         emit_method_def(name, method->get_name(), s);
         emit_method_setup(s);
@@ -1129,6 +1145,8 @@ void CgenNode::code_class_method(CgenClassTableP table, ostream& s)
         // Make sure to clean up parameters placed on stack by caller before we return
         int n = method->get_formals()->len();
         emit_method_cleanup(n, s);
+
+        table->exitscope();
       }
     }
   } 
@@ -1230,10 +1248,38 @@ void static_dispatch_class::code(CgenClassTableP table, ostream &s)
   // Evaluate e0 to get object we are dispatching on.
   // This object becomes self
   expr->code(table, s);
-  emit_move(SELF, ACC, s);
 
-  // Jump to method code
-  emit_jal_method(type_name, name, s);
+  // create label to dipatch to the method
+  int dispatch = table->new_label();
+  emit_bne(ACC, ZERO, dispatch, s);
+
+  // Dispatch on a void, raise error
+  emit_load_string(ACC, stringtable.lookup_string(table->filename->get_string()), s);
+  emit_load_imm(T1, get_line_number(), s);
+  emit_jal("_dispatch_abort", s);
+
+  //Define label for dispatch code
+  emit_label_def(dispatch, s);
+  emit_partial_load_address(T1, s);
+  emit_disptable_ref(type_name, s);
+  s << endl;
+
+  auto method_names = table->disp_tables[type_name];
+  size_t i;
+  for (i = 0; i < method_names.size(); i++) {
+    if (method_names[i] == name)
+      break;
+  }
+
+  Symbol expr_type = expr->get_type();
+  if (expr_type == SELF_TYPE) {
+    expr_type = (table->lookup(SELF_TYPE))->get_name();
+  }
+  table->addid(SELF_TYPE, table->lookup(expr_type));
+
+  // Load address of method code and jump there
+  emit_load(T1, i, T1, s);
+  emit_jalr(T1, s);
 }
 
 void dispatch_class::code(CgenClassTableP table, ostream &s) 
@@ -1250,11 +1296,40 @@ void dispatch_class::code(CgenClassTableP table, ostream &s)
   // Evaluate e0 to get object we are dispatching on.
   // This object becomes self
   expr->code(table, s);
-  emit_move(SELF, ACC, s);
 
-  // Jump to method code
-  Symbol class_name = expr->get_type();
-  emit_jal_method(class_name, name, s);
+  // create label to dipatch to the method
+  int dispatch = table->new_label();
+  emit_bne(ACC, ZERO, dispatch, s);
+
+  // Dispatch on a void, raise error
+  emit_load_string(ACC, stringtable.lookup_string(table->filename->get_string()), s);
+  emit_load_imm(T1, get_line_number(), s);
+  emit_jal("_dispatch_abort", s);
+
+  //Define label for dispatch code
+  emit_label_def(dispatch, s);
+
+  // load pointer to dispatch table
+  emit_load(T1, 2, ACC, s);
+
+  // Find method offset in dipatch table
+  Symbol expr_type = expr->get_type();
+  if (expr_type == SELF_TYPE) {
+    expr_type = (table->lookup(SELF_TYPE))->get_name();
+  }
+  auto method_names = table->disp_tables[expr_type];
+
+  size_t i;
+  for (i = 0; i < method_names.size(); i++) {
+    cerr << method_names[i] << " " << name << endl;
+    //if (method_names[i] == name)
+      //break;
+  }
+
+  table->addid(SELF_TYPE, table->lookup(expr_type));
+  // Load address of method code and jump there
+  emit_load(T1, i, T1, s);
+  emit_jalr(T1, s);
 }
 
 void cond_class::code(CgenClassTableP table, ostream &s) 

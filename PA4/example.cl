@@ -5,12 +5,12 @@
 
 class Main {
 	main():Object {
-		(new IO).out_int(5+5)
+		(new IO).out_int(m(7))
 	};
 
 	m(a:Int):Int {a+5};
 
-	k: Int <- 5+5;--if 5=6 then 5 else 6 fi;
+	k: Object <- (new Int)@Int.copy();--if 5=6 then 5 else 6 fi;
 };
 
 (*m(x:Int):Int {

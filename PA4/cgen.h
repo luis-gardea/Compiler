@@ -69,6 +69,8 @@ public:
    void code();
    CgenNodeP root();
    int new_label() { label_counter++; return label_counter; };
+   Symbol filename;
+   std::map<Symbol, std::vector<Symbol>> disp_tables;
 };
 
 
@@ -97,6 +99,7 @@ public:
    Symbol get_name() { return name; }
    void code_object_init(ostream& s, int num_inherited_attributes, int& num_self_attributes, CgenClassTableP table);
    void code_class_method(CgenClassTableP table, ostream& s);
+   Symbol get_filename() {return filename; }
 };
 
 class BoolConst 
