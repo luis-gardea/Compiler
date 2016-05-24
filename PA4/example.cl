@@ -5,19 +5,23 @@
 
 class Main {
 	main():Object {
-    let io : IO <- new IO in {
-      io.out_string(j);
-      j <- "\nnew string\n";
-		  io.out_int(m(7));
-      io@IO.out_string(j);
+    let io : IO <- new IO, b: B <- new B in {
+      --io.out_string(j);
+      --j <- "\nnew string\n";
+		  io@IO.out_int(b.m(7));
+      --io@IO.out_string(j);
+      --io.out_int(k);
+      io.out_int(m(7));
     }
+    --(new IO).out_int((new B).m())
 	};
 
-	m(a:Int):Int {a+k};
+
+	m(a:Int):Int {k + a};
 
   j: String <- "my string\n";
 
-	k: Int <- 4;
+	k: Int <- a;
 
   a:Int <- 8;
 };
@@ -26,6 +30,12 @@ class Main {
 	x+7
 };
 *)
+
+class B {
+  m(a:Int) : Int {
+    a+7
+  };
+};
 
 
 

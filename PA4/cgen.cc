@@ -1306,6 +1306,51 @@ void assign_class::code(CgenClassTableP table, ostream &s)
 
 void static_dispatch_class::code(CgenClassTableP table, ostream &s) 
 {
+  // //Push parameters onto stack, first is highest, last is lowest
+  // for (int i = actual->first(); actual->more(i); i = actual->next(i)) {
+  //   //evaluate expr
+  //   actual->nth(i)->code(table, s);
+
+  //   // push object onto stack in preparation for method call
+  //   emit_push(ACC, s);
+  // }
+
+  // // Evaluate e0 to get object we are dispatching on.
+  // // This object becomes self
+  // expr->code(table, s);
+
+  // // create label to dipatch to the method
+  // int dispatch = table->new_label();
+  // emit_bne(ACC, ZERO, dispatch, s);
+
+  // // Dispatch on a void, raise error
+  // emit_load_string(ACC, stringtable.lookup_string(table->filename->get_string()), s);
+  // emit_load_imm(T1, get_line_number(), s);
+  // emit_jal("_dispatch_abort", s);
+
+  // //Define label for dispatch code
+  // emit_label_def(dispatch, s);
+  // emit_partial_load_address(T1, s);
+  // emit_disptable_ref(type_name, s);
+  // s << endl;
+
+  // auto method_names = table->disp_tables[type_name];
+  // size_t i;
+  // for (i = 0; i < method_names.size(); i++) {
+  //   if (method_names[i] == name)
+  //     break;
+  // }
+
+  // Symbol expr_type = expr->get_type();
+  // if (expr_type == SELF_TYPE) {
+  //   expr_type = (table->lookup(SELF_TYPE))->get_name();
+  // }
+  // table->addid(SELF_TYPE, table->lookup(expr_type));
+
+  // // Load address of method code and jump there
+  // emit_load(T1, i, T1, s);
+  // emit_jalr(T1, s);
+
   //Push parameters onto stack, first is highest, last is lowest
   for (int i = actual->first(); actual->more(i); i = actual->next(i)) {
     //evaluate expr
@@ -1330,22 +1375,22 @@ void static_dispatch_class::code(CgenClassTableP table, ostream &s)
 
   //Define label for dispatch code
   emit_label_def(dispatch, s);
-  emit_partial_load_address(T1, s);
-  emit_disptable_ref(type_name, s);
-  s << endl;
 
+  // load pointer to dispatch table
+  emit_load(T1, 2, ACC, s);
+
+  // Find method offset in dipatch table
+  Symbol expr_type = expr->get_type();
+  if (expr_type == SELF_TYPE) {
+    expr_type = (table->lookup(SELF_TYPE))->get_name();
+  }
   auto method_names = table->disp_tables[type_name];
+
   size_t i;
   for (i = 0; i < method_names.size(); i++) {
     if (method_names[i] == name)
       break;
   }
-
-  Symbol expr_type = expr->get_type();
-  if (expr_type == SELF_TYPE) {
-    expr_type = (table->lookup(SELF_TYPE))->get_name();
-  }
-  table->addid(SELF_TYPE, table->lookup(expr_type));
 
   // Load address of method code and jump there
   emit_load(T1, i, T1, s);
@@ -1391,7 +1436,6 @@ void dispatch_class::code(CgenClassTableP table, ostream &s)
 
   size_t i;
   for (i = 0; i < method_names.size(); i++) {
-    // cerr << method_names[i] << " " << name << endl;
     if (method_names[i] == name)
       break;
   }
@@ -1440,11 +1484,23 @@ void block_class::code(CgenClassTableP table, ostream &s) {
 
 void let_class::code(CgenClassTableP table, ostream &s) 
 {
+  // Evaluate init expression
   init->code(table, s);
+
+  // We are introducing a variable on the stack
+  // We need to keep track of the offset from fp
+  // the variable is placed, as well as which method 
+  // has access to this variable
   table->var_count++;
-  var_table->addid(identifier, &(table->var_count));
+  int *offset = new int(table->var_count);
+  var_table->addid(identifier, offset);
   emit_push(ACC, s);
+
+  // Evaluate the body
   body->code(table, s);
+
+  // Move SP back up since the variable is now out of scope
+  emit_addiu(SP, SP, 4, s);
 }
 
 void plus_class::code(CgenClassTableP table, ostream &s) {
@@ -1654,6 +1710,7 @@ void object_class::code(CgenClassTableP table, ostream &s)
   if (var_table->probe(name) != NULL){
     int offset = *(var_table->probe(name));
     emit_load(ACC,-offset,FP,s);
+    cerr << name << " " << offset << endl;
     return;
   }
 
