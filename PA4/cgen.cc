@@ -655,7 +655,16 @@ void CgenClassTable::create_implementation_map(CgenNodeP p, std::vector<Method> 
       num_methods++;
       Method m(class_name, features->nth(i)->get_name());
       methods.push_back(m);
-      implementation_map[m] = features->nth(i);
+
+      Formals formals = features->nth(i)->get_formals();
+      std::vector<Symbol> formal_names;
+      for(int i = formals->first(); formals->more(i); i = formals->next(i)) {
+        formal_names.push_back(formals->nth(i));
+        // Feature* method_P = new Feature(features->nth(i));
+        // Feature method = *method_P;
+        // method = features->nth(i);
+      }
+      implementation_map[m] = formal_names;
     }
   }
 
@@ -681,7 +690,9 @@ void CgenClassTable::create_class_map(CgenNodeP p, std::vector<Symbol> attribute
     }
   }
 
-  std::vector<Symbol> class_attributes = attributes;
+  std::vector<Symbol>* class_attributesP = new std::vector<Symbol>(attributes);
+  std::vector<Symbol> class_attributes = *class_attributesP;
+  // class_attributes = attributes;
   class_map[p->get_name()] = class_attributes;
 
   List<CgenNode> *children = p->get_children(); 
@@ -1574,6 +1585,34 @@ void no_expr_class::code(CgenClassTableP table, ostream &s) {
 
 void object_class::code(CgenClassTableP table, ostream &s) {
   Method m(type_name, name);
+
+  Feature method = table->implementation_map[m];
+  // Here is where we crash
+  std::vector<Symbol> formal_names = method->get_formals();
+
+  cerr << "Here we are" << endl;
+  int offset = -1;
+  if (table->probe(name) != NULL){
+    // offset = *(table->probe(name));
+  } else {
+    for (size_t i = 0; formals->more(i); i = formals->next(i)){
+      cerr << name << endl;
+      if (name == formals->nth(i)->get_name()){
+        emit_load(ACC,i,FP,s);
+      }
+    }
+    if (offset == -1){
+      auto class_ = table->lookup(SELF_TYPE);
+      if (table->class_map.find(class_->get_name()) != table->class_map.end()){
+        std::vector<Symbol> v = table->class_map[class_->get_name()];
+        for (size_t i = 0; i < v.size(); i++){
+          if (name == v[i]){
+            emit_load(ACC,i,SELF,s);
+          }
+        }
+      }
+    }
+  }
   //Feature implementation = table->get_implementation_map[m];
 
 }
