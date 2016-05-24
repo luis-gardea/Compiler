@@ -17,6 +17,8 @@ typedef CgenClassTable *CgenClassTableP;
 class CgenNode;
 typedef CgenNode *CgenNodeP;
 
+typedef std::pair<Symbol, Symbol> Method;
+
 class CgenClassTable : public SymbolTable<Symbol,CgenNode> {
 private:
    List<CgenNode> *nds;
@@ -25,7 +27,9 @@ private:
    int intclasstag;
    int boolclasstag;
    std::map<Symbol, int> classTag_map;
-
+   std::map<Method, Feature> implementation_map;
+   std::map<Symbol, std::vector<Symbol>> class_map;
+   int label_counter;
 
 
 // The following methods emit code for
@@ -48,6 +52,8 @@ private:
    void build_inheritance_tree();
    void set_relations(CgenNodeP nd);
    void set_class_tags(CgenNodeP p, int& counter);
+   void create_implementation_map(CgenNodeP p, std::vector<Method> methods);
+   void create_class_map(CgenNodeP p, std::vector<Symbol> attributes);
 
 // Helper functions to code the tables and object initializations of all methods.
 
@@ -55,12 +61,14 @@ private:
    void code_class_nameTab();
    void code_class_objTab();
    void code_dispTabs(CgenNodeP p, std::vector<std::pair<Symbol, Symbol>> methods);
-   void code_object_inits();
+   void code_object_inits(CgenNodeP p, int num_inherited_attributes, CgenClassTableP table);
+   void code_class_methods();
 
 public:
    CgenClassTable(Classes, ostream& str);
    void code();
    CgenNodeP root();
+   int new_label() { label_counter++; return label_counter; };
 };
 
 
@@ -87,7 +95,8 @@ public:
    void code_class_objTab(ostream& s);
    void code_dispTab(ostream& s, std::vector<std::pair<Symbol, Symbol>> methods);
    Symbol get_name() { return name; }
-   void code_object_init(ostream& s);
+   void code_object_init(ostream& s, int num_inherited_attributes, int& num_self_attributes, CgenClassTableP table);
+   void code_class_method(CgenClassTableP table, ostream& s);
 };
 
 class BoolConst 

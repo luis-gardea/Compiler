@@ -188,7 +188,9 @@ public:
    }
    Feature copy_Feature();
    void dump(ostream& stream, int n);
-   Symbol get_type() { return return_type; } 
+   Symbol get_type() { return return_type; }
+   void code(CgenClassTableP table, ostream& s) { expr->code(table, s); } 
+   Formals get_formals() { return formals; }
 
 #ifdef Feature_SHARED_EXTRAS
    Feature_SHARED_EXTRAS
@@ -215,6 +217,8 @@ public:
    Feature copy_Feature();
    void dump(ostream& stream, int n);
    Symbol get_type() { return type_decl; } 
+   void code(CgenClassTableP table, ostream& s) { init->code(table, s); } 
+   Formals get_formals() { return NULL; }
 
 #ifdef Feature_SHARED_EXTRAS
    Feature_SHARED_EXTRAS

@@ -230,6 +230,9 @@ static void emit_jalr(char *dest, ostream& s)
 static void emit_jal(char *address,ostream &s)
 { s << JAL << address << endl; }
 
+static void emit_partial_jal(ostream &s)
+{ s << JAL; }
+
 static void emit_return(ostream& s)
 { s << RET << endl; }
 
@@ -242,6 +245,12 @@ static void emit_disptable_ref(Symbol sym, ostream& s)
 static void emit_init_ref(Symbol sym, ostream& s)
 { s << sym << CLASSINIT_SUFFIX; }
 
+static void emit_init_def(Symbol sym, ostream& s)
+{ 
+  emit_init_ref(sym, s);
+  s << ":" << endl;
+}
+
 static void emit_label_ref(int l, ostream &s)
 { s << "label" << l; }
 
@@ -250,6 +259,15 @@ static void emit_protobj_ref(Symbol sym, ostream& s)
 
 static void emit_method_ref(Symbol classname, Symbol methodname, ostream& s)
 { s << classname << METHOD_SEP << methodname; }
+
+static void emit_method_def(Symbol classname, Symbol methodname, ostream& s)
+{ 
+  emit_method_ref(classname, methodname, s);
+  s << ":" << endl;
+}
+
+static void emit_jal_method(Symbol classname, Symbol methodname, ostream& s)
+{ s << JAL << classname << METHOD_SEP << methodname << endl; }
 
 static void emit_label_def(int l, ostream &s)
 {
@@ -620,6 +638,62 @@ void CgenClassTable::set_class_tags(CgenNodeP p, int& counter) {
   }
 }
 
+void CgenClassTable::create_implementation_map(CgenNodeP p, std::vector<Method> methods)
+{
+  Symbol class_name = p->get_name();
+
+  for (auto parent_method : methods) {
+    Symbol parent_method_name = parent_method.second;
+    Method m(class_name, parent_method_name);
+    implementation_map[m] = implementation_map[parent_method];
+  }
+
+  int num_methods = 0;
+  Features features = p->get_features();
+  for(int i = features->first(); features->more(i); i = features->next(i)) {
+    if (features->nth(i)->get_feature_type() == "Method") {
+      num_methods++;
+      Method m(class_name, features->nth(i)->get_name());
+      methods.push_back(m);
+      implementation_map[m] = features->nth(i);
+    }
+  }
+
+  List<CgenNode> *children = p->get_children(); 
+  for(List<CgenNode> *l = children; l; l = l->tl()) {
+    create_implementation_map(l->hd(), methods);
+  }
+
+  for(int i = 0; i < num_methods; i++) {
+    methods.pop_back();
+  }
+}
+
+void CgenClassTable::create_class_map(CgenNodeP p, std::vector<Symbol> attributes) 
+{
+  int num_attributes = 0;
+
+  Features features = p->get_features();
+  for(int i = features->first(); features->more(i); i = features->next(i)) {
+    if (features->nth(i)->get_feature_type() == "Attribute") {
+      num_attributes++;
+      attributes.push_back(features->nth(i)->get_name());
+    }
+  }
+
+  std::vector<Symbol> class_attributes = attributes;
+  class_map[p->get_name()] = class_attributes;
+
+  List<CgenNode> *children = p->get_children(); 
+  for(List<CgenNode> *l = children; l; l = l->tl()) {
+    create_class_map(l->hd(), attributes);
+  }
+
+  for(int i = 0; i < num_attributes; i++) {
+    attributes.pop_back();
+  }
+}
+
 CgenClassTable::CgenClassTable(Classes classes, ostream& s) : nds(NULL) , str(s)
 {
    stringclasstag = 4;
@@ -633,11 +707,13 @@ CgenClassTable::CgenClassTable(Classes classes, ostream& s) : nds(NULL) , str(s)
    install_classes(classes);
    build_inheritance_tree();
 
-  if (cgen_debug) cout << "setting class tags" << endl;
+  if (cgen_debug) cout << "building maps" << endl;
   int classTag = 0;
   classTag_map[Object] = 0;
 
   set_class_tags(root(), classTag);
+  create_implementation_map(root(), std::vector<Method>());
+  create_class_map(root(), std::vector<Symbol>());
 
    code();
    exitscope();
@@ -950,43 +1026,112 @@ void CgenNode::code_dispTab(ostream& s, std::vector<std::pair<Symbol, Symbol>> m
   }                                        
 }
 
-void CgenClassTable::code_object_inits() {
-  for(List<CgenNode> *l = nds; l; l = l->tl()) {
-    l->hd()->code_object_init(str);
+void CgenClassTable::code_object_inits(CgenNodeP p, int num_inherited_attributes, CgenClassTableP table) {
+  int num_self_attributes = 0;
+  p->code_object_init(str, num_inherited_attributes, num_self_attributes, table);
+
+  List<CgenNode> *children = p->get_children(); 
+  for(List<CgenNode> *l = children; l; l = l->tl()) {
+    code_object_inits(l->hd(), (num_inherited_attributes + num_self_attributes), table);
   }
 }
 
 static void emit_jal_init(Symbol name, ostream &s)
 { s << JAL << name << CLASSINIT_SUFFIX << endl; }
 
-void CgenNode::code_object_init(ostream& s) {
-  emit_init_ref(name, s);
-  s << endl;
+void emit_method_setup(ostream& s) 
+{
+  // Move stack pointer down predefined 3 spaces
   emit_addiu(SP, SP, -12, s);
+  // Don't let FP get clobbered
   emit_store(FP, 3, SP, s);
+  // Don't let SELF get clobbered
   emit_store(SELF, 2, SP, s);
-  emit_store(RA, 1, SP, s);
-  emit_addiu(FP, SP, 4, s);
-  emit_move(SELF, ACC, s);
-  if (parentnd->get_name() != No_class) {
-    emit_jal_init(parentnd->get_name(), s);
-  }
-  for(int i = features->first(); features->more(i); i = features->next(i)) {
-    Feature feature = features->nth(i);
-    if (feature->get_feature_type() == "Attribute" && feature->get_type() != No_type) {
-      emit_partial_load_address(ACC, s);
-      emit_const_ref(feature->get_type(),s);
-      s << endl;
+  // Don't let FP get clobbered
+  emit_store(SELF, 1, SP, s);
 
-      emit_store(ACC, 3 + i, SELF, s);
-    }
-  }
-  emit_move(ACC, SELF, s);
+  // Move FP down- we are starting a new frame
+  // **Note: args are 12 + 4*n up from FP
+  emit_addiu(FP, SP, 4, s);
+  // Move self into SELF
+  emit_move(SELF, ACC ,s);
+}
+
+void emit_method_cleanup(int n, ostream& s) 
+{
+  //re-load, RA, SELF, and FP
   emit_load(FP, 3, SP, s);
   emit_load(SELF, 2, SP, s);
   emit_load(RA, 1, SP, s);
-  emit_addiu(SP, SP, 12, s);
+
+
+  //calculate size of activation
+  int z = 4*n + 12;
+
+  //move stack pointer up past space that calle used, plus the arguments to the
+  // that are right above where FP was stored
+  emit_addiu(SP, SP, z, s);
   emit_return(s);
+
+}
+
+// Init methods are called after an object of type *name* is created on heap. Pointer o that object is in ACC
+// We want to initilize all atttributes of the object with values from the init expressions
+void CgenNode::code_object_init(ostream& s, int num_inherited_attributes, int& num_self_attributes, CgenClassTableP table) {
+  // Treat this like any other method call, no parameters
+  emit_init_def(name, s);
+  emit_method_setup(s);
+
+  // Object is the root
+  if (parentnd->get_name() != No_class)
+    emit_jal_init(parentnd->get_name(), s);
+ 
+  // Initialize all attributes of object
+  if (basic_status == NotBasic) {
+    for(int i = features->first(); features->more(i); i = features->next(i)) {
+      Feature attribute = features->nth(i);
+      if (attribute->get_feature_type() == "Attribute" && attribute->get_type() != No_type) {
+        num_self_attributes++;
+        attribute->code(table, s);
+
+        // Return value of attribute is left in a0 (ACC). We want to store this value (which is always a reference to an object)
+        // in the correct position in the object we are initializing. Initialization object reference is s0 (SELF).
+        emit_store(ACC, 2 + num_inherited_attributes + num_self_attributes, SELF, s);
+      }
+    }
+  }
+
+  // When we leave this method, we want ACC to point to the object in the heap
+  // We stored the object in SELF, so we put self back in AC because self is the return value of the init method
+  emit_move(ACC, SELF, s);
+  emit_method_cleanup(0, s);
+}
+
+void CgenClassTable::code_class_methods() {
+  for(List<CgenNode> *l = nds; l; l = l->tl()) {
+    l->hd()->code_class_method(this, str);
+  }
+}
+
+void CgenNode::code_class_method(CgenClassTableP table, ostream& s) 
+{
+  if (basic_status == NotBasic) {
+    for(int i = features->first(); features->more(i); i = features->next(i)) {
+      Feature method = features->nth(i);
+      if (method->get_feature_type() == "Method") {
+        // Emit label and method setup
+        emit_method_def(name, method->get_name(), s);
+        emit_method_setup(s);
+
+        // Evaluate the expression of the method
+        method->code(table, s);
+
+        // Make sure to clean up parameters placed on stack by caller before we return
+        int n = method->get_formals()->len();
+        emit_method_cleanup(n, s);
+      }
+    }
+  } 
 }
 
 
@@ -1023,10 +1168,13 @@ void CgenClassTable::code()
   code_global_text();
 
   if (cgen_debug) cout << "coding object initializers" << endl;
-  code_object_inits();
+  code_object_inits(root(), 0, this);
+
+  if (cgen_debug) cout << "coding class methods" << endl;
+  code_class_methods();
 
 //                 Add your code to emit
-//                   - object initializer
+//                   - object initializer --check
 //                   - the class methods
 //                   - etc...
 
@@ -1065,85 +1213,285 @@ CgenNode::CgenNode(Class_ nd, Basicness bstatus, CgenClassTableP ct) :
 //
 //*****************************************************************
 
-void assign_class::code(ostream &s) {
+void assign_class::code(CgenClassTableP table, ostream &s) {
 }
 
-void static_dispatch_class::code(ostream &s) {
+void static_dispatch_class::code(CgenClassTableP table, ostream &s) 
+{
+  //Push parameters onto stack, first is highest, last is lowest
+  for (int i = actual->first(); actual->more(i); i = actual->next(i)) {
+    //evaluate expr
+    actual->nth(i)->code(table, s);
+
+    // push object onto stack in preparation for method call
+    emit_push(ACC, s);
+  }
+
+  // Evaluate e0 to get object we are dispatching on.
+  // This object becomes self
+  expr->code(table, s);
+  emit_move(SELF, ACC, s);
+
+  // Jump to method code
+  emit_jal_method(type_name, name, s);
 }
 
-void dispatch_class::code(ostream &s) {
+void dispatch_class::code(CgenClassTableP table, ostream &s) 
+{
+  //Push parameters onto stack, first is highest, last is lowest
+  for (int i = actual->first(); actual->more(i); i = actual->next(i)) {
+    //evaluate expr
+    actual->nth(i)->code(table, s);
+
+    // push object onto stack in preparation for method call
+    emit_push(ACC, s);
+  }
+
+  // Evaluate e0 to get object we are dispatching on.
+  // This object becomes self
+  expr->code(table, s);
+  emit_move(SELF, ACC, s);
+
+  // Jump to method code
+  Symbol class_name = expr->get_type();
+  emit_jal_method(class_name, name, s);
 }
 
-void cond_class::code(ostream &s) {
+void cond_class::code(CgenClassTableP table, ostream &s) 
+{
+  pred->code(table, s);
+  emit_push(ACC, s);
+  emit_load_bool(ACC, BoolConst(0), s);
+  s << endl;
+  emit_load(T1, 4, SP, s);
+  emit_addiu(SP, SP, 4, s);
+
+  int false_branch = table->new_label();
+  int true_branch = table->new_label();
+  int end_if = table->new_label();
+
+  emit_bne(ACC, T1, true_branch, s);
+
+  emit_label_ref(false_branch, s);
+  else_exp->code(table, s);
+  emit_branch(end_if, s);
+
+  emit_label_ref(true_branch, s);
+  then_exp->code(table, s);
+
+  emit_label_ref(end_if, s);
 }
 
-void loop_class::code(ostream &s) {
+void loop_class::code(CgenClassTableP table, ostream &s) {
 }
 
-void typcase_class::code(ostream &s) {
+void typcase_class::code(CgenClassTableP table, ostream &s) {
 }
 
-void block_class::code(ostream &s) {
+void block_class::code(CgenClassTableP table, ostream &s) {
 }
 
-void let_class::code(ostream &s) {
+void let_class::code(CgenClassTableP table, ostream &s) {
 }
 
-void plus_class::code(ostream &s) {
+void plus_class::code(CgenClassTableP table, ostream &s) {
+  //eval e1 and push result to stack
+  e1->code(table, s);
+  emit_push(ACC, s);
+
+  //eval e2 
+  e2->code(table, s);
+
+  // Get value within e2 int object
+  emit_fetch_int(ACC, ACC, s);
+
+  // Get value within e1 int object
+  emit_load(T1, 1, SP, s);
+  emit_fetch_int(T1, T1, s);
+
+  //perform computation, push onto stack
+  emit_add(T1, T1, ACC, s);
+  emit_push(T1, s);
+
+  //load ACC with int object and create new int object on heap
+  emit_load(ACC, 2, SP, s);
+  emit_jal_method(Object, idtable.lookup_string("copy"), s);
+
+  // Store sum in new int object
+  emit_load(T1, 1, SP, s);
+  emit_store_int(T1, ACC, s);
+
+  //Return stack pointer to orginal location
+  emit_addiu(SP, SP, 8, s);
+
+  //ACC contains pointer to new object on heap
 }
 
-void sub_class::code(ostream &s) {
+void sub_class::code(CgenClassTableP table, ostream &s) {
+  //eval e1 and push result to stack
+  e1->code(table, s);
+  emit_push(ACC, s);
+
+  //eval e2 
+  e2->code(table, s);
+
+  // Get value within e2 int object
+  emit_fetch_int(ACC, ACC, s);
+
+  // Get value within e1 int object
+  emit_load(T1, 1, SP, s);
+  emit_fetch_int(T1, T1, s);
+
+  //perform computation, place result in T1
+  emit_sub(T1, T1, ACC, s);
+
+  //load ACC with int object and create new int object on heap
+  emit_load(ACC, 1, SP, s);
+  emit_jal_method(Object, idtable.lookup_string("copy"), s);
+
+  // Store in new int object
+  emit_store_int(T1, ACC, s);
+
+  //Return stack pointer to orginal location
+  emit_addiu(SP, SP, 4, s);
+
+  //ACC contains pointer to new object on heap
 }
 
-void mul_class::code(ostream &s) {
+void mul_class::code(CgenClassTableP table, ostream &s) {
+  //eval e1 and push result to stack
+  e1->code(table, s);
+  emit_push(ACC, s);
+
+  //eval e2 
+  e2->code(table, s);
+
+  // Get value within e2 int object
+  emit_fetch_int(ACC, ACC, s);
+
+  // Get value within e1 int object
+  emit_load(T1, 1, SP, s);
+  emit_fetch_int(T1, T1, s);
+
+  //perform computation, place result in T1
+  emit_mul(T1, T1, ACC, s);
+
+  //load ACC with int object and create new int object on heap
+  emit_load(ACC, 1, SP, s);
+  emit_jal_method(Object, idtable.lookup_string("copy"), s);
+
+  // Store in new int object
+  emit_store_int(T1, ACC, s);
+
+  //Return stack pointer to orginal location
+  emit_addiu(SP, SP, 4, s);
+
+  //ACC contains pointer to new object on heap
 }
 
-void divide_class::code(ostream &s) {
+void divide_class::code(CgenClassTableP table, ostream &s) {
+  //eval e1 and push result to stack
+  e1->code(table, s);
+  emit_push(ACC, s);
+
+  //eval e2 
+  e2->code(table, s);
+
+  // Get value within e2 int object
+  emit_fetch_int(ACC, ACC, s);
+
+  // Get value within e1 int object
+  emit_load(T1, 1, SP, s);
+  emit_fetch_int(T1, T1, s);
+
+  //perform computation, place result in T1
+  emit_div(T1, T1, ACC, s);
+
+  //load ACC with int object and create new int object on heap
+  emit_load(ACC, 1, SP, s);
+  emit_jal_method(Object, idtable.lookup_string("copy"), s);
+
+  // Store in new int object
+  emit_store_int(T1, ACC, s);
+
+  //Return stack pointer to orginal location
+  emit_addiu(SP, SP, 4, s);
+
+  //ACC contains pointer to new object on heap
 }
 
-void neg_class::code(ostream &s) {
+void neg_class::code(CgenClassTableP table, ostream &s) {
+  e1->code(table, s);
+  emit_neg(ACC, ACC, s);
 }
 
-void lt_class::code(ostream &s) {
+void lt_class::code(CgenClassTableP table, ostream &s) {
 }
 
-void eq_class::code(ostream &s) {
+void eq_class::code(CgenClassTableP table, ostream &s) {
 }
 
-void leq_class::code(ostream &s) {
+void leq_class::code(CgenClassTableP table, ostream &s) {
 }
 
-void comp_class::code(ostream &s) {
+void comp_class::code(CgenClassTableP table, ostream &s) {
+  e1->code(table, s);
+  emit_store(ACC, 0, SP, s);
+  emit_addiu(SP, SP, -4, s);
+  emit_load_bool(ACC, BoolConst(0), s);
+  emit_load(T1, 4, SP, s);
+  emit_addiu(SP, SP, 4, s);
+
+  int end_comp = table->new_label();
+  emit_bne(ACC, T1, end_comp, s);
+
+  emit_load_bool(ACC, BoolConst(1), s);
+  s << endl;
+
+  emit_label_ref(end_comp, s);
 }
 
-void int_const_class::code(ostream& s)  
+void int_const_class::code(CgenClassTableP table, ostream& s)  
 {
   //
   // Need to be sure we have an IntEntry *, not an arbitrary Symbol
   //
-  emit_load_int(ACC,inttable.lookup_string(token->get_string()),s);
+  if (true)
+    emit_load_int(ACC,inttable.lookup_string(token->get_string()),s);
 }
 
-void string_const_class::code(ostream& s)
+void string_const_class::code(CgenClassTableP table, ostream& s)
 {
-  emit_load_string(ACC,stringtable.lookup_string(token->get_string()),s);
+  if (true)
+    emit_load_string(ACC,stringtable.lookup_string(token->get_string()),s);
 }
 
-void bool_const_class::code(ostream& s)
+void bool_const_class::code(CgenClassTableP table, ostream& s)
 {
   emit_load_bool(ACC, BoolConst(val), s);
 }
 
-void new__class::code(ostream &s) {
+void new__class::code(CgenClassTableP table, ostream &s) 
+{
+  emit_partial_load_address(ACC, s);
+  emit_protobj_ref(type_name, s);
+  s << endl;
+  emit_jal_method(Object, idtable.lookup_string("copy"), s);
+  emit_partial_jal(s);
+  emit_init_ref(type_name, s);
+  s << endl;
 }
 
-void isvoid_class::code(ostream &s) {
+void isvoid_class::code(CgenClassTableP table, ostream &s) {
 }
 
-void no_expr_class::code(ostream &s) {
+void no_expr_class::code(CgenClassTableP table, ostream &s) {
 }
 
-void object_class::code(ostream &s) {
+void object_class::code(CgenClassTableP table, ostream &s) {
+  Method m(type_name, name);
+  //Feature implementation = table->get_implementation_map[m];
+
 }
 
 
