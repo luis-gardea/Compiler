@@ -1573,7 +1573,7 @@ void no_expr_class::code(CgenClassTableP table, ostream &s) {
 }
 
 void object_class::code(CgenClassTableP table, ostream &s) {
-  Method m(type_name, name);
+  //Method m(type_name, name);
   //Feature implementation = table->get_implementation_map[m];
 
 }
