@@ -1482,6 +1482,22 @@ void cond_class::code(CgenClassTableP table, ostream &s)
 }
 
 void loop_class::code(CgenClassTableP table, ostream &s) {
+  int current_loop = table->new_label();
+  emit_label_def(current_loop,s);
+
+  pred->code(table,s);
+
+  emit_load(T1,3,ACC,s);
+  int end_loop = table->new_label();
+  emit_beq(T1,ZERO,end_loop,s);
+
+  body->code(table,s);
+
+  emit_branch(current_loop,s);
+
+  emit_label_def(end_loop,s);
+
+  emit_move(ACC,ZERO,s);
 }
 
 void typcase_class::code(CgenClassTableP table, ostream &s) 
@@ -1663,12 +1679,64 @@ void neg_class::code(CgenClassTableP table, ostream &s) {
 }
 
 void lt_class::code(CgenClassTableP table, ostream &s) {
+  e1->code(table,s);
+  emit_push(ACC,s);
+  e2->code(table,s);
+
+  emit_fetch_int(ACC, ACC, s);
+  emit_load(T1,1,SP,s);
+  emit_fetch_int(T1,T1,s);
+  int true_label = table->new_label();
+  emit_addiu(SP,SP,4,s);
+  emit_blt(T1,ACC,true_label,s);
+  emit_load_bool(ACC, BoolConst(0), s);
+
+  int end_lt = table->new_label();
+  emit_branch(end_lt,s);
+
+  emit_label_def(true_label,s);
+  emit_load_bool(ACC, BoolConst(1), s);
+  emit_label_def(end_lt,s);
 }
 
 void eq_class::code(CgenClassTableP table, ostream &s) {
+  e1->code(table,s);
+  emit_push(ACC,s);
+  e2->code(table,s);
+
+  emit_load(T1,1,SP,s);
+  emit_move(T2, ACC, s);
+
+  emit_load_bool(ACC, BoolConst(1), s);
+
+  int end_eq = table->new_label();
+  emit_beq(T1, T2, end_eq, s);
+
+  emit_load_bool(A1, BoolConst(0), s);
+  emit_addiu(SP,SP,4,s);
+  emit_jal("equality_test", s);
+  emit_label_def(end_eq, s);
 }
 
 void leq_class::code(CgenClassTableP table, ostream &s) {
+  e1->code(table,s);
+  emit_push(ACC,s);
+  e2->code(table,s);
+
+  emit_fetch_int(ACC, ACC, s);
+  emit_load(T1,1,SP,s);
+  emit_fetch_int(T1,T1,s);
+  int true_label = table->new_label();
+  emit_addiu(SP,SP,4,s);
+  emit_bleq(T1,ACC,true_label,s);
+  emit_load_bool(ACC, BoolConst(0), s);
+
+  int end_lt = table->new_label();
+  emit_branch(end_lt,s);
+
+  emit_label_def(true_label,s);
+  emit_load_bool(ACC, BoolConst(1), s);
+  emit_label_def(end_lt,s);
 }
 
 void comp_class::code(CgenClassTableP table, ostream &s) {

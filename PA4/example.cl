@@ -5,7 +5,7 @@
 
 class Main {
 	main():Object {
-	    case b of
+	    (*case b of
 	      a:Int => 1;
 	      b:Bool => 2;
 	      c:Object => 3;
@@ -14,11 +14,24 @@ class Main {
 	      e:C => 6;
 	      g:String => 7;
 	      h:D => 8;
-	    esac
-	};
+	    esac*)
+	    --a = b
 
-	b:B <- new B;
+	    while d = io loop
+	    	{
+	    		io.out_string("equal\n");
+	    	}
+	    pool
+	};
+	io:IO <- new IO;
+	d:IO <- io;
+	a : A <- new A;
+	b : B <- new B;
+	x:Bool <- true;
 };
+
+class A {};
+class B {};
     
     (*let io : IO <- new IO, b: B <- new B, a : Int <- a + 5, c : Int <- 7, d : Int <- c + k in {
       --io.out_string(j);
@@ -49,11 +62,11 @@ class Main {
 };
 *)
 
-class B inherits Main {
+(*class B inherits Main {
   m(a:Int) : Int {
     a+7
   };
-};
+};*)
 
 class C inherits B {
 
