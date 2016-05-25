@@ -26,7 +26,6 @@ private:
    int stringclasstag;
    int intclasstag;
    int boolclasstag;
-   std::map<Symbol, int> classTag_map;
    int label_counter;
 
 
@@ -73,6 +72,7 @@ public:
    std::map<Symbol, std::vector<Symbol>> disp_tables;
    std::map<Method, std::vector<Symbol>> implementation_map;
    std::map<Symbol, std::vector<Symbol>> class_map;
+   std::map<Symbol, int> classTag_map;
 };
 
 

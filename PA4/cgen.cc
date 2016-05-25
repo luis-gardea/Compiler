@@ -942,7 +942,7 @@ void CgenClassTable::code_protObjs(CgenNodeP p, std::vector<Feature> attributes)
   }
 }
 
-static void emit_const_ref(Symbol type, ostream &s)
+static void emit_default_const_ref(Symbol type, ostream &s)
 { 
     if (type == Str)
       stringtable.lookup_string("")->code_ref(s);
@@ -952,6 +952,17 @@ static void emit_const_ref(Symbol type, ostream &s)
       BoolConst(0).code_ref(s);
     else
       s << "0"; 
+}
+
+static void emit_default_init(Symbol type, ostream &s) {
+  if (type == Str)
+    emit_load_string(ACC,stringtable.lookup_string(""),s);
+  else if (type == Int)
+    emit_load_int(ACC,inttable.lookup_string("0"),s);
+  else if (type == Bool) 
+    emit_load_bool(ACC, BoolConst(0), s);
+  else
+    emit_move(ACC, ZERO, s); 
 }
 
 void CgenNode::code_protObj(ostream& s, std::vector<Feature> attributes, int classTag) 
@@ -971,7 +982,7 @@ void CgenNode::code_protObj(ostream& s, std::vector<Feature> attributes, int cla
   for(Feature attr : attributes) { // attributes
     s << WORD; 
     Symbol type = attr->get_type();
-    emit_const_ref(type, s);
+    emit_default_const_ref(type, s);
     s << endl;
   }                                        
 }
@@ -1232,7 +1243,6 @@ void CgenClassTable::code()
 
 }
 
-
 CgenNodeP CgenClassTable::root()
 {
    return probe(Object);
@@ -1433,6 +1443,7 @@ void dispatch_class::code(CgenClassTableP table, ostream &s)
     expr_type = (table->lookup(SELF_TYPE))->get_name();
   }
   auto method_names = table->disp_tables[expr_type];
+  //cerr << expr_type << " " << name << endl;
 
   size_t i;
   for (i = 0; i < method_names.size(); i++) {
@@ -1473,7 +1484,13 @@ void cond_class::code(CgenClassTableP table, ostream &s)
 void loop_class::code(CgenClassTableP table, ostream &s) {
 }
 
-void typcase_class::code(CgenClassTableP table, ostream &s) {
+void typcase_class::code(CgenClassTableP table, ostream &s) 
+{
+  // expr->code(table, s);
+  // std::vector<std::tuple<Symbol, int>> branches;
+  // for(int i = cases->first(); cases->more(i); i = cases->next(i)) {
+  //   branches.push_back(std::make_tuple(cases->nth(i)->get_type(), cases->nth(i));
+  // }
 }
 
 void block_class::code(CgenClassTableP table, ostream &s) {
@@ -1484,8 +1501,19 @@ void block_class::code(CgenClassTableP table, ostream &s) {
 
 void let_class::code(CgenClassTableP table, ostream &s) 
 {
+
   // Evaluate init expression
   init->code(table, s);
+  Symbol init_type = init->get_type();
+
+  // if (init_type != NULL)
+  //   cerr << init_type << " " << type_decl << endl;
+  // cerr << "HEREEE";
+
+  if(init_type == NULL) {
+    
+    emit_default_init(type_decl, s);
+  }
 
   // We are introducing a variable on the stack
   // We need to keep track of the offset from fp
@@ -1710,7 +1738,6 @@ void object_class::code(CgenClassTableP table, ostream &s)
   if (var_table->probe(name) != NULL){
     int offset = *(var_table->probe(name));
     emit_load(ACC,-offset,FP,s);
-    cerr << name << " " << offset << endl;
     return;
   }
 

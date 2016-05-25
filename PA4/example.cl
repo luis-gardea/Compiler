@@ -5,13 +5,22 @@
 
 class Main {
 	main():Object {
-    let io : IO <- new IO, b: B <- new B in {
+    (*case true of
+      a:Int => a;
+
+  };
+}*)
+    
+    let io : IO <- new IO, b: B <- new B, a : Int <- a + 5, c : Int <- 7, d : Int <- c + k in {
       --io.out_string(j);
       --j <- "\nnew string\n";
 		  io@IO.out_int(b.m(7));
       --io@IO.out_string(j);
       --io.out_int(k);
       io.out_int(m(7));
+      io.out_int(a);
+      io.out_int(c);
+      io.out_int(d);
     }
     --(new IO).out_int((new B).m())
 	};
