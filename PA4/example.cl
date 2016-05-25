@@ -5,18 +5,37 @@
 
 class Main {
 	main():Object {
-	    case b of
-	      a:Int => 2;
-	      c:Object => 0;
-	      --d:Main => 5;
-	      --f:B => 5;
-	      --e:C => 6;
-	      h:D => 8;
+	    case y of
+	      a:Int => io.out_int(a + 5 + a + a);
+	      c:Object => io.out_int(2);
+	      b:Bool => io.out_int(3);
+	      d:Main => io.out_int(4);
+        --e:A => io.out_int(5);
+	      --f:B => io.out_int(6);
+	      --g:C => io.out_int(7);
+	      h:D => io.out_int(8);
 	    esac
-	};
+	    --a = b
 
-	b:B <- new B;
+	    (*while d = io loop
+	    	{
+	    		io.out_string("equal\n");
+	    	}
+	    pool*)
+	};
+  y:Int <-2;
+	io:IO <- new IO;
+	--a : A <- new A;
+	--b : B <- new B;
+  --c : C <- new C;
+  --d : D <- new D;
+	x:Bool <- true;
 };
+
+class A {};
+class B inherits A {};
+class C inherits B {};
+class D inherits C {};
     
     (*let io : IO <- new IO, b: B <- new B, a : Int <- a + 5, c : Int <- 7, d : Int <- c + k in {
       --io.out_string(j);
@@ -47,19 +66,13 @@ class Main {
 };
 *)
 
-class B inherits Main {
+(*class B inherits Main {
   m(a:Int) : Int {
     a+7
   };
-};
+};*)
 
-class C inherits B {
 
-};
-
-class D inherits Main {
-
-};
 
 
 

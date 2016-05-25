@@ -1264,6 +1264,33 @@ CgenNode::CgenNode(Class_ nd, Basicness bstatus, CgenClassTableP ct) :
    stringtable.add_string(name->get_string());          // Add class name to string table
 }
 
+int CgenNode::closest_ancestor(std::vector<Symbol> types) 
+{
+  for (size_t i = 0; i < types.size(); i++) {
+    if (types[i] == name) {
+      return i; 
+    }
+  }
+
+  if (get_parent_name() != No_class) {
+    return get_parentnd()->closest_ancestor(types);
+  } else {
+    return -1;
+  }
+  
+  // CgenNode closest_ancestor = get_parentnd();
+
+  // while (closest_ancestor->get_parent_name() != No_class) {
+  //   closest_ancestor = closest_ancestor->get_parentnd();
+  //   for (size_t i = 0; i < types.size(); i++) {
+  //     if (types[i] == closest_ancestor->get_name()) {
+  //       return i; 
+  //     }
+  //   }
+  // }
+
+  // return -1;
+}
 
 //******************************************************************
 //
@@ -1482,15 +1509,118 @@ void cond_class::code(CgenClassTableP table, ostream &s)
 }
 
 void loop_class::code(CgenClassTableP table, ostream &s) {
+  int current_loop = table->new_label();
+  emit_label_def(current_loop,s);
+
+  pred->code(table,s);
+
+  emit_load(T1,3,ACC,s);
+  int end_loop = table->new_label();
+  emit_beq(T1,ZERO,end_loop,s);
+
+  body->code(table,s);
+
+  emit_branch(current_loop,s);
+
+  emit_label_def(end_loop,s);
+
+  emit_move(ACC,ZERO,s);
 }
 
 void typcase_class::code(CgenClassTableP table, ostream &s) 
 {
-  // expr->code(table, s);
-  // std::vector<std::tuple<Symbol, int>> branches;
-  // for(int i = cases->first(); cases->more(i); i = cases->next(i)) {
-  //   branches.push_back(std::make_tuple(cases->nth(i)->get_type(), cases->nth(i));
-  // }
+  // Evaluate expression
+  expr->code(table, s);
+
+  // create label to case statement
+  int case_start = table->new_label();
+  emit_bne(ACC, ZERO, case_start, s);
+
+  // case on a void, raise error
+  emit_load_string(ACC, stringtable.lookup_string(table->filename->get_string()), s);
+  emit_load_imm(T1, get_line_number(), s);
+  emit_jal("_case_abort2", s);
+
+  emit_label_def(case_start, s);
+  // Push object and Load class tag into ACC
+  emit_push(ACC, s);
+  emit_load(ACC, 0, ACC, s);
+
+  // label0 corresponds to the 1st branch, label1 to branch 2nd, etc.
+  int label = 0;
+  std::vector<int> labels;
+  std::vector<Symbol> types;
+  for(int i = cases->first(); cases->more(i); i = cases->next(i)) {
+    types.push_back(cases->nth(i)->get_type());
+
+    label = table->new_label();
+    labels.push_back(label);
+  }
+
+  // we can build a table that has the closest 
+  // ancestor for every class in the program
+  // in the case statement. 
+  // We will compare the classtag of dynamic type of expression 
+  // to all possible classes and do a predetermined jump
+  // to that class' branch
+  for(List<CgenNode> *l = table->get_classes(); l; l = l->tl()) {
+
+    // This returns the index of the closest ancenstor for class l
+    // so we can get its label to jump to
+    int idx = l->hd()->closest_ancestor(types);
+    // cerr << l->hd()->get_name() << " " << idx << endl;
+    // If we didnt find a closest ancestor in the case statement for class l,
+    // then if the dynamic type is l we should raise an error
+    if (idx != -1) {
+      // compare the dynamic tag in ACC to all class tags
+      int compare_tag = table->classTag_map[l->hd()->get_name()];
+      // cerr << compare_tag << endl;
+
+      emit_load_imm(T1, compare_tag, s);
+
+      // If we find a match, jump to that class' closest ancestor branch
+      emit_beq(ACC, T1, labels[idx], s);
+    }
+  }
+
+  // If we fall through all the class comparisons,
+  // there is no match in the case statement so we throw a 
+  // runtime error
+  emit_load(ACC, 1, SP, s);
+  emit_jal("_case_abort", s);
+
+
+  // Code the branchz
+  int j = 0;
+  int end_case = table->new_label();
+  for(int i = cases->first(); cases->more(i); i = cases->next(i)) {
+    emit_label_def(labels[j], s);
+    j++;
+    cases->nth(i)->code(table, s);
+    emit_branch(end_case, s);
+  }
+
+  //cleanup this expression
+  emit_label_def(end_case, s);
+  emit_addiu(SP, SP, 4, s);
+}
+
+void branch_class::code(CgenClassTableP table, ostream &s)
+{
+  // We are introducing a variable with init value ACC on the stack
+  // We need to keep track of the offset from fp
+  // the variable is placed, as well as which method 
+  // has access to this variable
+  table->var_count++;
+  int *offset = new int(table->var_count);
+  var_table->addid(name, offset);
+  emit_push(ACC, s);
+
+  // Evaluate the expression of the branch
+  expr->code(table, s);
+
+  // Move SP back up since the variable is now out of scope
+  emit_addiu(SP, SP, 4, s);
 }
 
 void block_class::code(CgenClassTableP table, ostream &s) {
@@ -1511,7 +1641,6 @@ void let_class::code(CgenClassTableP table, ostream &s)
   // cerr << "HEREEE";
 
   if(init_type == NULL) {
-    
     emit_default_init(type_decl, s);
   }
 
@@ -1663,12 +1792,64 @@ void neg_class::code(CgenClassTableP table, ostream &s) {
 }
 
 void lt_class::code(CgenClassTableP table, ostream &s) {
+  e1->code(table,s);
+  emit_push(ACC,s);
+  e2->code(table,s);
+
+  emit_fetch_int(ACC, ACC, s);
+  emit_load(T1,1,SP,s);
+  emit_fetch_int(T1,T1,s);
+  int true_label = table->new_label();
+  emit_addiu(SP,SP,4,s);
+  emit_blt(T1,ACC,true_label,s);
+  emit_load_bool(ACC, BoolConst(0), s);
+
+  int end_lt = table->new_label();
+  emit_branch(end_lt,s);
+
+  emit_label_def(true_label,s);
+  emit_load_bool(ACC, BoolConst(1), s);
+  emit_label_def(end_lt,s);
 }
 
 void eq_class::code(CgenClassTableP table, ostream &s) {
+  e1->code(table,s);
+  emit_push(ACC,s);
+  e2->code(table,s);
+
+  emit_load(T1,1,SP,s);
+  emit_move(T2, ACC, s);
+
+  emit_load_bool(ACC, BoolConst(1), s);
+
+  int end_eq = table->new_label();
+  emit_beq(T1, T2, end_eq, s);
+
+  emit_load_bool(A1, BoolConst(0), s);
+  emit_addiu(SP,SP,4,s);
+  emit_jal("equality_test", s);
+  emit_label_def(end_eq, s);
 }
 
 void leq_class::code(CgenClassTableP table, ostream &s) {
+  e1->code(table,s);
+  emit_push(ACC,s);
+  e2->code(table,s);
+
+  emit_fetch_int(ACC, ACC, s);
+  emit_load(T1,1,SP,s);
+  emit_fetch_int(T1,T1,s);
+  int true_label = table->new_label();
+  emit_addiu(SP,SP,4,s);
+  emit_bleq(T1,ACC,true_label,s);
+  emit_load_bool(ACC, BoolConst(0), s);
+
+  int end_lt = table->new_label();
+  emit_branch(end_lt,s);
+
+  emit_label_def(true_label,s);
+  emit_load_bool(ACC, BoolConst(1), s);
+  emit_label_def(end_lt,s);
 }
 
 void comp_class::code(CgenClassTableP table, ostream &s) {

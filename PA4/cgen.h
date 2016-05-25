@@ -2,6 +2,7 @@
 #include <utility>
 #include <vector>
 #include <map>
+#include <set>
 #include <stdio.h>
 #include "emit.h"
 #include "cool-tree.h"
@@ -73,6 +74,7 @@ public:
    std::map<Method, std::vector<Symbol>> implementation_map;
    std::map<Symbol, std::vector<Symbol>> class_map;
    std::map<Symbol, int> classTag_map;
+   List<CgenNode>* get_classes() { return nds; }
 };
 
 
@@ -92,6 +94,7 @@ public:
    List<CgenNode> *get_children() { return children; }
    void set_parentnd(CgenNodeP p);
    CgenNodeP get_parentnd() { return parentnd; }
+   Symbol get_parent_name() { return parentnd->get_name(); }
    int basic() { return (basic_status == Basic); }
    void code_protObj(ostream& s, std::vector<Feature> attributes, int classTag);
    Features get_features() { return features; }
@@ -102,6 +105,7 @@ public:
    void code_object_init(ostream& s, int num_inherited_attributes, int& num_self_attributes, CgenClassTableP table);
    void code_class_method(CgenClassTableP table, ostream& s);
    Symbol get_filename() {return filename; }
+   int closest_ancestor(std::vector<Symbol> types);
 };
 
 class BoolConst 
