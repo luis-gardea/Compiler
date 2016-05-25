@@ -6,13 +6,11 @@
 class Main {
 	main():Object {
 	    case b of
-	      a:Int => 1;
-	      b:Bool => 2;
-	      c:Object => 3;
-	      d:Main => 4;
+	      a:Int => 2;
+	      c:Object => 0;
+	      --d:Main => 5;
 	      --f:B => 5;
-	      e:C => 6;
-	      g:String => 7;
+	      --e:C => 6;
 	      h:D => 8;
 	    esac
 	};
