@@ -5,13 +5,22 @@
 
 class Main {
 	main():Object {
-    (*case true of
-      a:Int => a;
+	    case b of
+	      a:Int => 1;
+	      b:Bool => 2;
+	      c:Object => 3;
+	      d:Main => 4;
+	      --f:B => 5;
+	      e:C => 6;
+	      g:String => 7;
+	      h:D => 8;
+	    esac
+	};
 
-  };
-}*)
+	b:B <- new B;
+};
     
-    let io : IO <- new IO, b: B <- new B, a : Int <- a + 5, c : Int <- 7, d : Int <- c + k in {
+    (*let io : IO <- new IO, b: B <- new B, a : Int <- a + 5, c : Int <- 7, d : Int <- c + k in {
       --io.out_string(j);
       --j <- "\nnew string\n";
 		  io@IO.out_int(b.m(7));
@@ -28,22 +37,30 @@ class Main {
 
 	m(a:Int):Int {k + a};
 
-  j: String <- "my string\n";
+  	j: String <- "my string\n";
 
 	k: Int <- a;
 
   a:Int <- 8;
-};
+};*)
 
 (*m(x:Int):Int {
 	x+7
 };
 *)
 
-class B {
+class B inherits Main {
   m(a:Int) : Int {
     a+7
   };
+};
+
+class C inherits B {
+
+};
+
+class D inherits Main {
+
 };
 
 
