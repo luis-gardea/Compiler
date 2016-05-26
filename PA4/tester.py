@@ -11,9 +11,9 @@ if len(sys.argv) == 2:
 	filename = path[path.find('/')+1:]
 	# print filename
 	name = filename[:filename.find('.')]
-	command1 = "./mycoolc " + "tests/"+ filename;
+	command1 = "./mycoolc " + filename;
 	command2 = "mv -f " + name + ".s " + "output1"
-	command3 = "/usr/class/cs143/bin/coolc " + "tests/"+ filename
+	command3 = "/usr/class/cs143/bin/coolc " + filename
 	command4 = "mv -f " + name + ".s " + name + "ref.s"
 	command5 = "mv -f " + name + "ref.s output1" 
 	os.system(command1)

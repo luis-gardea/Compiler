@@ -3,8 +3,45 @@
     as possible.
  *)
 
-class Main {
+class Main inherits IO {
 	main():Object {
+    (*let line:String <- "Hello" in {
+      while (line = "Hello") loop {
+        out_string(line);
+        out_string("\n");
+        line <- in_string();
+      } pool;
+
+    }*)
+    
+    {
+      x <- in_string();
+      out_int(x.length());
+      x.substr(1, x.length()-2);
+      x = "quit";
+      if x="quit" then out_string("line=quit") else out_string("line!=quit") fi;
+    }
+   (*let line : String <- in_string() in
+      {
+        --out_string(line);
+        if line="quit" then out_string("line=quit") else out_string("line!=quit") fi;
+        (*while (not line="quit") loop {
+            out_string(line);
+            out_string("\n");
+            out_int(line.length());
+            out_int("quit".length());
+            line <- in_string();
+            
+        } pool;*)
+      }*)
+      
+      
+  };
+  x : String;
+};
+    
+
+    (*
     while x < 10 loop io.out_int(x <- x + 1) pool
   };
   io : IO <- new IO;
@@ -16,6 +53,7 @@ class Main {
 class A {
 
 };
+*)
     (*
 	    case y of
 	      a:Int => io.out_int(a * 5 / 0 - a);

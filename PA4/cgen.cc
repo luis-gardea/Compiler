@@ -1026,15 +1026,16 @@ void CgenClassTable::code_dispTabs(CgenNodeP p, std::vector<std::pair<Symbol, Sy
   for(int i = features->first(); features->more(i); i = features->next(i)) {
     if (features->nth(i)->get_feature_type() == "Method") {
       num_methods++;
+      bool inherited = false;
       for (size_t j = 0; j<methods.size(); j++){
         if (methods[j] == std::make_pair(p->get_parent_name(), features->nth(i)->get_name())){
-          methods.erase(methods.begin()+j);
+          methods[j] = std::make_pair(p->get_name(), features->nth(i)->get_name());
+          inherited = true;
           break;
         }
-
       }
-      
-      methods.push_back(std::make_pair(p->get_name(), features->nth(i)->get_name()));
+      if (!inherited)
+        methods.push_back(std::make_pair(p->get_name(), features->nth(i)->get_name()));
     }
   }
 
@@ -1196,6 +1197,7 @@ void CgenNode::code_class_method(CgenClassTableP table, ostream& s)
 
         // Make sure to clean up parameters placed on stack by caller before we return
         int n = method->get_formals()->len();
+        //cerr << name << " " << method->get_name() << " " << n << endl;
         emit_method_cleanup(n, s);
 
         var_table->exitscope();
@@ -1331,7 +1333,8 @@ void assign_class::code(CgenClassTableP table, ostream &s)
   std::vector<Symbol> implementation = table->implementation_map[m];
   for (size_t i = 0; i < implementation.size(); i++) {
     if (name == implementation[i]){
-      emit_store(ACC,3 + i,FP,s);
+      int pos = implementation.size() - 1 - i;
+      emit_load(ACC,3 + pos,FP,s);
       return;
     }
   }
@@ -1432,7 +1435,13 @@ void dispatch_class::code(CgenClassTableP table, ostream &s)
     expr_type = (table->lookup(SELF_TYPE))->get_name();
   }
   auto method_names = table->disp_tables[expr_type];
-  //cerr << expr_type << " " << name << endl;
+
+  //if (table->current_method == idtable.lookup_string("head")) {
+  // cerr << table->current_method << " " << expr_type << endl;
+  // for (auto method: method_names)
+  //    cerr << method << endl;
+  //    cerr << endl;
+   //}
 
   size_t i;
   for (i = 0; i < method_names.size(); i++) {
@@ -1449,20 +1458,32 @@ void cond_class::code(CgenClassTableP table, ostream &s)
 {
   pred->code(table,s);
 
-  emit_load_bool(T1, BoolConst(0), s);
-  int false_branch = table->new_label();
-
-  emit_beq(ACC, T1, false_branch, s);
-
+  emit_fetch_int(T1, ACC, s);
+  int label = table->new_label();
+  emit_beqz(T1, label, s );
   then_exp->code(table,s);
 
   int end = table->new_label();
   emit_branch(end,s);
 
-  emit_label_def(false_branch,s);
+  emit_label_def(label, s);
   else_exp->code(table,s);
-
   emit_label_def(end,s);
+
+  // emit_(T1, BoolConst(0), s);
+  // int false_branch = table->new_label();
+
+  // emit_beq(ACC, T1, false_branch, s);
+
+  // then_exp->code(table,s);
+
+  // int end = table->new_label();
+  // emit_branch(end,s);
+
+  // emit_label_def(false_branch,s);
+  // else_exp->code(table,s);
+
+  // emit_label_def(end,s);
 }
 
 void loop_class::code(CgenClassTableP table, ostream &s) {
@@ -1798,18 +1819,19 @@ void lt_class::code(CgenClassTableP table, ostream &s) {
 
 void eq_class::code(CgenClassTableP table, ostream &s) {
   e1->code(table,s);
-  emit_push(ACC,s);
-  table->var_count++;
+  emit_move(T1, ACC, s);
+  //emit_push(ACC,s);
+  //table->var_count++;
   e2->code(table,s);
 
-  emit_load(T1,1,SP,s);
+  //emit_move(T1,T3,s);
   emit_move(T2, ACC, s);
 
   emit_load_bool(ACC, BoolConst(1), s);
 
   int end_eq = table->new_label();
-  emit_addiu(SP,SP,4,s);
-  table->var_count--;
+  //emit_addiu(SP,SP,4,s);
+  //table->var_count--;
   emit_beq(T1, T2, end_eq, s);
 
   emit_load_bool(A1, BoolConst(0), s);
@@ -1925,7 +1947,8 @@ void object_class::code(CgenClassTableP table, ostream &s)
   std::vector<Symbol> implementation = table->implementation_map[m];
   for (size_t i = 0; i < implementation.size(); i++) {
     if (name == implementation[i]){
-      emit_load(ACC,3 + i,FP,s);
+      int pos = implementation.size() - 1 - i;
+      emit_load(ACC,3 + pos,FP,s);
       return;
     }
   }
