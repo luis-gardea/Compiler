@@ -191,6 +191,7 @@ public:
    Symbol get_type() { return return_type; }
    void code(CgenClassTableP table, ostream& s) { expr->code(table, s); } 
    Formals get_formals() { return formals; }
+   Symbol get_expr_type() { return expr->get_type(); }
 
 #ifdef Feature_SHARED_EXTRAS
    Feature_SHARED_EXTRAS
@@ -219,6 +220,7 @@ public:
    Symbol get_type() { return type_decl; } 
    void code(CgenClassTableP table, ostream& s) { init->code(table, s); } 
    Formals get_formals() { return NULL; }
+   Symbol get_expr_type() { return init->get_type(); }
 
 #ifdef Feature_SHARED_EXTRAS
    Feature_SHARED_EXTRAS

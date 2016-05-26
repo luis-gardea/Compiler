@@ -5,8 +5,15 @@
 
 class Main {
 	main():Object {
+    if not true then io.out_string("True") else io.out_string("False") fi
+  };
+  io : IO <- new IO;
+  x : Int <- 7;
+  f : Bool;
+};
+    (*
 	    case y of
-	      a:Int => io.out_int(a + 5 + a + a);
+	      a:Int => io.out_int(a * 5 / 0 - a);
 	      c:Object => io.out_int(2);
 	      b:Bool => io.out_int(3);
 	      d:Main => io.out_int(4);
@@ -35,7 +42,7 @@ class Main {
 class A {};
 class B inherits A {};
 class C inherits B {};
-class D inherits C {};
+class D inherits C {};*)
     
     (*let io : IO <- new IO, b: B <- new B, a : Int <- a + 5, c : Int <- 7, d : Int <- c + k in {
       --io.out_string(j);

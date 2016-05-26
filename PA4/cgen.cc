@@ -968,7 +968,6 @@ static void emit_default_init(Symbol type, ostream &s) {
 void CgenNode::code_protObj(ostream& s, std::vector<Feature> attributes, int classTag) 
 {
   int CLASS_SLOTS = attributes.size();
-  //cout << name << " " << CLASS_SLOTS << endl;
 
   // Add -1 eye catcher
   s << WORD << "-1" << endl;
@@ -1148,7 +1147,7 @@ void CgenNode::code_object_init(ostream& s, int num_inherited_attributes, int& n
 
         // Return value of attribute is left in a0 (ACC). We want to store this value (which is always a reference to an object)
         // in the correct position in the object we are initializing. Initialization object reference is s0 (SELF).
-        if (attribute->get_type() != No_type)
+        if (attribute->get_expr_type() != NULL)
           emit_store(ACC, 2 + num_inherited_attributes + num_self_attributes, SELF, s);
       }
     }
@@ -1343,51 +1342,6 @@ void assign_class::code(CgenClassTableP table, ostream &s)
 
 void static_dispatch_class::code(CgenClassTableP table, ostream &s) 
 {
-  // //Push parameters onto stack, first is highest, last is lowest
-  // for (int i = actual->first(); actual->more(i); i = actual->next(i)) {
-  //   //evaluate expr
-  //   actual->nth(i)->code(table, s);
-
-  //   // push object onto stack in preparation for method call
-  //   emit_push(ACC, s);
-  // }
-
-  // // Evaluate e0 to get object we are dispatching on.
-  // // This object becomes self
-  // expr->code(table, s);
-
-  // // create label to dipatch to the method
-  // int dispatch = table->new_label();
-  // emit_bne(ACC, ZERO, dispatch, s);
-
-  // // Dispatch on a void, raise error
-  // emit_load_string(ACC, stringtable.lookup_string(table->filename->get_string()), s);
-  // emit_load_imm(T1, get_line_number(), s);
-  // emit_jal("_dispatch_abort", s);
-
-  // //Define label for dispatch code
-  // emit_label_def(dispatch, s);
-  // emit_partial_load_address(T1, s);
-  // emit_disptable_ref(type_name, s);
-  // s << endl;
-
-  // auto method_names = table->disp_tables[type_name];
-  // size_t i;
-  // for (i = 0; i < method_names.size(); i++) {
-  //   if (method_names[i] == name)
-  //     break;
-  // }
-
-  // Symbol expr_type = expr->get_type();
-  // if (expr_type == SELF_TYPE) {
-  //   expr_type = (table->lookup(SELF_TYPE))->get_name();
-  // }
-  // table->addid(SELF_TYPE, table->lookup(expr_type));
-
-  // // Load address of method code and jump there
-  // emit_load(T1, i, T1, s);
-  // emit_jalr(T1, s);
-
   //Push parameters onto stack, first is highest, last is lowest
   for (int i = actual->first(); actual->more(i); i = actual->next(i)) {
     //evaluate expr
@@ -1485,27 +1439,22 @@ void dispatch_class::code(CgenClassTableP table, ostream &s)
 
 void cond_class::code(CgenClassTableP table, ostream &s) 
 {
-  pred->code(table, s);
-  emit_push(ACC, s);
-  emit_load_bool(ACC, BoolConst(0), s);
-  s << endl;
-  emit_load(T1, 4, SP, s);
-  emit_addiu(SP, SP, 4, s);
+  pred->code(table,s);
 
+  emit_load_bool(T1, BoolConst(0), s);
   int false_branch = table->new_label();
-  int true_branch = table->new_label();
-  int end_if = table->new_label();
 
-  emit_bne(ACC, T1, true_branch, s);
+  emit_beq(ACC, T1, false_branch, s);
 
-  emit_label_ref(false_branch, s);
-  else_exp->code(table, s);
-  emit_branch(end_if, s);
+  then_exp->code(table,s);
 
-  emit_label_ref(true_branch, s);
-  then_exp->code(table, s);
+  int end = table->new_label();
+  emit_branch(end,s);
 
-  emit_label_ref(end_if, s);
+  emit_label_def(false_branch,s);
+  else_exp->code(table,s);
+
+  emit_label_def(end,s);
 }
 
 void loop_class::code(CgenClassTableP table, ostream &s) {
@@ -1544,6 +1493,7 @@ void typcase_class::code(CgenClassTableP table, ostream &s)
   emit_label_def(case_start, s);
   // Push object and Load class tag into ACC
   emit_push(ACC, s);
+  table->var_count++;
   emit_load(ACC, 0, ACC, s);
 
   // label0 corresponds to the 1st branch, label1 to branch 2nd, etc.
@@ -1603,6 +1553,7 @@ void typcase_class::code(CgenClassTableP table, ostream &s)
   //cleanup this expression
   emit_label_def(end_case, s);
   emit_addiu(SP, SP, 4, s);
+  table->var_count--;
 }
 
 void branch_class::code(CgenClassTableP table, ostream &s)
@@ -1621,6 +1572,7 @@ void branch_class::code(CgenClassTableP table, ostream &s)
 
   // Move SP back up since the variable is now out of scope
   emit_addiu(SP, SP, 4, s);
+  table->var_count--;
 }
 
 void block_class::code(CgenClassTableP table, ostream &s) {
@@ -1635,10 +1587,6 @@ void let_class::code(CgenClassTableP table, ostream &s)
   // Evaluate init expression
   init->code(table, s);
   Symbol init_type = init->get_type();
-
-  // if (init_type != NULL)
-  //   cerr << init_type << " " << type_decl << endl;
-  // cerr << "HEREEE";
 
   if(init_type == NULL) {
     emit_default_init(type_decl, s);
@@ -1658,12 +1606,14 @@ void let_class::code(CgenClassTableP table, ostream &s)
 
   // Move SP back up since the variable is now out of scope
   emit_addiu(SP, SP, 4, s);
+  table->var_count--;
 }
 
 void plus_class::code(CgenClassTableP table, ostream &s) {
   //eval e1 and push result to stack
   e1->code(table, s);
   emit_push(ACC, s);
+  table->var_count++;
 
   //eval e2 
   e2->code(table, s);
@@ -1678,6 +1628,7 @@ void plus_class::code(CgenClassTableP table, ostream &s) {
   //perform computation, push onto stack
   emit_add(T1, T1, ACC, s);
   emit_push(T1, s);
+  table->var_count++;
 
   //load ACC with int object and create new int object on heap
   emit_load(ACC, 2, SP, s);
@@ -1689,7 +1640,8 @@ void plus_class::code(CgenClassTableP table, ostream &s) {
 
   //Return stack pointer to orginal location
   emit_addiu(SP, SP, 8, s);
-
+  table->var_count--;
+  table->var_count--;
   //ACC contains pointer to new object on heap
 }
 
@@ -1697,6 +1649,7 @@ void sub_class::code(CgenClassTableP table, ostream &s) {
   //eval e1 and push result to stack
   e1->code(table, s);
   emit_push(ACC, s);
+  table->var_count++;
 
   //eval e2 
   e2->code(table, s);
@@ -1708,18 +1661,23 @@ void sub_class::code(CgenClassTableP table, ostream &s) {
   emit_load(T1, 1, SP, s);
   emit_fetch_int(T1, T1, s);
 
-  //perform computation, place result in T1
+  //perform computation, push onto stack
   emit_sub(T1, T1, ACC, s);
+  emit_push(T1, s);
+  table->var_count++;
 
   //load ACC with int object and create new int object on heap
-  emit_load(ACC, 1, SP, s);
+  emit_load(ACC, 2, SP, s);
   emit_jal_method(Object, idtable.lookup_string("copy"), s);
 
-  // Store in new int object
+  // Store sum in new int object
+  emit_load(T1, 1, SP, s);
   emit_store_int(T1, ACC, s);
 
   //Return stack pointer to orginal location
-  emit_addiu(SP, SP, 4, s);
+  emit_addiu(SP, SP, 8, s);
+  table->var_count--;
+  table->var_count--;
 
   //ACC contains pointer to new object on heap
 }
@@ -1728,6 +1686,7 @@ void mul_class::code(CgenClassTableP table, ostream &s) {
   //eval e1 and push result to stack
   e1->code(table, s);
   emit_push(ACC, s);
+  table->var_count++;
 
   //eval e2 
   e2->code(table, s);
@@ -1739,18 +1698,23 @@ void mul_class::code(CgenClassTableP table, ostream &s) {
   emit_load(T1, 1, SP, s);
   emit_fetch_int(T1, T1, s);
 
-  //perform computation, place result in T1
+  //perform computation, push onto stack
   emit_mul(T1, T1, ACC, s);
+  emit_push(T1, s);
+  table->var_count++;
 
   //load ACC with int object and create new int object on heap
-  emit_load(ACC, 1, SP, s);
+  emit_load(ACC, 2, SP, s);
   emit_jal_method(Object, idtable.lookup_string("copy"), s);
 
-  // Store in new int object
+  // Store sum in new int object
+  emit_load(T1, 1, SP, s);
   emit_store_int(T1, ACC, s);
 
   //Return stack pointer to orginal location
-  emit_addiu(SP, SP, 4, s);
+  emit_addiu(SP, SP, 8, s);
+  table->var_count--;
+  table->var_count--;
 
   //ACC contains pointer to new object on heap
 }
@@ -1759,6 +1723,7 @@ void divide_class::code(CgenClassTableP table, ostream &s) {
   //eval e1 and push result to stack
   e1->code(table, s);
   emit_push(ACC, s);
+  table->var_count++;
 
   //eval e2 
   e2->code(table, s);
@@ -1770,18 +1735,23 @@ void divide_class::code(CgenClassTableP table, ostream &s) {
   emit_load(T1, 1, SP, s);
   emit_fetch_int(T1, T1, s);
 
-  //perform computation, place result in T1
+  //perform computation, push onto stack
   emit_div(T1, T1, ACC, s);
+  emit_push(T1, s);
+  table->var_count++;
 
   //load ACC with int object and create new int object on heap
-  emit_load(ACC, 1, SP, s);
+  emit_load(ACC, 2, SP, s);
   emit_jal_method(Object, idtable.lookup_string("copy"), s);
 
-  // Store in new int object
+  // Store sum in new int object
+  emit_load(T1, 1, SP, s);
   emit_store_int(T1, ACC, s);
 
   //Return stack pointer to orginal location
-  emit_addiu(SP, SP, 4, s);
+  emit_addiu(SP, SP, 8, s);
+  table->var_count--;
+  table->var_count--;
 
   //ACC contains pointer to new object on heap
 }
@@ -1794,6 +1764,7 @@ void neg_class::code(CgenClassTableP table, ostream &s) {
 void lt_class::code(CgenClassTableP table, ostream &s) {
   e1->code(table,s);
   emit_push(ACC,s);
+  table->var_count++;
   e2->code(table,s);
 
   emit_fetch_int(ACC, ACC, s);
@@ -1801,6 +1772,7 @@ void lt_class::code(CgenClassTableP table, ostream &s) {
   emit_fetch_int(T1,T1,s);
   int true_label = table->new_label();
   emit_addiu(SP,SP,4,s);
+  table->var_count--;
   emit_blt(T1,ACC,true_label,s);
   emit_load_bool(ACC, BoolConst(0), s);
 
@@ -1815,6 +1787,7 @@ void lt_class::code(CgenClassTableP table, ostream &s) {
 void eq_class::code(CgenClassTableP table, ostream &s) {
   e1->code(table,s);
   emit_push(ACC,s);
+  table->var_count++;
   e2->code(table,s);
 
   emit_load(T1,1,SP,s);
@@ -1823,10 +1796,11 @@ void eq_class::code(CgenClassTableP table, ostream &s) {
   emit_load_bool(ACC, BoolConst(1), s);
 
   int end_eq = table->new_label();
+  emit_addiu(SP,SP,4,s);
+  table->var_count--;
   emit_beq(T1, T2, end_eq, s);
 
   emit_load_bool(A1, BoolConst(0), s);
-  emit_addiu(SP,SP,4,s);
   emit_jal("equality_test", s);
   emit_label_def(end_eq, s);
 }
@@ -1834,6 +1808,7 @@ void eq_class::code(CgenClassTableP table, ostream &s) {
 void leq_class::code(CgenClassTableP table, ostream &s) {
   e1->code(table,s);
   emit_push(ACC,s);
+  table->var_count++;
   e2->code(table,s);
 
   emit_fetch_int(ACC, ACC, s);
@@ -1841,6 +1816,7 @@ void leq_class::code(CgenClassTableP table, ostream &s) {
   emit_fetch_int(T1,T1,s);
   int true_label = table->new_label();
   emit_addiu(SP,SP,4,s);
+  table->var_count--;
   emit_bleq(T1,ACC,true_label,s);
   emit_load_bool(ACC, BoolConst(0), s);
 
@@ -1854,19 +1830,15 @@ void leq_class::code(CgenClassTableP table, ostream &s) {
 
 void comp_class::code(CgenClassTableP table, ostream &s) {
   e1->code(table, s);
-  emit_store(ACC, 0, SP, s);
-  emit_addiu(SP, SP, -4, s);
-  emit_load_bool(ACC, BoolConst(0), s);
-  emit_load(T1, 4, SP, s);
-  emit_addiu(SP, SP, 4, s);
+
+  emit_fetch_int(T1,ACC,s);
+  emit_load_bool(ACC, BoolConst(1), s);
 
   int end_comp = table->new_label();
-  emit_bne(ACC, T1, end_comp, s);
+  emit_beqz(T1, end_comp, s);
 
-  emit_load_bool(ACC, BoolConst(1), s);
-  s << endl;
-
-  emit_label_ref(end_comp, s);
+  emit_load_bool(ACC, BoolConst(0), s);
+  emit_label_def(end_comp, s);
 }
 
 void int_const_class::code(CgenClassTableP table, ostream& s)  

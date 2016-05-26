@@ -77,7 +77,8 @@ virtual Symbol get_name() = 0; \
 virtual void dump_with_types(ostream&,int) = 0;	\
 virtual std::string get_feature_type() = 0;		\
 virtual Symbol get_type() = 0;	 \
-virtual Formals get_formals() = 0;
+virtual Formals get_formals() = 0; 	\
+virtual Symbol get_expr_type() = 0;
 
 
 #define Feature_SHARED_EXTRAS  \
