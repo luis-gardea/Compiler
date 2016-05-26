@@ -15,11 +15,14 @@ class Main inherits IO {
     }*)
     
     {
-      x <- in_string();
-      out_int(x.length());
-      x.substr(1, x.length()-2);
-      x = "quit";
-      if x="quit" then out_string("line=quit") else out_string("line!=quit") fi;
+      --"quit" = in_string();
+      --y <- x;
+      --y<-5;
+      --out_int(x.length());
+      --out_string(x);
+      --out_int(y);
+      if "qui" = in_string() then out_string("True") else out_string("False") fi;
+      --out_string(x);
     }
    (*let line : String <- in_string() in
       {
@@ -38,6 +41,7 @@ class Main inherits IO {
       
   };
   x : String;
+  y:String;
 };
     
 

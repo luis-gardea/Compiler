@@ -630,8 +630,10 @@ void CgenClassTable::code_constants()
 }
 
 void CgenClassTable::set_class_tags(CgenNodeP p, int& counter) {
-  classTag_map[p->get_name()] = counter;
-  counter++;
+  if (classTag_map.find(p->get_name()) == classTag_map.end()) {
+    classTag_map[p->get_name()] = counter;
+    counter++;
+  }
 
   List<CgenNode> *children = p->get_children(); 
   for(List<CgenNode> *l = children; l; l = l->tl()) {
@@ -711,7 +713,7 @@ void CgenClassTable::create_class_map(CgenNodeP p, std::vector<Symbol> attribute
 
 CgenClassTable::CgenClassTable(Classes classes, ostream& s) : nds(NULL) , str(s)
 {
-   stringclasstag = 4;
+   stringclasstag = 1;
    intclasstag =    2;
    boolclasstag =   3;
 
@@ -723,8 +725,11 @@ CgenClassTable::CgenClassTable(Classes classes, ostream& s) : nds(NULL) , str(s)
    build_inheritance_tree();
 
   if (cgen_debug) cout << "building maps" << endl;
-  int classTag = 0;
+  int classTag = 4;
   classTag_map[Object] = 0;
+  classTag_map[Str] = stringclasstag;
+  classTag_map[Int] = intclasstag;
+  classTag_map[Bool] = boolclasstag;
 
   set_class_tags(root(), classTag);
   create_implementation_map(root(), std::vector<Method>());
@@ -1153,6 +1158,10 @@ void CgenNode::code_object_init(ostream& s, int num_inherited_attributes, int& n
       if (attribute->get_feature_type() == "Attribute") {
         num_self_attributes++;
         attribute->code(table, s);
+
+        // if (name == String && attribute->get_name() == _val) {
+        //   emit
+        // }
 
         // Return value of attribute is left in a0 (ACC). We want to store this value (which is always a reference to an object)
         // in the correct position in the object we are initializing. Initialization object reference is s0 (SELF).
@@ -1819,20 +1828,24 @@ void lt_class::code(CgenClassTableP table, ostream &s) {
 
 void eq_class::code(CgenClassTableP table, ostream &s) {
   e1->code(table,s);
-  emit_move(T1, ACC, s);
-  //emit_push(ACC,s);
-  //table->var_count++;
+  //emit_move(T1, ACC, s);
+
+  emit_push(ACC,s);
+  table->var_count++;
   e2->code(table,s);
 
-  //emit_move(T1,T3,s);
   emit_move(T2, ACC, s);
+  emit_load(T1, 1, SP, s);
+  emit_addiu(SP,SP,4,s);
+  table->var_count--;
 
   emit_load_bool(ACC, BoolConst(1), s);
 
-  int end_eq = table->new_label();
-  //emit_addiu(SP,SP,4,s);
-  //table->var_count--;
+  int end_eq = table->new_label();  
   emit_beq(T1, T2, end_eq, s);
+
+  // emit_fetch_int(T2, T2, s);
+  // emit_fetch_int(T1, T1, s);
 
   emit_load_bool(A1, BoolConst(0), s);
   emit_jal("equality_test", s);
