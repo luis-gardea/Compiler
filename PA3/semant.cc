@@ -456,13 +456,13 @@ bool ClassTable::compare(Symbol class_name, Method m, Method parent_m, tree_node
     }
     // If the last element does not match, then return type is wrong
     if (formals.back().first != parent_formals.back().first) {
-        semant_error1(class_name,t) << "In redefined method " << m.second << ", return type " << formals.back().first << " is different from original return type " << parent_formals.back().first << endl;
+        semant_error1(class_name,t) << "In redefined method " << m.second << ", return type " << formals.back().first << " is different from original return type " << parent_formals.back().first << "." << endl;
         return false;
     }
     // If any element does not match that isnt the last, then parameter type is wrong
     for (size_t i = 0; i < formals.size(); i++){
         if (formals[i].first != parent_formals[i].first) {
-            semant_error1(class_name,t) << "In redefined method " << m.second << ", parameter type " << formals[i].first << " is different from original type " << parent_formals[i].first << endl;
+            semant_error1(class_name,t) << "In redefined method " << m.second << ", parameter type " << formals[i].first << " is different from original type " << parent_formals[i].first << "." << endl;
             return false;
         }
     }
@@ -645,6 +645,10 @@ void method_class::recurse(ClassTable* classtable, Symbol class_name)
     // Add formal variables to scope and make sure there are no multiples
     std::set<Symbol> formal_names;
     for(int i = formals->first(); formals->more(i); i = formals->next(i)) {
+        if (name == self) {
+            classtable->semant_error1(class_name,this) << "\'self\' cannot be the name of a formal parameter." << endl;
+        }
+
         if (formal_names.find(formals->nth(i)->get_name()) != formal_names.end()) {
             classtable->semant_error1(class_name,this) << "Formal parameter "<< formals->nth(i)->get_name() << " is multiply defined." << endl;
         }
@@ -664,6 +668,10 @@ void method_class::recurse(ClassTable* classtable, Symbol class_name)
 
 void attr_class::recurse(ClassTable* classtable, Symbol class_name)
 {
+    if (name == self) {
+        classtable->semant_error1(class_name,this) << "\'self\' cannot be the name of an attribute." << endl;
+    }
+
     // First check if the declared type is a valid type in the program
     // cout << name << " " << type_decl <<  endl;
     if (sym_tab->lookup(type_decl) == NULL){
@@ -695,7 +703,6 @@ void branch_class::recurse(ClassTable* classtable, Symbol class_name, std::set<S
     // Enterscope since we are pushing a new variable
     sym_tab->enterscope();
 
-    // cout << name << endl;
     if (name == self) 
         classtable->semant_error1(class_name,this) << "\'self\' bound in \'case\'." << endl;
 
@@ -726,6 +733,10 @@ void branch_class::recurse(ClassTable* classtable, Symbol class_name, std::set<S
 
 void assign_class::recurse(ClassTable* classtable, Symbol class_name)
 {
+    if (name == self) {
+        classtable->semant_error1(class_name,this) << "Cannot assign to \'self\'." << endl;
+    }
+
     // Assign always takes on the type of the expression, so we recurse first
     expr->recurse(classtable, class_name);
     type = expr->get_type();
