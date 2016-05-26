@@ -5,11 +5,16 @@
 
 class Main {
 	main():Object {
-    if not true then io.out_string("True") else io.out_string("False") fi
+    while true loop x <- x + 1 pool
   };
   io : IO <- new IO;
   x : Int <- 7;
   f : Bool;
+  a : A;
+};
+
+class A {
+
 };
     (*
 	    case y of

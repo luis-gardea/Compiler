@@ -1026,6 +1026,14 @@ void CgenClassTable::code_dispTabs(CgenNodeP p, std::vector<std::pair<Symbol, Sy
   for(int i = features->first(); features->more(i); i = features->next(i)) {
     if (features->nth(i)->get_feature_type() == "Method") {
       num_methods++;
+      for (size_t j = 0; j<methods.size(); j++){
+        if (methods[j] == std::make_pair(p->get_parent_name(), features->nth(i)->get_name())){
+          methods.erase(methods.begin()+j);
+          break;
+        }
+
+      }
+      
       methods.push_back(std::make_pair(p->get_name(), features->nth(i)->get_name()));
     }
   }
@@ -1758,7 +1766,11 @@ void divide_class::code(CgenClassTableP table, ostream &s) {
 
 void neg_class::code(CgenClassTableP table, ostream &s) {
   e1->code(table, s);
-  emit_neg(ACC, ACC, s);
+
+  emit_jal_method(Object, idtable.lookup_string("copy"), s);
+  emit_fetch_int(T1, ACC, s);
+  emit_neg(T1, T1, s);
+  emit_store_int(T1, ACC, s);
 }
 
 void lt_class::code(CgenClassTableP table, ostream &s) {
@@ -1873,6 +1885,16 @@ void new__class::code(CgenClassTableP table, ostream &s)
 }
 
 void isvoid_class::code(CgenClassTableP table, ostream &s) {
+  e1->code(table, s);
+
+  emit_move(T1, ACC, s);
+  emit_load_bool(ACC, BoolConst(1), s);
+
+  int end_isvoid = table->new_label();
+  emit_beqz(T1, end_isvoid, s);
+
+  emit_load_bool(ACC, BoolConst(0), s);
+  emit_label_def(end_isvoid, s);
 }
 
 void no_expr_class::code(CgenClassTableP table, ostream &s) {
