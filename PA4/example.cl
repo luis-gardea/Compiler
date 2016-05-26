@@ -5,7 +5,7 @@
 
 class Main {
 	main():Object {
-    while true loop x <- x + 1 pool
+    while x < 10 loop io.out_int(x <- x + 1) pool
   };
   io : IO <- new IO;
   x : Int <- 7;
