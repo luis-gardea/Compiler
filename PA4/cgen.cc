@@ -713,10 +713,7 @@ void CgenClassTable::create_class_map(CgenNodeP p, std::vector<Symbol> attribute
 
 CgenClassTable::CgenClassTable(Classes classes, ostream& s) : nds(NULL) , str(s)
 {
-   stringclasstag = 1;
-   intclasstag =    2;
-   boolclasstag =   3;
-
+   
 
    enterscope();
    if (cgen_debug) cout << "Building CgenClassTable" << endl;
@@ -724,14 +721,21 @@ CgenClassTable::CgenClassTable(Classes classes, ostream& s) : nds(NULL) , str(s)
    install_classes(classes);
    build_inheritance_tree();
 
-  if (cgen_debug) cout << "building maps" << endl;
-  int classTag = 4;
-  classTag_map[Object] = 0;
-  classTag_map[Str] = stringclasstag;
-  classTag_map[Int] = intclasstag;
-  classTag_map[Bool] = boolclasstag;
+   // stringclasstag = 1;
+   // intclasstag =    2;
+   // boolclasstag =   3;
 
+
+  if (cgen_debug) cout << "building maps" << endl;
+  int classTag = 0;
   set_class_tags(root(), classTag);
+
+  // classTag_map[Object] = 0;
+  stringclasstag = classTag_map[Str];
+  intclasstag = classTag_map[Int];
+  boolclasstag = classTag_map[Bool];
+
+  
   create_implementation_map(root(), std::vector<Method>());
   create_class_map(root(), std::vector<Symbol>());
 
