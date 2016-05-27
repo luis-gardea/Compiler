@@ -7,3 +7,7 @@ class Main inherits IO {
 	}
     };
 };
+
+class B inherits Main {
+
+};
