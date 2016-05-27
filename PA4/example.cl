@@ -11,6 +11,16 @@ class Main inherits IO {
         z : Object => x <- 7;
       esac;
       out_int(x);
+      while x < 40 loop {
+        out_int(x <- x*2);
+        out_string("\n");
+      } pool;
+      (let c : Cool <- (new Cool).init(1, 1) in
+        if c.reflect_X().reflect_Y() = c.reflect_0()
+        then out_string("=)\n")
+        else out_string("=(\n")
+        fi
+      );
     }
   };
   x : String;
@@ -24,6 +34,71 @@ class A inherits IO {
       out_string("method in A\n");
     }
   };
+
+  a() : Object {
+    {
+      case b of
+        a:Int => io.out_int(a * 5 / 0 - a);
+        c:Object => io.out_int(2);
+        b:Bool => io.out_int(3);
+        d:Main => io.out_int(4);
+      esac;
+
+      while d = io loop
+          {
+            io.out_string("equal\n");
+          }
+      pool;
+    }
+  };
+  y:Int <-2;
+  io:IO <- new IO;
+  a : Int <- 10;
+  x:Bool <- true;
+  b: String <- "Hello";
+  d : IO <- new IO;
+};
+
+class Cool inherits IO {
+    x : Int;
+    y : Int;
+
+    init(a : Int, b : Int) : Cool {
+  {
+      x = a;
+      y = b;
+      self;
+  }
+    };
+
+    print() : Object {
+  if y = 0
+  then out_int(x)
+  else out_int(x).out_string("+").out_int(y).out_string("I")
+  fi
+    };
+
+    reflect_0() : Cool {
+  {
+      x = ~x;
+      y = ~y;
+      self;
+  }
+    };
+
+    reflect_X() : Cool {
+  {
+      y = ~y;
+      self;
+  }
+    };
+
+    reflect_Y() : Cool {
+  {
+      x = ~x;
+      self;
+  }
+    };
 };
 
 class B inherits A {
@@ -35,95 +110,31 @@ class B inherits A {
   };
 };
 
-    (*
-    while x < 10 loop io.out_int(x <- x + 1) pool
-  };
-  io : IO <- new IO;
-  x : Int <- 7;
-  f : Bool;
-  a : A;
-};
-
-class A {
-
-};
-*)
-    (*
-	    case y of
-	      a:Int => io.out_int(a * 5 / 0 - a);
-	      c:Object => io.out_int(2);
-	      b:Bool => io.out_int(3);
-	      d:Main => io.out_int(4);
-        --e:A => io.out_int(5);
-	      --f:B => io.out_int(6);
-	      --g:C => io.out_int(7);
-	      h:D => io.out_int(8);
-	    esac
-	    --a = b
-
-	    (*while d = io loop
-	    	{
-	    		io.out_string("equal\n");
-	    	}
-	    pool*)
-	};
-  y:Int <-2;
-	io:IO <- new IO;
-	--a : A <- new A;
-	--b : B <- new B;
-  --c : C <- new C;
-  --d : D <- new D;
-	x:Bool <- true;
-};
-
-class A {};
-class B inherits A {};
 class C inherits B {};
-class D inherits C {};*)
-    
-    (*let io : IO <- new IO, b: B <- new B, a : Int <- a + 5, c : Int <- 7, d : Int <- c + k in {
-      --io.out_string(j);
-      --j <- "\nnew string\n";
-		  io@IO.out_int(b.m(7));
-      --io@IO.out_string(j);
-      --io.out_int(k);
-      io.out_int(m(7));
-      io.out_int(a);
-      io.out_int(c);
-      io.out_int(d);
+class D inherits J {
+  m(a:Int, k:Int): Int {
+    {
+    let io : IO <- new IO in 
+        let b: J <- new J, a : Int <- a + 5 in 
+          let c : Int <- 7, d : Int <- c + k, j:String in {
+            io.out_string(j);
+            j <- "\nnew string\n";
+		        io@IO.out_int(b.m(7, 6));
+            io@IO.out_string(j);
+            io.out_int(k);
+            io.out_int(m(7, 5));
+            io.out_int(a);
+            io.out_int(c);
+            io.out_int(d);
+          };
+    (new IO).out_int((new D).m(5, 4));
+    5;
     }
-    --(new IO).out_int((new B).m())
 	};
-
-
-	m(a:Int):Int {k + a};
-
-  	j: String <- "my string\n";
-
-	k: Int <- a;
-
-  a:Int <- 8;
-};*)
-
-(*m(x:Int):Int {
-	x+7
 };
-*)
 
-(*class B inherits Main {
-  m(a:Int) : Int {
-    a+7
-  };
-};*)
-
-
-
-
-
-
-(*class Main {
-  main():Object { 0 };
-  m(j:Int, k:Int) : Object {
+class J inherits M {
+  m(j:Int, k:Int) : Int {
   	let x:Int <- 5 in
   		let y:Int<-8 in 
   			x+y
@@ -132,40 +143,24 @@ class D inherits C {};*)
   m2(y:Int):Object {
   	m(y,8)
   };
-  k:Object <- {m(89, 7); let x:Int<-90 in x + 2;}; 
-  	{
-  		
-  		let m: Int <- 6 in m1(9);
-  	}
-  };
-  m1 (a:Int) : Int {
-  	m + 5
+
+  k:Object <- {let x :Int <- m(89, 7) in  
+                let x:Int <- 90 in x <- m(89, 7);}; 
+
+  m1(a:Int) : Int {
+    {
+      m + 5;
+      let m: Int <- 6 in m1(9);
+    }
+  	
   };
   m : Int <- 5;
   n : Int <- 2;
-  
 };
-class M inherits Main {
+
+class M inherits B {
 	j : Int <- 5;
 };
 
-
-class A {
-	a : Int <- 5 + 4;
-	b : Bool;
-	c : B <- new B;
-	d : String <- "Hello";
-
-
-	a() : Int {
-		5
-	};
-};
-
-class D inherits A {};
-class E inherits A {};
-class B {};
-class C {};
-*)
 
 
