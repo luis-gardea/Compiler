@@ -14,15 +14,10 @@ class Main inherits IO {
 
     }*)
     
-    {
-      --"quit" = in_string();
-      --y <- x;
-      --y<-5;
-      --out_int(x.length());
-      --out_string(x);
-      --out_int(y);
-      if "qui" = in_string() then out_string("True") else out_string("False") fi;
-      --out_string(x);
+    let y:Int <- 3000 in {
+      while ~5 < y loop
+        y <- y-1
+      pool; 
     }
    (*let line : String <- in_string() in
       {
@@ -41,7 +36,7 @@ class Main inherits IO {
       
   };
   x : String;
-  y:String;
+  y:Int <- 50000;
 };
     
 

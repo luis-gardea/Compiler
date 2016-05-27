@@ -1165,8 +1165,14 @@ void CgenNode::code_object_init(ostream& s, int num_inherited_attributes, int& n
 
         // Return value of attribute is left in a0 (ACC). We want to store this value (which is always a reference to an object)
         // in the correct position in the object we are initializing. Initialization object reference is s0 (SELF).
-        if (attribute->get_expr_type() != NULL)
+        if (attribute->get_expr_type() != NULL) {
           emit_store(ACC, 2 + num_inherited_attributes + num_self_attributes, SELF, s);
+
+          if (cgen_Memmgr == 1) {
+            emit_addiu(A1, SELF, 4*(2 + num_inherited_attributes + num_self_attributes),s);
+            emit_jal("_GenGC_Assign", s);
+          }
+        }
       }
     }
   }
@@ -1354,6 +1360,10 @@ void assign_class::code(CgenClassTableP table, ostream &s)
     for (size_t i = 0; i < v.size(); i++){
       if (name == v[i]){
         emit_store(ACC,3+i,SELF,s);
+        if (cgen_Memmgr == 1) {
+          emit_addiu(A1, SELF, 4*(3+i),s);
+          emit_jal("_GenGC_Assign", s);
+        }
         return;
       }
     }
@@ -1467,9 +1477,9 @@ void cond_class::code(CgenClassTableP table, ostream &s)
 {
   pred->code(table,s);
 
-  emit_fetch_int(T1, ACC, s);
+  emit_fetch_int(ACC, ACC, s);
   int label = table->new_label();
-  emit_beqz(T1, label, s );
+  emit_beqz(ACC, label, s );
   then_exp->code(table,s);
 
   int end = table->new_label();
@@ -1501,9 +1511,9 @@ void loop_class::code(CgenClassTableP table, ostream &s) {
 
   pred->code(table,s);
 
-  emit_load(T1,3,ACC,s);
+  emit_load(ACC,3,ACC,s);
   int end_loop = table->new_label();
-  emit_beq(T1,ZERO,end_loop,s);
+  emit_beq(ACC,ZERO,end_loop,s);
 
   body->code(table,s);
 
