@@ -15,7 +15,7 @@ _int_tag:
 _bool_tag:
 	.word	3
 _string_tag:
-	.word	4
+	.word	1
 	.globl	_MemMgr_INITIALIZER
 _MemMgr_INITIALIZER:
 	.word	_NoGC_Init
@@ -27,7 +27,7 @@ _MemMgr_TEST:
 	.word	0
 	.word	-1
 str_const15:
-	.word	4
+	.word	1
 	.word	5
 	.word	String_dispTab
 	.word	int_const0
@@ -35,7 +35,7 @@ str_const15:
 	.align	2
 	.word	-1
 str_const14:
-	.word	4
+	.word	1
 	.word	6
 	.word	String_dispTab
 	.word	int_const4
@@ -44,7 +44,7 @@ str_const14:
 	.align	2
 	.word	-1
 str_const13:
-	.word	4
+	.word	1
 	.word	6
 	.word	String_dispTab
 	.word	int_const5
@@ -53,7 +53,7 @@ str_const13:
 	.align	2
 	.word	-1
 str_const12:
-	.word	4
+	.word	1
 	.word	6
 	.word	String_dispTab
 	.word	int_const4
@@ -62,7 +62,7 @@ str_const12:
 	.align	2
 	.word	-1
 str_const11:
-	.word	4
+	.word	1
 	.word	5
 	.word	String_dispTab
 	.word	int_const6
@@ -71,7 +71,7 @@ str_const11:
 	.align	2
 	.word	-1
 str_const10:
-	.word	4
+	.word	1
 	.word	5
 	.word	String_dispTab
 	.word	int_const1
@@ -80,7 +80,7 @@ str_const10:
 	.align	2
 	.word	-1
 str_const9:
-	.word	4
+	.word	1
 	.word	6
 	.word	String_dispTab
 	.word	int_const5
@@ -89,7 +89,7 @@ str_const9:
 	.align	2
 	.word	-1
 str_const8:
-	.word	4
+	.word	1
 	.word	7
 	.word	String_dispTab
 	.word	int_const7
@@ -98,7 +98,7 @@ str_const8:
 	.align	2
 	.word	-1
 str_const7:
-	.word	4
+	.word	1
 	.word	7
 	.word	String_dispTab
 	.word	int_const8
@@ -107,7 +107,7 @@ str_const7:
 	.align	2
 	.word	-1
 str_const6:
-	.word	4
+	.word	1
 	.word	7
 	.word	String_dispTab
 	.word	int_const8
@@ -116,7 +116,7 @@ str_const6:
 	.align	2
 	.word	-1
 str_const5:
-	.word	4
+	.word	1
 	.word	8
 	.word	String_dispTab
 	.word	int_const9
@@ -125,7 +125,7 @@ str_const5:
 	.align	2
 	.word	-1
 str_const4:
-	.word	4
+	.word	1
 	.word	7
 	.word	String_dispTab
 	.word	int_const10
@@ -134,7 +134,7 @@ str_const4:
 	.align	2
 	.word	-1
 str_const3:
-	.word	4
+	.word	1
 	.word	6
 	.word	String_dispTab
 	.word	int_const4
@@ -143,7 +143,7 @@ str_const3:
 	.align	2
 	.word	-1
 str_const2:
-	.word	4
+	.word	1
 	.word	7
 	.word	String_dispTab
 	.word	int_const11
@@ -152,7 +152,7 @@ str_const2:
 	.align	2
 	.word	-1
 str_const1:
-	.word	4
+	.word	1
 	.word	10
 	.word	String_dispTab
 	.word	int_const12
@@ -161,7 +161,7 @@ str_const1:
 	.align	2
 	.word	-1
 str_const0:
-	.word	4
+	.word	1
 	.word	8
 	.word	String_dispTab
 	.word	int_const13
@@ -266,7 +266,7 @@ bool_const1:
 	.word	1
 	.word	-1
 Main_protObj:
-	.word	2
+	.word	5
 	.word	8
 	.word	Main_dispTab
 	.word	int_const0
@@ -276,24 +276,24 @@ Main_protObj:
 	.word	0
 	.word	-1
 IO_protObj:
-	.word	1
+	.word	4
 	.word	3
 	.word	IO_dispTab
 	.word	-1
 Int_protObj:
-	.word	3
+	.word	2
 	.word	4
 	.word	Int_dispTab
 	.word	0
 	.word	-1
 Bool_protObj:
-	.word	4
+	.word	3
 	.word	4
 	.word	Bool_dispTab
 	.word	0
 	.word	-1
 String_protObj:
-	.word	5
+	.word	1
 	.word	5
 	.word	String_dispTab
 	.word	int_const0
@@ -423,8 +423,8 @@ label1:
 	sw	$a0 24($s0)
 label2:
 	la	$a0 bool_const1
-	lw	$t1 12($a0)
-	beq	$t1 $zero label3
+	lw	$a0 12($a0)
+	beq	$a0 $zero label3
 	lw	$a0 16($s0)
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
@@ -472,8 +472,8 @@ label4:
 label5:
 	la	$a0 bool_const1
 label6:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label7
+	lw	$a0 12($a0)
+	beqz	$a0 label7
 	la	$a0 bool_const0
 	b	label8
 label7:
@@ -523,24 +523,24 @@ label7:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 int_const0
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label9
 	la	$a1 bool_const0
 	jal	equality_test
 label9:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label10
+	lw	$a0 12($a0)
+	beqz	$a0 label10
 	la	$a0 bool_const0
 	b	label11
 label10:
 	la	$a0 bool_const1
 label11:
 label8:
-	lw	$t1 12($a0)
-	beq	$t1 $zero label12
+	lw	$a0 12($a0)
+	beq	$a0 $zero label12
 	lw	$a0 20($s0)
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
@@ -588,8 +588,8 @@ label12:
 label13:
 	la	$a0 bool_const1
 label14:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label15
+	lw	$a0 12($a0)
+	beqz	$a0 label15
 	lw	$a0 16($s0)
 	sw	$a0 12($s0)
 	lw	$a0 12($s0)
@@ -634,8 +634,8 @@ label18:
 label19:
 	la	$a0 bool_const1
 label20:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label21
+	lw	$a0 12($a0)
+	beqz	$a0 label21
 	la	$a0 str_const3
 	bne	$a0 $zero label22
 	la	$a0 str_const0

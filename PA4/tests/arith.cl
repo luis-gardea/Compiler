@@ -359,8 +359,8 @@ class Main inherits IO {
 	             } else
                   if char = "b" then -- negate
                      case avar of
-	                   c : C => avar <- c.method6(c.value());
-	                   a : A => avar <- a.method3(a.value());
+	                   c : C => { avar <- c.method6(c.value()); };
+	                   a : A => { out_string("WE ARE HERE"); out_int(a.value()); avar <- a.method3(a.value()); };
 	                   o : Object => {
 		                  out_string("Oooops\n");
 		                  abort(); 0;
@@ -373,7 +373,10 @@ class Main inherits IO {
 	             } else
                   if char = "d" then avar <- (new C)@A.method5(avar.value()) else
 		          -- factorial
-                  if char = "e" then avar <- (new C)@B.method5(avar.value()) else
+                  if char = "e" then {
+                    avar <- (new C)@B.method5(avar.value());
+                    (new IO).out_string("square");
+                  } else
 			  -- square
                   if char = "f" then avar <- (new C)@C.method5(avar.value()) else
 			  -- cube

@@ -1398,7 +1398,10 @@ void static_dispatch_class::code(CgenClassTableP table, ostream &s)
   emit_label_def(dispatch, s);
 
   // load pointer to dispatch table
-  emit_load(T1, 2, ACC, s);
+  // emit_load(T1, 2, ACC, s);
+  emit_partial_load_address(T1, s);
+  emit_disptable_ref(type_name,s);
+  s << endl;
 
   // Find method offset in dipatch table
   Symbol expr_type = expr->get_type();
@@ -1406,11 +1409,13 @@ void static_dispatch_class::code(CgenClassTableP table, ostream &s)
     expr_type = (table->lookup(SELF_TYPE))->get_name();
   }
   auto method_names = table->disp_tables[type_name];
-
+  // cerr << name << " "<< type_name << " " << expr_type << endl;
   size_t i;
   for (i = 0; i < method_names.size(); i++) {
-    if (method_names[i] == name)
+    if (method_names[i] == name){
+      // cerr << i << endl;
       break;
+    }
   }
 
   // Load address of method code and jump there
@@ -1576,8 +1581,11 @@ void typcase_class::code(CgenClassTableP table, ostream &s)
 
       emit_load_imm(T1, compare_tag, s);
 
+      // emit_addiu(SP, SP, 4, s);
+      // table->var_count--;
       // If we find a match, jump to that class' closest ancestor branch
       emit_beq(ACC, T1, labels[idx], s);
+
     }
   }
 
@@ -1593,6 +1601,7 @@ void typcase_class::code(CgenClassTableP table, ostream &s)
   int end_case = table->new_label();
   for(int i = cases->first(); cases->more(i); i = cases->next(i)) {
     emit_label_def(labels[j], s);
+    emit_load(ACC, 1, SP, s);
     j++;
     cases->nth(i)->code(table, s);
     emit_branch(end_case, s);
@@ -1931,7 +1940,7 @@ void new__class::code(CgenClassTableP table, ostream &s)
 
 void isvoid_class::code(CgenClassTableP table, ostream &s) {
   e1->code(table, s);
-
+  
   emit_move(T1, ACC, s);
   emit_load_bool(ACC, BoolConst(1), s);
 

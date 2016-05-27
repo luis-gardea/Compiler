@@ -11,9 +11,9 @@ if len(sys.argv) == 2:
 	filename = path[path.find('/')+1:]
 	# print filename
 	name = filename[:filename.find('.')]
-	command1 = "./mycoolc " + filename;
+	command1 = "./mycoolc " + "tests/"+filename;
 	command2 = "mv -f " + name + ".s " + "output1"
-	command3 = "/usr/class/cs143/bin/coolc " + filename
+	command3 = "/usr/class/cs143/bin/coolc " +"tests/"+ filename
 	command4 = "mv -f " + name + ".s " + name + "ref.s"
 	command5 = "mv -f " + name + "ref.s output1" 
 	os.system(command1)
@@ -22,12 +22,12 @@ if len(sys.argv) == 2:
 	os.system(command4)
 	os.system(command5)
 	# print filename
-	# command6 = "./spim " + "output1/" + name + ".s >& output2/" + name
-	# command7 = "./spim " + "output1/" + name + "ref.s >& output2/" + name + "ref"
-	# os.system(command6)
-	# os.system(command7)
-	# diff_cmd = "diff output2/" + name + " output2/" + name
-	# os.system(diff_cmd)
+	command6 = "./spim " + "output1/" + name + ".s >& output2/" + name
+	command7 = "./spim " + "output1/" + name + "ref.s >& output2/" + name + "ref"
+	os.system(command6)
+	os.system(command7)
+	diff_cmd = "diff output2/" + name + " output2/" + name
+	os.system(diff_cmd)
 else:
 # This would print all the files and directories
 	for filename in dirs:

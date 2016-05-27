@@ -15,7 +15,7 @@ _int_tag:
 _bool_tag:
 	.word	3
 _string_tag:
-	.word	4
+	.word	1
 	.globl	_MemMgr_INITIALIZER
 _MemMgr_INITIALIZER:
 	.word	_NoGC_Init
@@ -27,7 +27,7 @@ _MemMgr_TEST:
 	.word	0
 	.word	-1
 str_const16:
-	.word	4
+	.word	1
 	.word	5
 	.word	String_dispTab
 	.word	int_const2
@@ -35,7 +35,7 @@ str_const16:
 	.align	2
 	.word	-1
 str_const15:
-	.word	4
+	.word	1
 	.word	6
 	.word	String_dispTab
 	.word	int_const3
@@ -44,7 +44,7 @@ str_const15:
 	.align	2
 	.word	-1
 str_const14:
-	.word	4
+	.word	1
 	.word	6
 	.word	String_dispTab
 	.word	int_const3
@@ -53,7 +53,7 @@ str_const14:
 	.align	2
 	.word	-1
 str_const13:
-	.word	4
+	.word	1
 	.word	6
 	.word	String_dispTab
 	.word	int_const3
@@ -62,7 +62,7 @@ str_const13:
 	.align	2
 	.word	-1
 str_const12:
-	.word	4
+	.word	1
 	.word	5
 	.word	String_dispTab
 	.word	int_const4
@@ -71,7 +71,7 @@ str_const12:
 	.align	2
 	.word	-1
 str_const11:
-	.word	4
+	.word	1
 	.word	5
 	.word	String_dispTab
 	.word	int_const4
@@ -80,7 +80,7 @@ str_const11:
 	.align	2
 	.word	-1
 str_const10:
-	.word	4
+	.word	1
 	.word	6
 	.word	String_dispTab
 	.word	int_const5
@@ -89,7 +89,7 @@ str_const10:
 	.align	2
 	.word	-1
 str_const9:
-	.word	4
+	.word	1
 	.word	6
 	.word	String_dispTab
 	.word	int_const3
@@ -98,7 +98,7 @@ str_const9:
 	.align	2
 	.word	-1
 str_const8:
-	.word	4
+	.word	1
 	.word	5
 	.word	String_dispTab
 	.word	int_const4
@@ -107,7 +107,7 @@ str_const8:
 	.align	2
 	.word	-1
 str_const7:
-	.word	4
+	.word	1
 	.word	5
 	.word	String_dispTab
 	.word	int_const0
@@ -116,7 +116,7 @@ str_const7:
 	.align	2
 	.word	-1
 str_const6:
-	.word	4
+	.word	1
 	.word	6
 	.word	String_dispTab
 	.word	int_const5
@@ -125,7 +125,7 @@ str_const6:
 	.align	2
 	.word	-1
 str_const5:
-	.word	4
+	.word	1
 	.word	7
 	.word	String_dispTab
 	.word	int_const6
@@ -134,7 +134,7 @@ str_const5:
 	.align	2
 	.word	-1
 str_const4:
-	.word	4
+	.word	1
 	.word	7
 	.word	String_dispTab
 	.word	int_const7
@@ -143,7 +143,7 @@ str_const4:
 	.align	2
 	.word	-1
 str_const3:
-	.word	4
+	.word	1
 	.word	7
 	.word	String_dispTab
 	.word	int_const7
@@ -152,7 +152,7 @@ str_const3:
 	.align	2
 	.word	-1
 str_const2:
-	.word	4
+	.word	1
 	.word	8
 	.word	String_dispTab
 	.word	int_const8
@@ -161,7 +161,7 @@ str_const2:
 	.align	2
 	.word	-1
 str_const1:
-	.word	4
+	.word	1
 	.word	7
 	.word	String_dispTab
 	.word	int_const6
@@ -170,7 +170,7 @@ str_const1:
 	.align	2
 	.word	-1
 str_const0:
-	.word	4
+	.word	1
 	.word	9
 	.word	String_dispTab
 	.word	int_const9
@@ -251,7 +251,7 @@ bool_const1:
 	.word	1
 	.word	-1
 Bar_protObj:
-	.word	5
+	.word	8
 	.word	12
 	.word	Bar_dispTab
 	.word	int_const2
@@ -265,7 +265,7 @@ Bar_protObj:
 	.word	0
 	.word	-1
 Razz_protObj:
-	.word	4
+	.word	7
 	.word	10
 	.word	Razz_dispTab
 	.word	int_const2
@@ -277,7 +277,7 @@ Razz_protObj:
 	.word	int_const2
 	.word	-1
 Foo_protObj:
-	.word	3
+	.word	6
 	.word	8
 	.word	Foo_dispTab
 	.word	int_const2
@@ -287,7 +287,7 @@ Foo_protObj:
 	.word	int_const2
 	.word	-1
 Bazz_protObj:
-	.word	2
+	.word	5
 	.word	6
 	.word	Bazz_dispTab
 	.word	int_const2
@@ -295,24 +295,24 @@ Bazz_protObj:
 	.word	0
 	.word	-1
 IO_protObj:
-	.word	1
+	.word	4
 	.word	3
 	.word	IO_dispTab
 	.word	-1
 Int_protObj:
-	.word	6
+	.word	2
 	.word	4
 	.word	Int_dispTab
 	.word	0
 	.word	-1
 Bool_protObj:
-	.word	7
+	.word	3
 	.word	4
 	.word	Bool_dispTab
 	.word	0
 	.word	-1
 String_protObj:
-	.word	8
+	.word	1
 	.word	5
 	.word	String_dispTab
 	.word	int_const2
@@ -372,7 +372,6 @@ Bar_dispTab:
 	.word	IO.in_string
 	.word	IO.in_int
 	.word	Bazz.printh
-	.word	Bazz.doh
 	.word	Foo.doh
 Razz_dispTab:
 	.word	Object.abort
@@ -383,7 +382,6 @@ Razz_dispTab:
 	.word	IO.in_string
 	.word	IO.in_int
 	.word	Bazz.printh
-	.word	Bazz.doh
 	.word	Foo.doh
 Foo_dispTab:
 	.word	Object.abort
@@ -394,7 +392,6 @@ Foo_dispTab:
 	.word	IO.in_string
 	.word	IO.in_int
 	.word	Bazz.printh
-	.word	Bazz.doh
 	.word	Foo.doh
 Bazz_dispTab:
 	.word	Object.abort
@@ -493,17 +490,18 @@ label1:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	lw	$a0 0($a0)
-	li	$t1 2
-	beq	$a0 $t1 label2
-	li	$t1 4
-	beq	$a0 $t1 label3
 	li	$t1 5
+	beq	$a0 $t1 label2
+	li	$t1 7
+	beq	$a0 $t1 label3
+	li	$t1 8
 	beq	$a0 $t1 label5
-	li	$t1 3
+	li	$t1 6
 	beq	$a0 $t1 label4
 	lw	$a0 4($sp)
 	jal	_case_abort
 label2:
+	lw	$a0 4($sp)
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 Foo_protObj
@@ -512,6 +510,7 @@ label2:
 	addiu	$sp $sp 4
 	b	label6
 label3:
+	lw	$a0 4($sp)
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 Bar_protObj
@@ -520,6 +519,7 @@ label3:
 	addiu	$sp $sp 4
 	b	label6
 label4:
+	lw	$a0 4($sp)
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 Razz_protObj
@@ -528,6 +528,7 @@ label4:
 	addiu	$sp $sp 4
 	b	label6
 label5:
+	lw	$a0 4($sp)
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	lw	$a0 -8($fp)
@@ -569,15 +570,16 @@ label8:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	lw	$a0 0($a0)
-	li	$t1 4
+	li	$t1 7
 	beq	$a0 $t1 label9
-	li	$t1 5
+	li	$t1 8
 	beq	$a0 $t1 label11
-	li	$t1 3
+	li	$t1 6
 	beq	$a0 $t1 label10
 	lw	$a0 4($sp)
 	jal	_case_abort
 label9:
+	lw	$a0 4($sp)
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 Bar_protObj
@@ -586,6 +588,7 @@ label9:
 	addiu	$sp $sp 4
 	b	label12
 label10:
+	lw	$a0 4($sp)
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 Razz_protObj
@@ -594,6 +597,7 @@ label10:
 	addiu	$sp $sp 4
 	b	label12
 label11:
+	lw	$a0 4($sp)
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	lw	$a0 -8($fp)
@@ -701,13 +705,14 @@ label17:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	lw	$a0 0($a0)
-	li	$t1 4
+	li	$t1 7
 	beq	$a0 $t1 label18
-	li	$t1 5
+	li	$t1 8
 	beq	$a0 $t1 label19
 	lw	$a0 4($sp)
 	jal	_case_abort
 label18:
+	lw	$a0 4($sp)
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 Bar_protObj
@@ -716,6 +721,7 @@ label18:
 	addiu	$sp $sp 4
 	b	label20
 label19:
+	lw	$a0 4($sp)
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	lw	$a0 -8($fp)
@@ -730,7 +736,7 @@ label20:
 	li	$t1 31
 	jal	_dispatch_abort
 label21:
-	lw	$t1 8($a0)
+	la	$t1 Bazz_dispTab
 	lw	$t1 32($t1)
 	jalr		$t1
 	sw	$a0 0($sp)

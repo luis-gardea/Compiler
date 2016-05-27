@@ -15,7 +15,7 @@ _int_tag:
 _bool_tag:
 	.word	3
 _string_tag:
-	.word	4
+	.word	1
 	.globl	_MemMgr_INITIALIZER
 _MemMgr_INITIALIZER:
 	.word	_NoGC_Init
@@ -27,7 +27,7 @@ _MemMgr_TEST:
 	.word	0
 	.word	-1
 str_const71:
-	.word	4
+	.word	1
 	.word	5
 	.word	String_dispTab
 	.word	int_const10
@@ -35,7 +35,7 @@ str_const71:
 	.align	2
 	.word	-1
 str_const70:
-	.word	4
+	.word	1
 	.word	6
 	.word	String_dispTab
 	.word	int_const4
@@ -44,7 +44,7 @@ str_const70:
 	.align	2
 	.word	-1
 str_const69:
-	.word	4
+	.word	1
 	.word	9
 	.word	String_dispTab
 	.word	int_const21
@@ -53,7 +53,7 @@ str_const69:
 	.align	2
 	.word	-1
 str_const68:
-	.word	4
+	.word	1
 	.word	6
 	.word	String_dispTab
 	.word	int_const2
@@ -62,7 +62,7 @@ str_const68:
 	.align	2
 	.word	-1
 str_const67:
-	.word	4
+	.word	1
 	.word	6
 	.word	String_dispTab
 	.word	int_const13
@@ -71,7 +71,7 @@ str_const67:
 	.align	2
 	.word	-1
 str_const66:
-	.word	4
+	.word	1
 	.word	6
 	.word	String_dispTab
 	.word	int_const4
@@ -80,7 +80,7 @@ str_const66:
 	.align	2
 	.word	-1
 str_const65:
-	.word	4
+	.word	1
 	.word	5
 	.word	String_dispTab
 	.word	int_const1
@@ -89,7 +89,7 @@ str_const65:
 	.align	2
 	.word	-1
 str_const64:
-	.word	4
+	.word	1
 	.word	5
 	.word	String_dispTab
 	.word	int_const12
@@ -98,7 +98,7 @@ str_const64:
 	.align	2
 	.word	-1
 str_const63:
-	.word	4
+	.word	1
 	.word	6
 	.word	String_dispTab
 	.word	int_const13
@@ -107,7 +107,7 @@ str_const63:
 	.align	2
 	.word	-1
 str_const62:
-	.word	4
+	.word	1
 	.word	7
 	.word	String_dispTab
 	.word	int_const16
@@ -116,7 +116,7 @@ str_const62:
 	.align	2
 	.word	-1
 str_const61:
-	.word	4
+	.word	1
 	.word	7
 	.word	String_dispTab
 	.word	int_const15
@@ -125,7 +125,7 @@ str_const61:
 	.align	2
 	.word	-1
 str_const60:
-	.word	4
+	.word	1
 	.word	7
 	.word	String_dispTab
 	.word	int_const15
@@ -134,7 +134,7 @@ str_const60:
 	.align	2
 	.word	-1
 str_const59:
-	.word	4
+	.word	1
 	.word	8
 	.word	String_dispTab
 	.word	int_const19
@@ -143,7 +143,7 @@ str_const59:
 	.align	2
 	.word	-1
 str_const58:
-	.word	4
+	.word	1
 	.word	16
 	.word	String_dispTab
 	.word	int_const24
@@ -152,7 +152,7 @@ str_const58:
 	.align	2
 	.word	-1
 str_const57:
-	.word	4
+	.word	1
 	.word	12
 	.word	String_dispTab
 	.word	int_const25
@@ -161,7 +161,7 @@ str_const57:
 	.align	2
 	.word	-1
 str_const56:
-	.word	4
+	.word	1
 	.word	5
 	.word	String_dispTab
 	.word	int_const11
@@ -170,7 +170,7 @@ str_const56:
 	.align	2
 	.word	-1
 str_const55:
-	.word	4
+	.word	1
 	.word	17
 	.word	String_dispTab
 	.word	int_const26
@@ -179,7 +179,7 @@ str_const55:
 	.align	2
 	.word	-1
 str_const54:
-	.word	4
+	.word	1
 	.word	17
 	.word	String_dispTab
 	.word	int_const27
@@ -188,7 +188,7 @@ str_const54:
 	.align	2
 	.word	-1
 str_const53:
-	.word	4
+	.word	1
 	.word	5
 	.word	String_dispTab
 	.word	int_const12
@@ -197,7 +197,7 @@ str_const53:
 	.align	2
 	.word	-1
 str_const52:
-	.word	4
+	.word	1
 	.word	5
 	.word	String_dispTab
 	.word	int_const11
@@ -206,7 +206,7 @@ str_const52:
 	.align	2
 	.word	-1
 str_const51:
-	.word	4
+	.word	1
 	.word	17
 	.word	String_dispTab
 	.word	int_const26
@@ -215,7 +215,7 @@ str_const51:
 	.align	2
 	.word	-1
 str_const50:
-	.word	4
+	.word	1
 	.word	18
 	.word	String_dispTab
 	.word	int_const28
@@ -224,7 +224,7 @@ str_const50:
 	.align	2
 	.word	-1
 str_const49:
-	.word	4
+	.word	1
 	.word	11
 	.word	String_dispTab
 	.word	int_const8
@@ -233,7 +233,7 @@ str_const49:
 	.align	2
 	.word	-1
 str_const48:
-	.word	4
+	.word	1
 	.word	12
 	.word	String_dispTab
 	.word	int_const9
@@ -242,7 +242,7 @@ str_const48:
 	.align	2
 	.word	-1
 str_const47:
-	.word	4
+	.word	1
 	.word	12
 	.word	String_dispTab
 	.word	int_const9
@@ -251,7 +251,7 @@ str_const47:
 	.align	2
 	.word	-1
 str_const46:
-	.word	4
+	.word	1
 	.word	9
 	.word	String_dispTab
 	.word	int_const3
@@ -260,7 +260,7 @@ str_const46:
 	.align	2
 	.word	-1
 str_const45:
-	.word	4
+	.word	1
 	.word	12
 	.word	String_dispTab
 	.word	int_const9
@@ -269,7 +269,7 @@ str_const45:
 	.align	2
 	.word	-1
 str_const44:
-	.word	4
+	.word	1
 	.word	12
 	.word	String_dispTab
 	.word	int_const9
@@ -278,7 +278,7 @@ str_const44:
 	.align	2
 	.word	-1
 str_const43:
-	.word	4
+	.word	1
 	.word	10
 	.word	String_dispTab
 	.word	int_const6
@@ -287,7 +287,7 @@ str_const43:
 	.align	2
 	.word	-1
 str_const42:
-	.word	4
+	.word	1
 	.word	10
 	.word	String_dispTab
 	.word	int_const6
@@ -296,7 +296,7 @@ str_const42:
 	.align	2
 	.word	-1
 str_const41:
-	.word	4
+	.word	1
 	.word	11
 	.word	String_dispTab
 	.word	int_const8
@@ -305,7 +305,7 @@ str_const41:
 	.align	2
 	.word	-1
 str_const40:
-	.word	4
+	.word	1
 	.word	11
 	.word	String_dispTab
 	.word	int_const8
@@ -314,7 +314,7 @@ str_const40:
 	.align	2
 	.word	-1
 str_const39:
-	.word	4
+	.word	1
 	.word	11
 	.word	String_dispTab
 	.word	int_const8
@@ -323,7 +323,7 @@ str_const39:
 	.align	2
 	.word	-1
 str_const38:
-	.word	4
+	.word	1
 	.word	8
 	.word	String_dispTab
 	.word	int_const0
@@ -332,7 +332,7 @@ str_const38:
 	.align	2
 	.word	-1
 str_const37:
-	.word	4
+	.word	1
 	.word	8
 	.word	String_dispTab
 	.word	int_const0
@@ -341,7 +341,7 @@ str_const37:
 	.align	2
 	.word	-1
 str_const36:
-	.word	4
+	.word	1
 	.word	8
 	.word	String_dispTab
 	.word	int_const0
@@ -350,7 +350,7 @@ str_const36:
 	.align	2
 	.word	-1
 str_const35:
-	.word	4
+	.word	1
 	.word	10
 	.word	String_dispTab
 	.word	int_const5
@@ -359,7 +359,7 @@ str_const35:
 	.align	2
 	.word	-1
 str_const34:
-	.word	4
+	.word	1
 	.word	10
 	.word	String_dispTab
 	.word	int_const5
@@ -368,7 +368,7 @@ str_const34:
 	.align	2
 	.word	-1
 str_const33:
-	.word	4
+	.word	1
 	.word	11
 	.word	String_dispTab
 	.word	int_const8
@@ -377,7 +377,7 @@ str_const33:
 	.align	2
 	.word	-1
 str_const32:
-	.word	4
+	.word	1
 	.word	11
 	.word	String_dispTab
 	.word	int_const8
@@ -386,7 +386,7 @@ str_const32:
 	.align	2
 	.word	-1
 str_const31:
-	.word	4
+	.word	1
 	.word	11
 	.word	String_dispTab
 	.word	int_const8
@@ -395,7 +395,7 @@ str_const31:
 	.align	2
 	.word	-1
 str_const30:
-	.word	4
+	.word	1
 	.word	11
 	.word	String_dispTab
 	.word	int_const8
@@ -404,7 +404,7 @@ str_const30:
 	.align	2
 	.word	-1
 str_const29:
-	.word	4
+	.word	1
 	.word	11
 	.word	String_dispTab
 	.word	int_const8
@@ -413,7 +413,7 @@ str_const29:
 	.align	2
 	.word	-1
 str_const28:
-	.word	4
+	.word	1
 	.word	10
 	.word	String_dispTab
 	.word	int_const5
@@ -422,7 +422,7 @@ str_const28:
 	.align	2
 	.word	-1
 str_const27:
-	.word	4
+	.word	1
 	.word	8
 	.word	String_dispTab
 	.word	int_const0
@@ -431,7 +431,7 @@ str_const27:
 	.align	2
 	.word	-1
 str_const26:
-	.word	4
+	.word	1
 	.word	8
 	.word	String_dispTab
 	.word	int_const18
@@ -440,7 +440,7 @@ str_const26:
 	.align	2
 	.word	-1
 str_const25:
-	.word	4
+	.word	1
 	.word	8
 	.word	String_dispTab
 	.word	int_const18
@@ -449,7 +449,7 @@ str_const25:
 	.align	2
 	.word	-1
 str_const24:
-	.word	4
+	.word	1
 	.word	8
 	.word	String_dispTab
 	.word	int_const18
@@ -458,7 +458,7 @@ str_const24:
 	.align	2
 	.word	-1
 str_const23:
-	.word	4
+	.word	1
 	.word	7
 	.word	String_dispTab
 	.word	int_const17
@@ -467,7 +467,7 @@ str_const23:
 	.align	2
 	.word	-1
 str_const22:
-	.word	4
+	.word	1
 	.word	8
 	.word	String_dispTab
 	.word	int_const18
@@ -476,7 +476,7 @@ str_const22:
 	.align	2
 	.word	-1
 str_const21:
-	.word	4
+	.word	1
 	.word	8
 	.word	String_dispTab
 	.word	int_const18
@@ -485,7 +485,7 @@ str_const21:
 	.align	2
 	.word	-1
 str_const20:
-	.word	4
+	.word	1
 	.word	7
 	.word	String_dispTab
 	.word	int_const17
@@ -494,7 +494,7 @@ str_const20:
 	.align	2
 	.word	-1
 str_const19:
-	.word	4
+	.word	1
 	.word	9
 	.word	String_dispTab
 	.word	int_const3
@@ -503,7 +503,7 @@ str_const19:
 	.align	2
 	.word	-1
 str_const18:
-	.word	4
+	.word	1
 	.word	7
 	.word	String_dispTab
 	.word	int_const17
@@ -512,7 +512,7 @@ str_const18:
 	.align	2
 	.word	-1
 str_const17:
-	.word	4
+	.word	1
 	.word	9
 	.word	String_dispTab
 	.word	int_const21
@@ -521,7 +521,7 @@ str_const17:
 	.align	2
 	.word	-1
 str_const16:
-	.word	4
+	.word	1
 	.word	12
 	.word	String_dispTab
 	.word	int_const29
@@ -530,7 +530,7 @@ str_const16:
 	.align	2
 	.word	-1
 str_const15:
-	.word	4
+	.word	1
 	.word	10
 	.word	String_dispTab
 	.word	int_const5
@@ -539,7 +539,7 @@ str_const15:
 	.align	2
 	.word	-1
 str_const14:
-	.word	4
+	.word	1
 	.word	7
 	.word	String_dispTab
 	.word	int_const16
@@ -548,7 +548,7 @@ str_const14:
 	.align	2
 	.word	-1
 str_const13:
-	.word	4
+	.word	1
 	.word	11
 	.word	String_dispTab
 	.word	int_const30
@@ -557,7 +557,7 @@ str_const13:
 	.align	2
 	.word	-1
 str_const12:
-	.word	4
+	.word	1
 	.word	11
 	.word	String_dispTab
 	.word	int_const31
@@ -566,7 +566,7 @@ str_const12:
 	.align	2
 	.word	-1
 str_const11:
-	.word	4
+	.word	1
 	.word	10
 	.word	String_dispTab
 	.word	int_const6
@@ -575,7 +575,7 @@ str_const11:
 	.align	2
 	.word	-1
 str_const10:
-	.word	4
+	.word	1
 	.word	11
 	.word	String_dispTab
 	.word	int_const8
@@ -584,7 +584,7 @@ str_const10:
 	.align	2
 	.word	-1
 str_const9:
-	.word	4
+	.word	1
 	.word	7
 	.word	String_dispTab
 	.word	int_const15
@@ -593,7 +593,7 @@ str_const9:
 	.align	2
 	.word	-1
 str_const8:
-	.word	4
+	.word	1
 	.word	16
 	.word	String_dispTab
 	.word	int_const24
@@ -602,7 +602,7 @@ str_const8:
 	.align	2
 	.word	-1
 str_const7:
-	.word	4
+	.word	1
 	.word	16
 	.word	String_dispTab
 	.word	int_const24
@@ -611,7 +611,7 @@ str_const7:
 	.align	2
 	.word	-1
 str_const6:
-	.word	4
+	.word	1
 	.word	8
 	.word	String_dispTab
 	.word	int_const18
@@ -620,7 +620,7 @@ str_const6:
 	.align	2
 	.word	-1
 str_const5:
-	.word	4
+	.word	1
 	.word	11
 	.word	String_dispTab
 	.word	int_const30
@@ -629,7 +629,7 @@ str_const5:
 	.align	2
 	.word	-1
 str_const4:
-	.word	4
+	.word	1
 	.word	5
 	.word	String_dispTab
 	.word	int_const11
@@ -638,7 +638,7 @@ str_const4:
 	.align	2
 	.word	-1
 str_const3:
-	.word	4
+	.word	1
 	.word	5
 	.word	String_dispTab
 	.word	int_const11
@@ -647,7 +647,7 @@ str_const3:
 	.align	2
 	.word	-1
 str_const2:
-	.word	4
+	.word	1
 	.word	5
 	.word	String_dispTab
 	.word	int_const11
@@ -656,7 +656,7 @@ str_const2:
 	.align	2
 	.word	-1
 str_const1:
-	.word	4
+	.word	1
 	.word	5
 	.word	String_dispTab
 	.word	int_const11
@@ -665,7 +665,7 @@ str_const1:
 	.align	2
 	.word	-1
 str_const0:
-	.word	4
+	.word	1
 	.word	8
 	.word	String_dispTab
 	.word	int_const19
@@ -878,7 +878,7 @@ bool_const1:
 	.word	1
 	.word	-1
 Main_protObj:
-	.word	4
+	.word	7
 	.word	8
 	.word	Main_dispTab
 	.word	int_const10
@@ -888,7 +888,7 @@ Main_protObj:
 	.word	0
 	.word	-1
 CellularAutomaton_protObj:
-	.word	3
+	.word	6
 	.word	7
 	.word	CellularAutomaton_dispTab
 	.word	int_const10
@@ -897,7 +897,7 @@ CellularAutomaton_protObj:
 	.word	str_const71
 	.word	-1
 Board_protObj:
-	.word	2
+	.word	5
 	.word	6
 	.word	Board_dispTab
 	.word	int_const10
@@ -905,24 +905,24 @@ Board_protObj:
 	.word	int_const10
 	.word	-1
 IO_protObj:
-	.word	1
+	.word	4
 	.word	3
 	.word	IO_dispTab
 	.word	-1
 Int_protObj:
-	.word	5
+	.word	2
 	.word	4
 	.word	Int_dispTab
 	.word	0
 	.word	-1
 Bool_protObj:
-	.word	6
+	.word	3
 	.word	4
 	.word	Bool_dispTab
 	.word	0
 	.word	-1
 String_protObj:
-	.word	7
+	.word	1
 	.word	5
 	.word	String_dispTab
 	.word	int_const10
@@ -1219,8 +1219,8 @@ label4:
 	lw	$t1 8($a0)
 	lw	$t1 104($t1)
 	jalr		$t1
-	lw	$t1 12($a0)
-	beq	$t1 $zero label5
+	lw	$a0 12($a0)
+	beq	$a0 $zero label5
 	la	$a0 bool_const1
 	sw	$a0 -4($fp)
 	move	$a0 $s0
@@ -1259,8 +1259,8 @@ label8:
 	jalr		$t1
 label9:
 	lw	$a0 -4($fp)
-	lw	$t1 12($a0)
-	beq	$t1 $zero label10
+	lw	$a0 12($a0)
+	beq	$a0 $zero label10
 	move	$a0 $s0
 	bne	$a0 $zero label11
 	la	$a0 str_const0
@@ -1270,8 +1270,8 @@ label11:
 	lw	$t1 8($a0)
 	lw	$t1 100($t1)
 	jalr		$t1
-	la	$t1 bool_const0
-	beq	$a0 $t1 label12
+	lw	$a0 12($a0)
+	beqz	$a0 label12
 	lw	$a0 28($s0)
 	bne	$a0 $zero label13
 	la	$a0 str_const0
@@ -1376,8 +1376,8 @@ label18:
 label19:
 	la	$a0 bool_const1
 label20:
-	lw	$t1 12($a0)
-	beq	$t1 $zero label21
+	lw	$a0 12($a0)
+	beq	$a0 $zero label21
 	lw	$a0 -4($fp)
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
@@ -1511,8 +1511,8 @@ CellularAutomaton.cell:
 label27:
 	la	$a0 bool_const1
 label28:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label29
+	lw	$a0 12($a0)
+	beqz	$a0 label29
 	la	$a0 str_const2
 	b	label30
 label29:
@@ -1572,8 +1572,8 @@ CellularAutomaton.north:
 label32:
 	la	$a0 bool_const1
 label33:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label34
+	lw	$a0 12($a0)
+	beqz	$a0 label34
 	la	$a0 str_const2
 	b	label35
 label34:
@@ -1644,8 +1644,8 @@ CellularAutomaton.south:
 label37:
 	la	$a0 bool_const1
 label38:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label39
+	lw	$a0 12($a0)
+	beqz	$a0 label39
 	la	$a0 str_const2
 	b	label40
 label39:
@@ -1748,16 +1748,16 @@ CellularAutomaton.east:
 	lw	$t1 4($sp)
 	sw	$t1 12($a0)
 	addiu	$sp $sp 8
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label42
 	la	$a1 bool_const0
 	jal	equality_test
 label42:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label43
+	lw	$a0 12($a0)
+	beqz	$a0 label43
 	la	$a0 str_const2
 	b	label44
 label43:
@@ -1804,16 +1804,16 @@ CellularAutomaton.west:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 int_const10
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label46
 	la	$a1 bool_const0
 	jal	equality_test
 label46:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label47
+	lw	$a0 12($a0)
+	beqz	$a0 label47
 	la	$a0 str_const2
 	b	label48
 label47:
@@ -1849,16 +1849,16 @@ label47:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	lw	$a0 12($fp)
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label49
 	la	$a1 bool_const0
 	jal	equality_test
 label49:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label50
+	lw	$a0 12($a0)
+	beqz	$a0 label50
 	la	$a0 str_const2
 	b	label51
 label50:
@@ -1930,8 +1930,8 @@ CellularAutomaton.northwest:
 label53:
 	la	$a0 bool_const1
 label54:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label55
+	lw	$a0 12($a0)
+	beqz	$a0 label55
 	la	$a0 str_const2
 	b	label56
 label55:
@@ -1967,16 +1967,16 @@ label55:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	lw	$a0 12($fp)
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label57
 	la	$a1 bool_const0
 	jal	equality_test
 label57:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label58
+	lw	$a0 12($a0)
+	beqz	$a0 label58
 	la	$a0 str_const2
 	b	label59
 label58:
@@ -2048,8 +2048,8 @@ CellularAutomaton.northeast:
 label61:
 	la	$a0 bool_const1
 label62:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label63
+	lw	$a0 12($a0)
+	beqz	$a0 label63
 	la	$a0 str_const2
 	b	label64
 label63:
@@ -2113,16 +2113,16 @@ label63:
 	lw	$t1 4($sp)
 	sw	$t1 12($a0)
 	addiu	$sp $sp 8
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label65
 	la	$a1 bool_const0
 	jal	equality_test
 label65:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label66
+	lw	$a0 12($a0)
+	beqz	$a0 label66
 	la	$a0 str_const2
 	b	label67
 label66:
@@ -2194,8 +2194,8 @@ CellularAutomaton.southeast:
 label69:
 	la	$a0 bool_const1
 label70:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label71
+	lw	$a0 12($a0)
+	beqz	$a0 label71
 	la	$a0 str_const2
 	b	label72
 label71:
@@ -2259,16 +2259,16 @@ label71:
 	lw	$t1 4($sp)
 	sw	$t1 12($a0)
 	addiu	$sp $sp 8
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label73
 	la	$a1 bool_const0
 	jal	equality_test
 label73:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label74
+	lw	$a0 12($a0)
+	beqz	$a0 label74
 	la	$a0 str_const2
 	b	label75
 label74:
@@ -2340,8 +2340,8 @@ CellularAutomaton.southwest:
 label77:
 	la	$a0 bool_const1
 label78:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label79
+	lw	$a0 12($a0)
+	beqz	$a0 label79
 	la	$a0 str_const2
 	b	label80
 label79:
@@ -2377,16 +2377,16 @@ label79:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	lw	$a0 12($fp)
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label81
 	la	$a1 bool_const0
 	jal	equality_test
 label81:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label82
+	lw	$a0 12($a0)
+	beqz	$a0 label82
 	la	$a0 str_const2
 	b	label83
 label82:
@@ -2445,16 +2445,16 @@ label85:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 str_const3
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label86
 	la	$a1 bool_const0
 	jal	equality_test
 label86:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label87
+	lw	$a0 12($a0)
+	beqz	$a0 label87
 	la	$a0 int_const11
 	b	label88
 label87:
@@ -2477,16 +2477,16 @@ label89:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 str_const3
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label90
 	la	$a1 bool_const0
 	jal	equality_test
 label90:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label91
+	lw	$a0 12($a0)
+	beqz	$a0 label91
 	la	$a0 int_const11
 	b	label92
 label91:
@@ -2520,16 +2520,16 @@ label93:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 str_const3
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label94
 	la	$a1 bool_const0
 	jal	equality_test
 label94:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label95
+	lw	$a0 12($a0)
+	beqz	$a0 label95
 	la	$a0 int_const11
 	b	label96
 label95:
@@ -2563,16 +2563,16 @@ label97:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 str_const3
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label98
 	la	$a1 bool_const0
 	jal	equality_test
 label98:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label99
+	lw	$a0 12($a0)
+	beqz	$a0 label99
 	la	$a0 int_const11
 	b	label100
 label99:
@@ -2606,16 +2606,16 @@ label101:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 str_const3
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label102
 	la	$a1 bool_const0
 	jal	equality_test
 label102:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label103
+	lw	$a0 12($a0)
+	beqz	$a0 label103
 	la	$a0 int_const11
 	b	label104
 label103:
@@ -2649,16 +2649,16 @@ label105:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 str_const3
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label106
 	la	$a1 bool_const0
 	jal	equality_test
 label106:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label107
+	lw	$a0 12($a0)
+	beqz	$a0 label107
 	la	$a0 int_const11
 	b	label108
 label107:
@@ -2692,16 +2692,16 @@ label109:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 str_const3
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label110
 	la	$a1 bool_const0
 	jal	equality_test
 label110:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label111
+	lw	$a0 12($a0)
+	beqz	$a0 label111
 	la	$a0 int_const11
 	b	label112
 label111:
@@ -2735,16 +2735,16 @@ label113:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 str_const3
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label114
 	la	$a1 bool_const0
 	jal	equality_test
 label114:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label115
+	lw	$a0 12($a0)
+	beqz	$a0 label115
 	la	$a0 int_const11
 	b	label116
 label115:
@@ -2788,16 +2788,16 @@ label117:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 int_const1
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label118
 	la	$a1 bool_const0
 	jal	equality_test
 label118:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label119
+	lw	$a0 12($a0)
+	beqz	$a0 label119
 	la	$a0 str_const3
 	b	label120
 label119:
@@ -2816,16 +2816,16 @@ label121:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 int_const12
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label122
 	la	$a1 bool_const0
 	jal	equality_test
 label122:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label123
+	lw	$a0 12($a0)
+	beqz	$a0 label123
 	lw	$a0 12($fp)
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
@@ -2841,16 +2841,16 @@ label124:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 str_const3
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label125
 	la	$a1 bool_const0
 	jal	equality_test
 label125:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label126
+	lw	$a0 12($a0)
+	beqz	$a0 label126
 	la	$a0 str_const3
 	b	label127
 label126:
@@ -2905,8 +2905,8 @@ label130:
 label131:
 	la	$a0 bool_const1
 label132:
-	lw	$t1 12($a0)
-	beq	$t1 $zero label133
+	lw	$a0 12($a0)
+	beq	$a0 $zero label133
 	lw	$a0 -4($fp)
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
@@ -3273,16 +3273,16 @@ label160:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 int_const11
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label161
 	la	$a1 bool_const0
 	jal	equality_test
 label161:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label162
+	lw	$a0 12($a0)
+	beqz	$a0 label162
 	la	$a0 str_const28
 	b	label163
 label162:
@@ -3290,16 +3290,16 @@ label162:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 int_const12
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label164
 	la	$a1 bool_const0
 	jal	equality_test
 label164:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label165
+	lw	$a0 12($a0)
+	beqz	$a0 label165
 	la	$a0 str_const29
 	b	label166
 label165:
@@ -3307,16 +3307,16 @@ label165:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 int_const1
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label167
 	la	$a1 bool_const0
 	jal	equality_test
 label167:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label168
+	lw	$a0 12($a0)
+	beqz	$a0 label168
 	la	$a0 str_const30
 	b	label169
 label168:
@@ -3324,16 +3324,16 @@ label168:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 int_const4
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label170
 	la	$a1 bool_const0
 	jal	equality_test
 label170:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label171
+	lw	$a0 12($a0)
+	beqz	$a0 label171
 	la	$a0 str_const31
 	b	label172
 label171:
@@ -3341,16 +3341,16 @@ label171:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 int_const2
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label173
 	la	$a1 bool_const0
 	jal	equality_test
 label173:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label174
+	lw	$a0 12($a0)
+	beqz	$a0 label174
 	la	$a0 str_const32
 	b	label175
 label174:
@@ -3358,16 +3358,16 @@ label174:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 int_const13
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label176
 	la	$a1 bool_const0
 	jal	equality_test
 label176:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label177
+	lw	$a0 12($a0)
+	beqz	$a0 label177
 	la	$a0 str_const33
 	b	label178
 label177:
@@ -3375,16 +3375,16 @@ label177:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 int_const7
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label179
 	la	$a1 bool_const0
 	jal	equality_test
 label179:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label180
+	lw	$a0 12($a0)
+	beqz	$a0 label180
 	la	$a0 str_const34
 	b	label181
 label180:
@@ -3392,16 +3392,16 @@ label180:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 int_const14
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label182
 	la	$a1 bool_const0
 	jal	equality_test
 label182:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label183
+	lw	$a0 12($a0)
+	beqz	$a0 label183
 	la	$a0 str_const35
 	b	label184
 label183:
@@ -3409,16 +3409,16 @@ label183:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 int_const15
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label185
 	la	$a1 bool_const0
 	jal	equality_test
 label185:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label186
+	lw	$a0 12($a0)
+	beqz	$a0 label186
 	la	$a0 str_const36
 	b	label187
 label186:
@@ -3426,16 +3426,16 @@ label186:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 int_const16
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label188
 	la	$a1 bool_const0
 	jal	equality_test
 label188:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label189
+	lw	$a0 12($a0)
+	beqz	$a0 label189
 	la	$a0 str_const37
 	b	label190
 label189:
@@ -3443,16 +3443,16 @@ label189:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 int_const17
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label191
 	la	$a1 bool_const0
 	jal	equality_test
 label191:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label192
+	lw	$a0 12($a0)
+	beqz	$a0 label192
 	la	$a0 str_const38
 	b	label193
 label192:
@@ -3460,16 +3460,16 @@ label192:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 int_const18
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label194
 	la	$a1 bool_const0
 	jal	equality_test
 label194:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label195
+	lw	$a0 12($a0)
+	beqz	$a0 label195
 	la	$a0 str_const39
 	b	label196
 label195:
@@ -3477,16 +3477,16 @@ label195:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 int_const19
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label197
 	la	$a1 bool_const0
 	jal	equality_test
 label197:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label198
+	lw	$a0 12($a0)
+	beqz	$a0 label198
 	la	$a0 str_const40
 	b	label199
 label198:
@@ -3494,16 +3494,16 @@ label198:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 int_const20
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label200
 	la	$a1 bool_const0
 	jal	equality_test
 label200:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label201
+	lw	$a0 12($a0)
+	beqz	$a0 label201
 	la	$a0 str_const41
 	b	label202
 label201:
@@ -3511,16 +3511,16 @@ label201:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 int_const0
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label203
 	la	$a1 bool_const0
 	jal	equality_test
 label203:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label204
+	lw	$a0 12($a0)
+	beqz	$a0 label204
 	la	$a0 str_const42
 	b	label205
 label204:
@@ -3528,16 +3528,16 @@ label204:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 int_const3
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label206
 	la	$a1 bool_const0
 	jal	equality_test
 label206:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label207
+	lw	$a0 12($a0)
+	beqz	$a0 label207
 	la	$a0 str_const43
 	b	label208
 label207:
@@ -3545,16 +3545,16 @@ label207:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 int_const21
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label209
 	la	$a1 bool_const0
 	jal	equality_test
 label209:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label210
+	lw	$a0 12($a0)
+	beqz	$a0 label210
 	la	$a0 str_const44
 	b	label211
 label210:
@@ -3562,16 +3562,16 @@ label210:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 int_const22
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label212
 	la	$a1 bool_const0
 	jal	equality_test
 label212:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label213
+	lw	$a0 12($a0)
+	beqz	$a0 label213
 	la	$a0 str_const45
 	b	label214
 label213:
@@ -3579,16 +3579,16 @@ label213:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 int_const23
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label215
 	la	$a1 bool_const0
 	jal	equality_test
 label215:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label216
+	lw	$a0 12($a0)
+	beqz	$a0 label216
 	la	$a0 str_const46
 	b	label217
 label216:
@@ -3596,16 +3596,16 @@ label216:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 int_const5
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label218
 	la	$a1 bool_const0
 	jal	equality_test
 label218:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label219
+	lw	$a0 12($a0)
+	beqz	$a0 label219
 	la	$a0 str_const47
 	b	label220
 label219:
@@ -3613,16 +3613,16 @@ label219:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 int_const6
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label221
 	la	$a1 bool_const0
 	jal	equality_test
 label221:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label222
+	lw	$a0 12($a0)
+	beqz	$a0 label222
 	la	$a0 str_const48
 	b	label223
 label222:
@@ -3714,16 +3714,16 @@ label227:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 str_const52
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label228
 	la	$a1 bool_const0
 	jal	equality_test
 label228:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label229
+	lw	$a0 12($a0)
+	beqz	$a0 label229
 	la	$a0 bool_const0
 	b	label230
 label229:
@@ -3795,16 +3795,16 @@ label234:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 str_const56
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label235
 	la	$a1 bool_const0
 	jal	equality_test
 label235:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label236
+	lw	$a0 12($a0)
+	beqz	$a0 label236
 	la	$a0 bool_const1
 	b	label237
 label236:
@@ -3862,16 +3862,16 @@ label239:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 int_const0
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label240
 	la	$a1 bool_const0
 	jal	equality_test
 label240:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label241
+	lw	$a0 12($a0)
+	beqz	$a0 label241
 	la	$a0 int_const1
 	sw	$a0 12($s0)
 	la	$a0 int_const2
@@ -3884,16 +3884,16 @@ label241:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 int_const3
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label243
 	la	$a1 bool_const0
 	jal	equality_test
 label243:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label244
+	lw	$a0 12($a0)
+	beqz	$a0 label244
 	la	$a0 int_const4
 	sw	$a0 12($s0)
 	la	$a0 int_const4
@@ -3906,16 +3906,16 @@ label244:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 int_const5
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label246
 	la	$a1 bool_const0
 	jal	equality_test
 label246:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label247
+	lw	$a0 12($a0)
+	beqz	$a0 label247
 	la	$a0 int_const4
 	sw	$a0 12($s0)
 	la	$a0 int_const2
@@ -3928,16 +3928,16 @@ label247:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 int_const6
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label249
 	la	$a1 bool_const0
 	jal	equality_test
 label249:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label250
+	lw	$a0 12($a0)
+	beqz	$a0 label250
 	la	$a0 int_const1
 	sw	$a0 12($s0)
 	la	$a0 int_const7
@@ -3950,16 +3950,16 @@ label250:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 int_const8
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label252
 	la	$a1 bool_const0
 	jal	equality_test
 label252:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label253
+	lw	$a0 12($a0)
+	beqz	$a0 label253
 	la	$a0 int_const2
 	sw	$a0 12($s0)
 	la	$a0 int_const2
@@ -3972,16 +3972,16 @@ label253:
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
 	la	$a0 int_const9
-	lw	$t1 4($sp)
 	move	$t2 $a0
-	la	$a0 bool_const1
+	lw	$t1 4($sp)
 	addiu	$sp $sp 4
+	la	$a0 bool_const1
 	beq	$t1 $t2 label255
 	la	$a1 bool_const0
 	jal	equality_test
 label255:
-	la	$t1 bool_const0
-	beq	$a0 $t1 label256
+	lw	$a0 12($a0)
+	beqz	$a0 label256
 	la	$a0 int_const7
 	sw	$a0 12($s0)
 	la	$a0 int_const4

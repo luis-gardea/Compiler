@@ -5,40 +5,35 @@
 
 class Main inherits IO {
 	main():Object {
-    (*let line:String <- "Hello" in {
-      while (line = "Hello") loop {
-        out_string(line);
-        out_string("\n");
-        line <- in_string();
-      } pool;
-
-    }*)
-    
-    let y:Int <- 3000 in {
-      while ~5 < y loop
-        y <- y-1
-      pool; 
+    let x : Int <- 5 in {
+      case x of
+        y : Int => x <- 6;
+        z : Object => x <- 7;
+      esac;
+      out_int(x);
     }
-   (*let line : String <- in_string() in
-      {
-        --out_string(line);
-        if line="quit" then out_string("line=quit") else out_string("line!=quit") fi;
-        (*while (not line="quit") loop {
-            out_string(line);
-            out_string("\n");
-            out_int(line.length());
-            out_int("quit".length());
-            line <- in_string();
-            
-        } pool;*)
-      }*)
-      
-      
   };
   x : String;
-  y:Int <- 50000;
+  y:Int <- 10;
 };
-    
+
+class A inherits IO {
+  print(a:Int) : Object {
+    {
+      out_int(a);
+      out_string("method in A\n");
+    }
+  };
+};
+
+class B inherits A {
+  print(a:Int) : Object{
+    {
+      out_int(a);
+      out_string("Method in B\n");
+    }
+  };
+};
 
     (*
     while x < 10 loop io.out_int(x <- x + 1) pool
