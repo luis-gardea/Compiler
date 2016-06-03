@@ -28,7 +28,7 @@
 extern void emit_string_constant(ostream& str, char *s);
 extern int cgen_debug;
 
-static SymbolTable<Symbol, int>* var_table = new SymbolTable<Symbol, int>();
+//static std::map<Symbol, std::vector<int>>* var_table = new SymbolTable<Symbol, std::vector<int>>();
 //
 // Three symbols from the semantic analyzer (semant.cc) are used.
 // If e : No_type, then no code is generated for e.
@@ -1142,7 +1142,8 @@ void emit_method_cleanup(int n, ostream& s)
 // We want to initilize all atttributes of the object with values from the init expressions
 void CgenNode::code_object_init(ostream& s, int num_inherited_attributes, int& num_self_attributes, CgenClassTableP table) 
 {
-  var_table->enterscope();
+  //var_table->enterscope();
+  table->new_env();
   table->var_count = 0;
   table->addid(SELF_TYPE, table->lookup(name));
   table->current_method = name;
@@ -1186,7 +1187,7 @@ void CgenNode::code_object_init(ostream& s, int num_inherited_attributes, int& n
   emit_move(ACC, SELF, s);
   emit_method_cleanup(0, s);
 
-  var_table->exitscope();
+  //var_table->exitscope();
 }
 
 void CgenClassTable::code_class_methods() {
@@ -1202,7 +1203,8 @@ void CgenNode::code_class_method(CgenClassTableP table, ostream& s)
     for(int i = features->first(); features->more(i); i = features->next(i)) {
       Feature method = features->nth(i);
       if (method->get_feature_type() == "Method") {
-        var_table->enterscope();
+        //var_table->enterscope();
+        table->new_env();
         table->var_count = 0;
         table->addid(SELF_TYPE, table->lookup(name));
         table->current_method = method->get_name();
@@ -1219,7 +1221,7 @@ void CgenNode::code_class_method(CgenClassTableP table, ostream& s)
         //cerr << name << " " << method->get_name() << " " << n << endl;
         emit_method_cleanup(n, s);
 
-        var_table->exitscope();
+        //var_table->exitscope();
       }
     }
   } 
@@ -1337,8 +1339,10 @@ void assign_class::code(CgenClassTableP table, ostream &s)
 
   // Next we lookup to see if this object is a variable in scope,
   // since variables in scope shadow everything else
-  if (var_table->probe(name) != NULL){
-    int offset = *(var_table->probe(name));
+  //if (var_table->probe(name) != NULL){
+  if (table->var_table->find(name) != table->var_table->end() && (*table->var_table)[name].size() != 0){
+    //int offset = *(var_table->probe(name));
+    int offset = (*table->var_table)[name].back();
     emit_store(ACC,-offset,FP,s);
     return;
   }
@@ -1624,8 +1628,9 @@ void branch_class::code(CgenClassTableP table, ostream &s)
   // the variable is placed, as well as which method 
   // has access to this variable
   table->var_count++;
-  int *offset = new int(table->var_count);
-  var_table->addid(name, offset);
+  //int *offset = new int(table->var_count);
+  //var_table->addid(name, offset);
+  (*table->var_table)[name].push_back(table->var_count);
   emit_push(ACC, s);
 
   // Evaluate the expression of the branch
@@ -1633,6 +1638,7 @@ void branch_class::code(CgenClassTableP table, ostream &s)
 
   // Move SP back up since the variable is now out of scope
   emit_addiu(SP, SP, 4, s);
+  (*table->var_table)[name].pop_back();
   table->var_count--;
 }
 
@@ -1658,8 +1664,9 @@ void let_class::code(CgenClassTableP table, ostream &s)
   // the variable is placed, as well as which method 
   // has access to this variable
   table->var_count++;
-  int *offset = new int(table->var_count);
-  var_table->addid(identifier, offset);
+  //int *offset = new int(table->var_count);
+  //var_table->addid(identifier, offset);
+  (*table->var_table)[identifier].push_back(table->var_count);
   emit_push(ACC, s);
 
   // Evaluate the body
@@ -1667,6 +1674,7 @@ void let_class::code(CgenClassTableP table, ostream &s)
 
   // Move SP back up since the variable is now out of scope
   emit_addiu(SP, SP, 4, s);
+  (*table->var_table)[identifier].pop_back();
   table->var_count--;
 }
 
@@ -1968,8 +1976,10 @@ void object_class::code(CgenClassTableP table, ostream &s)
 
   // Next we lookup to see if this object is a variable in scope,
   // since variables in scope shadow everything else
-  if (var_table->probe(name) != NULL){
-    int offset = *(var_table->probe(name));
+  //if (var_table->probe(name) != NULL){
+  if (table->var_table->find(name) != table->var_table->end() && (*table->var_table)[name].size() != 0){
+    //int offset = *(var_table->probe(name));
+    int offset = (*table->var_table)[name].back();
     emit_load(ACC,-offset,FP,s);
     return;
   }

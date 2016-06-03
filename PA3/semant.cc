@@ -616,7 +616,7 @@ void class__class::recurse(ClassTable* classtable) {
         if (features->nth(i)->get_feature_type() == "Attribute") {
             if(sym_tab->probe(feature_name) != NULL) {
                 classtable->semant_error1(name, features->nth(i)) << "Attribute " << feature_name << " is multiply defined in class." << endl;
-            } else if (sym_tab->lookup(feature_name) != NULL) {
+            } else if (feature_name != self && sym_tab->lookup(feature_name) != NULL) {
                 classtable->semant_error1(name, features->nth(i)) << "Attribute " << feature_name << " is an attribute of an inherited class." << endl;
             }else {
                 sym_tab->addid(feature_name, new Symbol(features->nth(i)->get_type()));
@@ -645,7 +645,7 @@ void method_class::recurse(ClassTable* classtable, Symbol class_name)
     // Add formal variables to scope and make sure there are no multiples
     std::set<Symbol> formal_names;
     for(int i = formals->first(); formals->more(i); i = formals->next(i)) {
-        if (name == self) {
+        if (formals->nth(i)->get_name() == self) {
             classtable->semant_error1(class_name,this) << "\'self\' cannot be the name of a formal parameter." << endl;
         }
 

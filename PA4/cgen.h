@@ -75,6 +75,9 @@ public:
    std::map<Symbol, std::vector<Symbol>> class_map;
    std::map<Symbol, int> classTag_map;
    List<CgenNode>* get_classes() { return nds; }
+   std::map<Symbol, std::vector<int>>* var_table;
+   void new_env() { var_table = new std::map<Symbol, std::vector<int>>(); }
+
 };
 
 
