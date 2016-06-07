@@ -1867,8 +1867,7 @@ void eq_class::code(CgenClassTableP table, ostream &s) {
 
   emit_move(T2, ACC, s);
   emit_load(T1, 1, SP, s);
-  emit_addiu(SP,SP,4,s);
-  table->var_count--;
+
 
   emit_load_bool(ACC, BoolConst(1), s);
 
@@ -1881,6 +1880,8 @@ void eq_class::code(CgenClassTableP table, ostream &s) {
   emit_load_bool(A1, BoolConst(0), s);
   emit_jal("equality_test", s);
   emit_label_def(end_eq, s);
+  emit_addiu(SP,SP,4,s);
+  table->var_count--;
 }
 
 void leq_class::code(CgenClassTableP table, ostream &s) {
@@ -1941,12 +1942,14 @@ void bool_const_class::code(CgenClassTableP table, ostream& s)
 
 void new__class::code(CgenClassTableP table, ostream &s) 
 {
+  Symbol new_type = table->lookup(type_name)->get_name(); 
+
   emit_partial_load_address(ACC, s);
-  emit_protobj_ref(type_name, s);
+  emit_protobj_ref(new_type, s);
   s << endl;
   emit_jal_method(Object, idtable.lookup_string("copy"), s);
   emit_partial_jal(s);
-  emit_init_ref(type_name, s);
+  emit_init_ref(new_type, s);
   s << endl;
 }
 

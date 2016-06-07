@@ -296,11 +296,13 @@ class App inherits Expr {
 
   beta() : Expr {
     case fun of
-      l : Lambda => l.apply(arg);     -- Lazy evaluation
+      l : Lambda => { new IO.out_string("Here\n"); l.apply(arg); };    -- Lazy evaluation
       e : Expr =>
 	let new_fun : Expr <- fun.beta(),
-	    new_app : App <- new App in
+	    new_app : App <- new App in {
+         --new IO.out_string("Here\n");
 	  new_app.init(new_fun, arg);
+   };
     esac
   };
 
@@ -464,7 +466,9 @@ class Main inherits Term {
       out_string("\n");
       s().print_self();
       out_string("\n");
+
       beta_reduce(app(app(app(s(), k()), i()), i()));
+      abort();
       beta_reduce(app(app(k(),i()),i()));
       gen_code(app(i(), i()));
       gen_code(app(app(app(s(), k()), i()), i()));
