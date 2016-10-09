@@ -7,11 +7,3 @@ class Main inherits IO {
 	}
     };
 };
-
-class B inherits Main {
-
-<<<<<<< HEAD
-};
-=======
-};
->>>>>>> 04c715673b3619bd1f612b084900a1cec838312d
